@@ -1,1 +1,1 @@
-# Register your models here.
+"""Admin module for the main app."""
