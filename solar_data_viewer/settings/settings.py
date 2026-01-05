@@ -116,3 +116,5 @@ USE_TZ = True
 STATIC_URL = "static/"
 
 INSTALLED_APPS += ["main"]
+
+STATIC_ROOT = BASE_DIR / "staticfiles"
