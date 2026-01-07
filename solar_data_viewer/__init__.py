@@ -1,7 +1,1 @@
-"""The main module for Solar Data Viewer."""
-
-from contextlib import suppress
-from importlib.metadata import PackageNotFoundError, version
-
-with suppress(PackageNotFoundError):
-    __version__ = version(__name__)
+"""Django project for the Solar Data Viewer."""

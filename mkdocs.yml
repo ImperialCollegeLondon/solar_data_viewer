@@ -1,5 +1,5 @@
 site_name: Solar Data Viewer
-watch: [solar_data_viewer]
+watch: [main]
 
 theme:
   name: material
