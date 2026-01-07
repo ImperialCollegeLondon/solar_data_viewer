@@ -5,5 +5,5 @@ from django.shortcuts import render
 
 
 def index(request: HttpRequest) -> HttpResponse:
-    """Example view function making use of a template."""
+    """Placeholder view function."""
     return render(request, "main/index.html")
