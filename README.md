@@ -97,7 +97,7 @@ Ensure you have [Docker][Docker] installed and simply run:
 docker compose up
 ```
 
-The app will be available at <http://127.0.0.1:8000/>
+The app will be available at <http://127.0.0.1:8000/> (or <http://localhost:8000/>).
 
 ## Updating Dependencies
 
