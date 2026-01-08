@@ -47,25 +47,37 @@ the virtual environment (see [uv activate] for more info):
 1. Install the pre-commit git hooks:
 
     ```bash
-    uv run pre-commit install
+    pre-commit install
     ```
 
 1. Update the pre-commit hooks
 
     ```bash
-    uv run pre-commit autoupdate
+    pre-commit autoupdate
     ```
 
-1. Run the main app:
+1. Run the web app:
 
     ```bash
-    uv run python -m solar_data_viewer
+    python manage.py runserver
     ```
+
+    When running the webapp for the first time you may get a warning similar to:
+
+   `You have 19 unapplied migration(s). Your project may not work properly until you apply the migrations for app(s): admin, auth, contenttypes, main, sessions.`
+
+   If this is the case, stop your webapp (with CONTROL-C) and apply the migrations with:
+
+   ```bash
+   python manage.py migrate
+   ```
+
+   then restart it.
 
 1. Run the tests:
 
     ```bash
-    uv run pytest
+    pytest
     ```
 
 1. Create an initial commit (it's possible there might be some failures in pre-commit):
@@ -74,6 +86,18 @@ the virtual environment (see [uv activate] for more info):
     git add .
     git commit -m "Initial commit"
     ```
+
+## Installation with Docker
+
+The app can be run within a Docker container and a `docker-compose.yml` file is provided to make this easy for development.
+
+Ensure you have [Docker][Docker] installed and simply run:
+
+```bash
+docker compose up
+```
+
+The app will be available at <http://127.0.0.1:8000/> (or <http://localhost:8000/>).
 
 ## Updating Dependencies
 
@@ -94,3 +118,4 @@ For further information, see the [uv] docs for managing dependencies.
 [Imperial College Research Software Engineering Team]: https://www.imperial.ac.uk/admin-services/ict/self-service/research-support/rcs/service-offering/research-software-engineering/
 [Download and install uv]: https://docs.astral.sh/uv/getting-started/installation/
 [uv activate]: https://docs.astral.sh/uv/pip/environments/
+[Docker]: https://docs.docker.com/desktop/
