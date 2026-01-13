@@ -121,5 +121,5 @@ def create_layout(
 
     button = radio_button(labels, default_index)
     plots = create_plots(sources, button, default_index)
-    layout = column([button, *plots])
+    layout = column([button, *plots], sizing_mode="stretch_width")
     return layout
