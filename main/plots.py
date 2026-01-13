@@ -47,6 +47,7 @@ def create_scatter_plot(
             legend_label=trace["name"],
         )
 
+    plot.legend.click_policy = "hide"
     plot.legend.location = "bottom_right"
 
     return plot
