@@ -4,15 +4,24 @@ from pathlib import Path
 
 import pandas as pd
 from bokeh.layouts import column
-from bokeh.models import ColumnDataSource, CrosshairTool, HoverTool, Range1d, Span
+from bokeh.models import (
+    ColumnDataSource,
+    CrosshairTool,
+    HoverTool,
+    RadioButtonGroup,
+    Range1d,
+    Span,
+)
 from bokeh.models.layouts import Column
 from bokeh.plotting import figure
+
+from .widgets import add_callback_to_button, radio_button
 
 
 def create_scatter_plot(
     traces: tuple[dict[str, str], ...], source: ColumnDataSource
 ) -> figure:
-    """Create a timeseries scatter plots.
+    """Create a timeseries scatter plot.
 
     Args:
         traces: A tuple of dictionaries for each trace to add to the plot, with keys
@@ -43,15 +52,22 @@ def create_scatter_plot(
     return plot
 
 
-def create_plots() -> Column:
+def create_plots(
+    sources: list[ColumnDataSource],
+    button: RadioButtonGroup,
+    default_index: int = 0,
+) -> list[figure]:
     """Create plots for ACE data.
 
-    Returns:
-        A Column object containing the five Bokeh plots.
-    """
-    df = pd.read_csv(Path(__file__).parent / "data" / "test_data.csv")
-    source = ColumnDataSource(df)
+    Args:
+        sources: A list of ColumnDataSources for the plots for each spacecraft.
+        button: A radio button to select the spacecraft to display data for.
+        default_index: The index for which spacecraft data to display as default.
 
+    Returns:
+        A list containing the five Bokeh plots for each measurement.
+    """
+    source = sources[default_index]
     plot_args = (
         (
             {"col_name": "bt", "name": "Bt", "colour": "black"},
@@ -70,8 +86,7 @@ def create_plots() -> Column:
     )
     height = Span(dimension="height", line_dash="dotted", line_width=2)
     crosshair = CrosshairTool(overlay=height, dimensions="height")
-
-    range = Range1d(df.index[0], df.index[-1])
+    range = Range1d(source.data["index"][0], source.data["index"][-1])
 
     plots = []
     for traces in plot_args:
@@ -79,7 +94,32 @@ def create_plots() -> Column:
         plot.add_tools(hover)
         plot.add_tools(crosshair)
         plot.x_range = range
+        add_callback_to_button(plot, button, sources)
         plots.append(plot)
 
-    layout = column(plots)
+    return plots
+
+
+def create_layout(
+    csv_files: tuple[Path, ...], labels: list[str], default_index: int
+) -> Column:
+    """Creates a layout object for the spacecraft data plots.
+
+    Args:
+        csv_files: A list of CSV files to read the processed test ACE data from.
+        labels: A list of names for the spacecraft.
+        default_index: The index for which spacecraft data to display as default.
+
+    Returns:
+        A Column object containing the five Bokeh plots.
+    """
+    sources = []
+    for csv in csv_files:
+        df = pd.read_csv(csv, index_col=0, parse_dates=True)
+        source = ColumnDataSource(df)
+        sources.append(source)
+
+    button = radio_button(labels, default_index)
+    plots = create_plots(sources, button, default_index)
+    layout = column([button, *plots])
     return layout
