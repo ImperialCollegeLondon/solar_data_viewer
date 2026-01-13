@@ -3,7 +3,7 @@
 from pathlib import Path
 
 import pandas as pd
-from bokeh.layouts import column
+from bokeh.layouts import column, row
 from bokeh.models import (
     ColumnDataSource,
     CrosshairTool,
@@ -15,7 +15,7 @@ from bokeh.models import (
 from bokeh.models.layouts import Column
 from bokeh.plotting import figure
 
-from .widgets import add_callback_to_button, radio_button
+from .widgets import add_callback_to_button, dropdown_button, radio_button
 
 
 def create_scatter_plot(
@@ -120,6 +120,8 @@ def create_layout(
         sources.append(source)
 
     button = radio_button(labels, default_index)
+    time_ranges = [("1 day", "days_1"), ("3 days", "days_3"), ("7 days", "days_7")]
+    dropdown = dropdown_button(label="Select time range", items=time_ranges)
     plots = create_plots(sources, button, default_index)
-    layout = column([button, *plots], sizing_mode="stretch_width")
+    layout = column([row([dropdown, button]), *plots], sizing_mode="stretch_width")
     return layout

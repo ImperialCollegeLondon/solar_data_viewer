@@ -2,7 +2,7 @@
 
 from copy import deepcopy
 
-from bokeh.models import ColumnDataSource, CustomJS, RadioButtonGroup
+from bokeh.models import ColumnDataSource, CustomJS, Dropdown, RadioButtonGroup
 from bokeh.plotting import figure
 
 
@@ -28,8 +28,22 @@ def radio_button(labels: list[str], default_index: int) -> RadioButtonGroup:
     Returns:
         A RadioButtonGroup widget for selecting the spacecraft.
     """
-    button = RadioButtonGroup(labels=labels, active=default_index)
+    button = RadioButtonGroup(labels=labels, active=default_index, name="Test")
     return button
+
+
+def dropdown_button(label: str, items: list[tuple[str, str]]) -> Dropdown:
+    """Create a Dropdown button.
+
+    Args:
+        label: A label displayed on the dropdown button.
+        items: A list of tuples containing each item's text and value name.
+
+    Returns:
+        A Dropdown button for selecting time ranges.
+    """
+    dropdown = Dropdown(label=label, menu=items, button_type="default")
+    return dropdown
 
 
 def add_callback_to_button(
