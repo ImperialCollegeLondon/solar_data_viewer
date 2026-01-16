@@ -6,7 +6,7 @@ from bokeh.models import ColumnDataSource, CustomJS, Dropdown, RadioButtonGroup
 from bokeh.plotting import figure
 
 
-def copy_sources(sources: list[ColumnDataSource]) -> list[ColumnDataSource]:
+def _copy_sources(sources: list[ColumnDataSource]) -> list[ColumnDataSource]:
     """Copy the ColumnDataSource's so they are not overwritten later on.
 
     Args:
@@ -51,6 +51,9 @@ def add_callback_to_button(
 ) -> None:
     """Enables the data in the plot to be updated depending on the radio button.
 
+    The data sources have to be copied to prevent modifying their underlying data
+    when the button is clicked.
+
     Args:
         plot: A Bokeh figure for a scatter plot.
         button: A radio button to select the spacecraft to display data for.
@@ -60,11 +63,16 @@ def add_callback_to_button(
         args=dict(
             plot=plot,
             button=button,
-            sources=copy_sources(sources),
+            sources=_copy_sources(sources),
         ),
         code="""const selection = button.active;
         const orig_source = plot.renderers[0].data_source;
         const new_source = sources[selection];
+
+        const n = new_source.data.index.length;
+        plot.x_range.start = new_source.data.index[0];
+
+        plot.x_range.end = new_source.data.index[n-1];
         orig_source.data = new_source.data;""",
     )
     button.js_on_event("button_click", callback)
