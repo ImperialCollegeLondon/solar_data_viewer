@@ -71,8 +71,8 @@ def add_callback_to_button(
 
         const n = new_source.data.index.length;
         plot.x_range.start = new_source.data.index[0];
-
         plot.x_range.end = new_source.data.index[n-1];
+
         orig_source.data = new_source.data;""",
     )
     button.js_on_event("button_click", callback)

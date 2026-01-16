@@ -74,7 +74,7 @@ def create_plots(
             {"col_name": "bt", "name": "Bt", "colour": "black"},
             {"col_name": "bz_gsm", "name": "Bz GSM", "colour": "red"},
         ),
-        ({"col_name": "lon_gsm", "name": "Phi GSM(deg)", "colour": "deepskyblue"},),
+        ({"col_name": "lon_gsm", "name": "Phi GSM (deg)", "colour": "deepskyblue"},),
         ({"col_name": "density", "name": "Density (1/cm\u00b3)", "colour": "orange"},),
         ({"col_name": "speed", "name": "Speed (km/s)", "colour": "darkviolet"},),
         ({"col_name": "temperature", "name": "Temperature (K)", "colour": "green"},),
@@ -120,9 +120,14 @@ def create_layout(
         source = ColumnDataSource(df)
         sources.append(source)
 
+    # Create button to select the spacecraft
     button = radio_button(labels, default_index)
+
+    # Create dropdown to select the time range
     time_ranges = [("1 day", "days_1"), ("3 days", "days_3"), ("7 days", "days_7")]
     dropdown = dropdown_button(label="Select time range", items=time_ranges)
+
     plots = create_plots(sources, button, default_index)
     layout = column([row([dropdown, button]), *plots], sizing_mode="stretch_width")
+
     return layout
