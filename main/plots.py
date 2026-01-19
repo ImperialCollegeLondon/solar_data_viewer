@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 from bokeh.layouts import column, row
-from bokeh.models import (
+from bokeh.models import (  # type: ignore[attr-defined]
     ColumnDataSource,
     CrosshairTool,
     HoverTool,
@@ -31,7 +31,7 @@ def create_scatter_plot(
     Returns:
         Bokeh figure for the scatter plot.
     """
-    plot = figure(
+    plot = figure(  # type: ignore[call-arg]
         x_axis_type="datetime",
         width=1200,
         height=300,

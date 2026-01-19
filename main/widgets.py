@@ -2,7 +2,12 @@
 
 from copy import deepcopy
 
-from bokeh.models import ColumnDataSource, CustomJS, Dropdown, RadioButtonGroup
+from bokeh.models import (  # type: ignore[attr-defined]
+    ColumnDataSource,
+    CustomJS,
+    Dropdown,
+    RadioButtonGroup,
+)
 from bokeh.plotting import figure
 
 
