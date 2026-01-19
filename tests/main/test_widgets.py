@@ -2,10 +2,8 @@
 
 from unittest.mock import patch
 
-from bokeh.models import (  # type: ignore[attr-defined]
-    ColumnDataSource,
-    RadioButtonGroup,
-)
+from bokeh.models import ColumnDataSource
+from bokeh.models.widgets.groups import RadioButtonGroup
 
 
 def test_add_callback_to_button():
