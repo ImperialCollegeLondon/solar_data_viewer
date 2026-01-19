@@ -19,6 +19,8 @@ def test_create_scatter_plot():
 
     plot = create_scatter_plot(traces, source)
 
+    assert isinstance(plot, figure)
+
     # Check legend items added
     legend_items = [item.label.value for item in plot.legend.items]
     assert traces[0]["name"] in legend_items
