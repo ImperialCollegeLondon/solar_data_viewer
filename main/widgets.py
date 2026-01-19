@@ -1,7 +1,5 @@
 """Widgets for interacting with Bokeh plots."""
 
-from copy import deepcopy
-
 from bokeh.models import (  # type: ignore[attr-defined]
     ColumnDataSource,
     CustomJS,
@@ -12,15 +10,15 @@ from bokeh.plotting import figure
 
 
 def _copy_sources(sources: list[ColumnDataSource]) -> list[ColumnDataSource]:
-    """Copy the ColumnDataSource's so they are not overwritten later on.
+    """Create new ColumnDataSources so they are not overwritten later on.
 
     Args:
         sources: A list of ColumnDataSources for the plots for each spacecraft.
 
     Returns:
-        A copied list of ColumnDataSources.
+        A new list of ColumnDataSources.
     """
-    return [ColumnDataSource(data=deepcopy(source.data)) for source in sources]
+    return [ColumnDataSource(data=source.data) for source in sources]
 
 
 def radio_button(labels: list[str], default_index: int) -> RadioButtonGroup:
@@ -33,7 +31,7 @@ def radio_button(labels: list[str], default_index: int) -> RadioButtonGroup:
     Returns:
         A RadioButtonGroup widget for selecting the spacecraft.
     """
-    button = RadioButtonGroup(labels=labels, active=default_index, name="Test")
+    button = RadioButtonGroup(labels=labels, active=default_index)
     return button
 
 
@@ -57,7 +55,8 @@ def add_callback_to_button(
     """Enables the data in the plot to be updated depending on the radio button.
 
     The data sources have to be copied to prevent modifying their underlying data
-    when the button is clicked.
+    when the button is clicked. The x-range is also updated in case the date range
+    is different.
 
     Args:
         plot: A Bokeh figure for a scatter plot.

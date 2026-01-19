@@ -58,7 +58,7 @@ def create_plots(
     button: RadioButtonGroup,
     default_index: int = 0,
 ) -> list[figure]:
-    """Create plots for ACE data.
+    """Create five plots to display solar weather data.
 
     Args:
         sources: A list of ColumnDataSources for the plots for each spacecraft.
@@ -104,15 +104,15 @@ def create_plots(
 def create_layout(
     csv_files: tuple[Path, ...], labels: list[str], default_index: int
 ) -> Column:
-    """Creates a layout object for the spacecraft data plots.
+    """Creates a layout object for the spacecraft data plots and widgets.
 
     Args:
-        csv_files: A list of CSV files to read the processed test ACE data from.
+        csv_files: A list of CSV files to read the processed test data from.
         labels: A list of names for the spacecraft.
         default_index: The index for which spacecraft data to display as default.
 
     Returns:
-        A Column object containing the five Bokeh plots.
+        A Column object containing the five Bokeh plots and widgets.
     """
     sources = []
     for csv in csv_files:
@@ -124,6 +124,7 @@ def create_layout(
     button = radio_button(labels, default_index)
 
     # Create dropdown to select the time range
+    # TODO: Add a callback to allow the button to control the plot x-range
     time_ranges = [("1 day", "days_1"), ("3 days", "days_3"), ("7 days", "days_7")]
     dropdown = dropdown_button(label="Select time range", items=time_ranges)
 

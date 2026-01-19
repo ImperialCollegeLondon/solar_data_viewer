@@ -18,7 +18,7 @@ def index(request: HttpRequest) -> HttpResponse:
 
 
 class PlotsView(TemplateView):
-    """View to display the ACE data plots."""
+    """View to display the plots."""
 
     template_name = "main/plots.html"
 
