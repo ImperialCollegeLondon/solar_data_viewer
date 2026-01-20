@@ -50,9 +50,10 @@ def add_spacecraft_callback(
         spacecraft_button: A radio button to select the spacecraft to display data for.
         time_button: A radio button to select the time range to display data for.
         time_callback: The callback to update the time range.
-        sources: A list of ColumnDataSources for the plots for each spacecraft.
-        shared_source: The data source used by all plots. This is overwritten with
-        the selected spacecrafts data.
+        sources: The full dataset for each spacecraft (stored in a list,
+            never used directly by plots)
+        shared_source: The single active dataset that all plots read from
+            (updated when spacecraft or time range changes)
     """
     callback = CustomJS(
         args=dict(
