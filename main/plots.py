@@ -148,7 +148,6 @@ def create_layout(csv_files: tuple[Path, ...], labels: list[str], default_index:
         shared_source=shared_source,
         sources=sources,
     )
-    time_button.active = time_button.active
 
     spacecraft_button.js_on_event("button_click", spacecraft_callback)
 

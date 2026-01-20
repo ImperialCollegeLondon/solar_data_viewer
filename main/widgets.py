@@ -1,6 +1,6 @@
 """Widgets for interacting with Bokeh plots."""
 
-from bokeh.models import ColumnDataSource, CustomJS
+from bokeh.models import ColumnDataSource, CustomJS, Dropdown
 from bokeh.models.widgets.groups import RadioButtonGroup
 from bokeh.plotting import figure
 
@@ -99,12 +99,17 @@ def add_time_range_callback(plots, df):
         df: The dataframe containing the data.
 
     Returns:
-        A RadioButtonGroup and its associated CustomJS callback.
+        A Dropdown and its associated CustomJS callback.
     """
-    buttons = RadioButtonGroup(
-        labels=["1 day", "3 days", "7 days"],
-        active=1,
+    buttons = Dropdown(
+        label="Time Range",
+        menu=[
+            ("1 Day", "1d"),
+            ("3 Days", "3d"),
+            ("7 Days", "7d"),
+        ],
     )
+
     df_start = int(df.index.min().timestamp() * 1000)
     df_end = int(df.index.max().timestamp() * 1000)
 
@@ -120,10 +125,10 @@ def add_time_range_callback(plots, df):
             const now = xs[xs.length - 1];
             let start;
 
-            switch (cb_obj.active) {
-                case 0: start = now - 24*3600*1000; break;
-                case 1: start = now - 3*24*3600*1000; break;
-                case 2: start = now - 7*24*3600*1000; break;
+            switch (cb_obj.item) {
+                case "1d": start = now - 24*3600*1000; break;
+                case "3d": start = now - 3*24*3600*1000; break;
+                case "7d": start = now - 7*24*3600*1000; break;
                 default: start = now - 3*24*3600*1000;
             }
 
@@ -131,9 +136,10 @@ def add_time_range_callback(plots, df):
                 p.x_range.start = start;
                 p.x_range.end = now;
             }
+            console.log("Dropdown clicked:", cb_obj.item);
         """,
     )
 
-    buttons.js_on_change("active", callback)
+    buttons.js_on_event("menu_item_click", callback)
 
     return buttons, callback
