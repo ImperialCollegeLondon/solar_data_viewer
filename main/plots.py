@@ -59,6 +59,7 @@ def create_scatter_plot(
 def create_plots(
     source: list[ColumnDataSource],
     button_callouts: list[Callable[[figure], None]],
+    x_range: Range1d | None = None,
 ) -> list[figure]:
     """Create five plots to display solar weather data.
 
@@ -66,6 +67,7 @@ def create_plots(
         source: A list of ColumnDataSources for the plots for each spacecraft.
         button_callouts: A list of callouts to add to each plot for the spacecraft
             selection button.
+        x_range: The initial x-range for the plots (default 3 days).
 
     Returns:
         A list containing the five Bokeh plots for each measurement.
@@ -88,14 +90,14 @@ def create_plots(
     )
     height = Span(dimension="height", line_dash="dotted", line_width=2)
     crosshair = CrosshairTool(overlay=height, dimensions="height")
-    range = Range1d(source.data["index"][0], source.data["index"][-1])
 
     plots = []
+
     for traces in plot_args:
         plot = create_scatter_plot(traces, source)
         plot.add_tools(hover)
         plot.add_tools(crosshair)
-        plot.x_range = range
+        plot.x_range = x_range
         for button_callout in button_callouts:
             button_callout(plot)
         plots.append(plot)
@@ -125,7 +127,16 @@ def create_layout(csv_files: tuple[Path, ...], labels: list[str], default_index:
 
     spacecraft_button = radio_button(labels, default_index)
 
-    plots = create_plots(shared_source, [])
+    # Set initial x-range to last 3 days of data (default)
+    xs = shared_source.data["index"]
+    if len(xs) > 0:
+        end = xs[-1]
+        start = end - pd.Timedelta(days=3)
+        initial_x_range = Range1d(start=start, end=end)
+    else:
+        initial_x_range = None
+
+    plots = create_plots(shared_source, [], x_range=initial_x_range)
 
     time_button, time_callback = add_time_range_callback(plots, dfs[default_index])
 
@@ -137,6 +148,7 @@ def create_layout(csv_files: tuple[Path, ...], labels: list[str], default_index:
         shared_source=shared_source,
         sources=sources,
     )
+    time_button.active = time_button.active
 
     spacecraft_button.js_on_event("button_click", spacecraft_callback)
 

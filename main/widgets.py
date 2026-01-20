@@ -31,45 +31,6 @@ def radio_button(labels: list[str], default_index: int) -> RadioButtonGroup:
     return button
 
 
-def add_callback_to_spacecraft_button(
-    plots: figure,
-    button: RadioButtonGroup,
-    time_callback: CustomJS,
-    sources: list[ColumnDataSource],
-) -> None:
-    """Enables the data in the plot to be updated depending on the radio button.
-
-    The data sources have to be copied to prevent modifying their underlying data
-    when the button is clicked. The x-range is also updated in case the date range
-    is different.
-
-    Args:
-        plots: A Bokeh figure for a scatter plot.
-        button: A radio button to select the spacecraft to display data for.
-        time_callback: The callback to update the time range.
-        sources: A list of ColumnDataSources for the plots for each spacecraft.
-    """
-    callback = CustomJS(
-        args=dict(
-            plots=plots,
-            button=button,
-            time_callback=time_callback,
-            sources=_copy_sources(sources),
-        ),
-        code="""const selection = button.active;
-        const orig_source = plots.renderers[0].data_source;
-        const new_source = sources[selection];
-
-        const n = new_source.data.index.length;
-        for (let p of plots) {
-            p.x_range.start = new_source.data.index[0];
-            p.x_range.end = new_source.data.index[n-1];
-
-        orig_source.data = new_source.data;""",
-    )
-    button.js_on_event("button_click", callback)
-
-
 def add_spacecraft_callback(
     plots: list[figure],
     spacecraft_button: RadioButtonGroup,
@@ -130,7 +91,7 @@ def add_spacecraft_callback(
 
 
 def add_time_range_callback(plots, df):
-    """Adds a time range callback to the plots.
+    """Add a time range callback to the plots.
 
     Args:
         plots: A list of Bokeh plots.
@@ -173,9 +134,5 @@ def add_time_range_callback(plots, df):
     )
 
     buttons.js_on_change("active", callback)
+
     return buttons, callback
-
-
-def bind_spacecraft_callback(plot, spacecraft_button, time_callback, sources):
-    """Bind the spacecraft callback to the plot."""
-    add_callback_to_spacecraft_button(plot, spacecraft_button, time_callback, sources)
