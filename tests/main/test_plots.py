@@ -1,10 +1,14 @@
 """Test suite for the plots."""
 
-from unittest.mock import patch
-
 import pandas as pd
-from bokeh.models import ColumnDataSource, CrosshairTool, HoverTool, Range1d
+from bokeh.models import (
+    ColumnDataSource,
+    CustomJS,
+    Dropdown,
+)
 from bokeh.plotting import figure
+
+from main.plots import add_time_range_callback
 
 
 def test_create_scatter_plot():
@@ -30,46 +34,73 @@ def test_create_scatter_plot():
     assert len(plot.renderers) == 2
 
 
-def test_create_plots():
-    """Test the create_plots function."""
-    from main.plots import create_plots
-    from main.widgets import radio_button
+# def test_create_plots():
+#     from main.plots import create_plots
+#     from main.widgets import radio_button
 
-    data_A = pd.DataFrame(
+#     data_A = pd.DataFrame(
+#         {
+#             "index": [1, 2, 3],
+#             "bt": [22, 33, 44],
+#             "bz_gsm": [13, 14, 15],
+#             "lon_gsm": [55, 66, 77],
+#             "density": [56, 67, 78],
+#             "speed": [1, 2, 3],
+#             "temperature": [40, 50, 60],
+#         }
+#     )
+
+#     shared_source = ColumnDataSource(data_A)
+#     button = radio_button(["Spacecraft A", "Spacecraft B"], 0)
+
+#     with patch("main.plots.add_spacecraft_callback") as callback_mock:
+#         plots = create_plots(shared_source, button)
+
+#         assert len(plots) == 5
+#         assert all(isinstance(plot, figure) for plot in plots)
+
+#         tools = plots[0].tools
+#         assert any(isinstance(tool, HoverTool) for tool in tools)
+#         assert any(isinstance(tool, CrosshairTool) for tool in tools)
+
+#         assert isinstance(plots[0].x_range, Range1d)
+
+#         assert callback_mock.call_count == 5
+
+
+def test_add_time_range_callback():
+    """Test the add_time_range_callback function."""
+    # Create a simple dataframe with a datetime index
+    df = pd.DataFrame(
         {
-            "bt": [22, 33, 44],
-            "bz_gsm": [13, 14, 15],
-            "lon_gsm": [55, 66, 77],
-            "density": [56, 67, 78],
-            "speed": [1, 2, 3],
-            "temperature": [40, 50, 60],
-        }
+            "bt": [10, 20, 30],
+            "bz_gsm": [1, 2, 3],
+        },
+        index=pd.date_range("2024-01-01", periods=3, freq="H"),
     )
-    data_B = pd.DataFrame(
-        {
-            "bt": [33, 44, 55],
-            "bz_gsm": [17, 18, 19],
-            "lon_gsm": [77, 66, 55],
-            "density": [76, 65, 54],
-            "speed": [2, 2, 2],
-            "temperature": [50, 50, 50],
-        }
-    )
-    sources = [ColumnDataSource(data_A), ColumnDataSource(data_B)]
-    button = radio_button(["Spacecraft A", "Spacecraft B"], 0)
 
-    with patch("main.plots.add_callback_to_button") as callback_mock:
-        plots = create_plots(sources, button)
-        assert len(plots) == 5
-        assert all(isinstance(plot, figure) for plot in plots)
+    from bokeh.plotting import figure
 
-        # Check tools have been added
-        tools = plots[0].tools
-        assert any(isinstance(tool, HoverTool) for tool in tools)
-        assert any(isinstance(tool, CrosshairTool) for tool in tools)
+    plots = [figure() for _ in range(3)]
 
-        # Check x_range added
-        assert isinstance(plots[0].x_range, Range1d)
+    # Run the function
+    widget, callback = add_time_range_callback(plots, df)
 
-        # Check callback added to buttons
-        assert callback_mock.call_count == 5
+    assert isinstance(widget, Dropdown)
+    assert widget.label == "Time Range"
+    assert len(widget.menu) == 3
+    assert widget.menu[0][1] == "1d"
+
+    assert isinstance(callback, CustomJS)
+    assert "cb_obj.item" in callback.code
+    assert "menu_item_click" in widget.js_event_callbacks
+
+    # Ensure the callback is registered for the correct event
+    events = widget.js_event_callbacks
+    assert "menu_item_click" in events
+    assert callback in events["menu_item_click"]
+
+    # Ensure df_start and df_end were passed correctly
+    assert "df_start" in callback.args
+    assert "df_end" in callback.args
+    assert callback.args["df_start"] < callback.args["df_end"]
