@@ -1,8 +1,8 @@
 """Widgets for interacting with Bokeh plots."""
 
-import pandas as pd
-from bokeh.models import ColumnDataSource, CustomJS, Range1d
+from bokeh.models import ColumnDataSource, CustomJS
 from bokeh.models.widgets.groups import RadioButtonGroup
+from bokeh.plotting import figure
 
 
 def _copy_sources(sources: list[ColumnDataSource]) -> list[ColumnDataSource]:
@@ -14,7 +14,7 @@ def _copy_sources(sources: list[ColumnDataSource]) -> list[ColumnDataSource]:
     Returns:
         A new list of ColumnDataSources.
     """
-    return [ColumnDataSource(data=dict(source.data)) for source in sources]
+    return [ColumnDataSource(data=source.data) for source in sources]
 
 
 def radio_button(labels: list[str], default_index: int) -> RadioButtonGroup:
@@ -31,12 +31,11 @@ def radio_button(labels: list[str], default_index: int) -> RadioButtonGroup:
     return button
 
 
-def add_spacecraft_callback(
-    spacecraft_button: RadioButtonGroup,
+def add_callback_to_spacecraft_button(
+    plots: figure,
+    button: RadioButtonGroup,
     time_callback: CustomJS,
-    time_button: RadioButtonGroup,
     sources: list[ColumnDataSource],
-    shared_source: ColumnDataSource,
 ) -> None:
     """Enables the data in the plot to be updated depending on the radio button.
 
@@ -45,75 +44,118 @@ def add_spacecraft_callback(
     is different.
 
     Args:
-        spacecraft_button: A radio button to select the spacecraft to display data for.
-        time_callback: A CustomJS callback for updating the time range.
-        time_button: A radio button for selecting the time range.
+        plots: A Bokeh figure for a scatter plot.
+        button: A radio button to select the spacecraft to display data for.
+        time_callback: The callback to update the time range.
         sources: A list of ColumnDataSources for the plots for each spacecraft.
-        shared_source: The shared ColumnDataSource used by the plots.
     """
     callback = CustomJS(
         args=dict(
+            plots=plots,
+            button=button,
+            time_callback=time_callback,
             sources=_copy_sources(sources),
+        ),
+        code="""const selection = button.active;
+        const orig_source = plots.renderers[0].data_source;
+        const new_source = sources[selection];
+
+        const n = new_source.data.index.length;
+        for (let p of plots) {
+            p.x_range.start = new_source.data.index[0];
+            p.x_range.end = new_source.data.index[n-1];
+
+        orig_source.data = new_source.data;""",
+    )
+    button.js_on_event("button_click", callback)
+
+
+def add_spacecraft_callback(
+    plots: list[figure],
+    spacecraft_button: RadioButtonGroup,
+    time_button: RadioButtonGroup,
+    time_callback: CustomJS,
+    sources: list[ColumnDataSource],
+    shared_source: ColumnDataSource,
+) -> CustomJS:
+    """Enables the data in the plot to be updated depending on the radio button.
+
+    The data sources have to be copied to prevent modifying their underlying data
+    when the button is clicked. The x-range is also updated in case the date range
+    is different.
+
+    Args:
+        plots: The list of Bokeh plots.
+        spacecraft_button: A radio button to select the spacecraft to display data for.
+        time_button: A radio button to select the time range to display data for.
+        time_callback: The callback to update the time range.
+        sources: A list of ColumnDataSources for the plots for each spacecraft.
+        shared_source: The data source used by all plots. This is overwritten with
+        the selected spacecrafts data.
+    """
+    callback = CustomJS(
+        args=dict(
+            plots=plots,
+            spacecraft_button=spacecraft_button,
             shared_source=shared_source,
+            sources=sources,
             time_callback=time_callback,
             time_button=time_button,
         ),
         code="""
-        const selection = cb_obj.active;
+        const selection = spacecraft_button.active;
         const new_source = sources[selection];
 
         shared_source.data = new_source.data;
-        shared_source.change.emit();
 
-        const times = new_source.data['index'];
-        const new_end = times[times.length - 1];
+        const xs = new_source.data.index;
+        const start = xs[0];
+        const end   = xs[xs.length - 1];
 
-        time_callback.args.df_end = new_end;
+        for (let p of plots) {
+            p.x_range.start = start;
+            p.x_range.end   = end;
+        }
 
-        const current_time_selection = time_button.active;
+        time_callback.args.df_start = start;
+        time_callback.args.df_end   = end;
 
-        time_callback.execute(time_button, {'active': current_time_selection});
+        // Re-apply the currently selected time window
+        const active = time_button.active;
+        time_callback.execute(time_button, {active: active});
         """,
     )
-    spacecraft_button.js_on_change("active", callback)
+
+    return callback
 
 
-def add_time_range_callback(
-    x_range: Range1d, initial_df: pd.DataFrame
-) -> tuple[RadioButtonGroup, CustomJS]:
-    """Create the time-range selection widget (1 day, 3 days, 7 days).
+def add_time_range_callback(plots, df):
+    """Adds a time range callback to the plots.
 
     Args:
-        x_range: The shared Range1d object used by the plots.
-        initial_df: The DataFrame of the initially selected spacecraft, used
-            to calculate the initial 'end' timestamp.
+        plots: A list of Bokeh plots.
+        df: The dataframe containing the data.
 
     Returns:
-        A tuple containing:
-            1. The RadioButtonGroup widget for time selection.
-            2. The CustomJS callback attached to it (returned so it can be
-               updated by the spacecraft selector later).
+        A RadioButtonGroup and its associated CustomJS callback.
     """
     buttons = RadioButtonGroup(
         labels=["1 day", "3 days", "7 days"],
         active=1,
     )
-
-    df_end = int(initial_df.index.max().timestamp() * 1000)
-
-    # Set initial plot range to 3 days
-    now = df_end
-    start = now - 3 * 24 * 3600 * 1000
-    x_range.start = start
-    x_range.end = now
+    df_start = int(df.index.min().timestamp() * 1000)
+    df_end = int(df.index.max().timestamp() * 1000)
 
     callback = CustomJS(
         args=dict(
-            xr=x_range,  # Act on the shared range
-            df_end=df_end,  # This variable will be updated by the spacecraft button
+            plots=plots,
+            df_start=df_start,
+            df_end=df_end,
         ),
         code="""
-            const now = df_end;
+            const xs = plots[0].renderers[0].data_source.data.index;
+
+            const now = xs[xs.length - 1];
             let start;
 
             switch (cb_obj.active) {
@@ -123,10 +165,17 @@ def add_time_range_callback(
                 default: start = now - 3*24*3600*1000;
             }
 
-            xr.start = start;
-            xr.end = now;
+            for (let p of plots) {
+                p.x_range.start = start;
+                p.x_range.end = now;
+            }
         """,
     )
 
     buttons.js_on_change("active", callback)
     return buttons, callback
+
+
+def bind_spacecraft_callback(plot, spacecraft_button, time_callback, sources):
+    """Bind the spacecraft callback to the plot."""
+    add_callback_to_spacecraft_button(plot, spacecraft_button, time_callback, sources)
