@@ -12,6 +12,7 @@ from bokeh.models import (
     Range1d,
 )
 from bokeh.models.annotations.geometry import Span
+from bokeh.models.layouts import Column
 from bokeh.plotting import figure
 
 from .widgets import (
@@ -57,14 +58,14 @@ def create_scatter_plot(
 
 
 def create_plots(
-    source: list[ColumnDataSource],
+    source: ColumnDataSource,
     button_callouts: list[Callable[[figure], None]],
-    x_range: Range1d | None = None,
+    x_range: Range1d,
 ) -> list[figure]:
     """Create five plots to display solar weather data.
 
     Args:
-        source: A list of ColumnDataSources for the plots for each spacecraft.
+        source: the ColumnDataSource for each plot
         button_callouts: A list of callouts to add to each plot for the spacecraft
             selection button.
         x_range: The initial x-range for the plots (default 3 days).
@@ -105,7 +106,9 @@ def create_plots(
     return plots
 
 
-def create_layout(csv_files: tuple[Path, ...], labels: list[str], default_index: int):
+def create_layout(
+    csv_files: tuple[Path, ...], labels: list[str], default_index: int
+) -> Column:
     """Creates a layout object for the spacecraft data plots and widgets.
 
     Args:
@@ -129,14 +132,11 @@ def create_layout(csv_files: tuple[Path, ...], labels: list[str], default_index:
 
     # Set initial x-range to last 3 days of data (default)
     xs = shared_source.data["index"]
-    if len(xs) > 0:
-        end = xs[-1]
-        start = end - pd.Timedelta(days=3)
-        initial_x_range = Range1d(start=start, end=end)
-    else:
-        initial_x_range = None
+    end = xs[-1]
+    start = end - pd.Timedelta(days=3)
+    initial_x_range = Range1d(start=start, end=end)
 
-    plots = create_plots(shared_source, [], x_range=initial_x_range)
+    plots = create_plots(shared_source, [], initial_x_range)
 
     time_button, time_callback = add_time_range_callback(plots, dfs[default_index])
 

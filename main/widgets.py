@@ -1,6 +1,8 @@
 """Widgets for interacting with Bokeh plots."""
 
-from bokeh.models import ColumnDataSource, CustomJS, Dropdown
+import pandas as pd
+from bokeh.models import ColumnDataSource, CustomJS
+from bokeh.models.widgets.buttons import Dropdown
 from bokeh.models.widgets.groups import RadioButtonGroup
 from bokeh.plotting import figure
 
@@ -34,7 +36,7 @@ def radio_button(labels: list[str], default_index: int) -> RadioButtonGroup:
 def add_spacecraft_callback(
     plots: list[figure],
     spacecraft_button: RadioButtonGroup,
-    time_button: RadioButtonGroup,
+    time_button: Dropdown,
     time_callback: CustomJS,
     sources: list[ColumnDataSource],
     shared_source: ColumnDataSource,
@@ -91,7 +93,10 @@ def add_spacecraft_callback(
     return callback
 
 
-def add_time_range_callback(plots, df):
+def add_time_range_callback(
+    plots: list[figure],
+    df: pd.DataFrame,
+) -> tuple[Dropdown, CustomJS]:
     """Add a time range callback to the plots.
 
     Args:

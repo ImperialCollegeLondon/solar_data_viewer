@@ -4,8 +4,8 @@ import pandas as pd
 from bokeh.models import (
     ColumnDataSource,
     CustomJS,
-    Dropdown,
 )
+from bokeh.models.widgets.buttons import Dropdown
 from bokeh.plotting import figure
 
 from main.plots import add_time_range_callback
