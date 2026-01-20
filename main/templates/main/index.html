@@ -1,7 +1,16 @@
 {% extends "main/base.html" %}
 
-{% block title %}Home{% endblock title %}
-
 {% block content %}
-Placeholder content for the home page.
+
+  <script src="https://cdn.bokeh.org/bokeh/release/bokeh-{{ bokeh_version }}.min.js"></script>
+  <script src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-{{ bokeh_version }}.min.js"></script>
+  <script src="https://cdn.bokeh.org/bokeh/release/bokeh-tables-{{ bokeh_version }}.min.js"></script>
+  <script src="https://cdn.bokeh.org/bokeh/release/bokeh-gl-{{ bokeh_version }}.min.js"></script>
+  <script src="https://cdn.bokeh.org/bokeh/release/bokeh-mathjax-{{ bokeh_version }}.min.js"></script>
+
+  <h2>Plots</h2>
+
+  {{ script | safe }}
+  {{ div | safe }}
+
 {% endblock content %}

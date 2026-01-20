@@ -7,6 +7,5 @@ from . import views
 app_name = "main"
 
 urlpatterns = [
-    path("", views.index, name="index"),
-    path("plots", views.PlotsView.as_view(), name="plots"),
+    path("", views.IndexView.as_view(), name="index"),
 ]

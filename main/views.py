@@ -5,22 +5,15 @@ from typing import Any
 
 import bokeh
 from bokeh.embed import components
-from django.http import HttpRequest, HttpResponse
-from django.shortcuts import render
 from django.views.generic import TemplateView
 
 from .plots import create_layout
 
 
-def index(request: HttpRequest) -> HttpResponse:
-    """Placeholder view function."""
-    return render(request, "main/index.html")
+class IndexView(TemplateView):
+    """View to display the index page."""
 
-
-class PlotsView(TemplateView):
-    """View to display the plots."""
-
-    template_name = "main/plots.html"
+    template_name = "main/index.html"
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:  # type: ignore
         """Add HTML components and Bokeh version to the context."""
