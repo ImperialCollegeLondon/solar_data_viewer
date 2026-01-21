@@ -38,11 +38,10 @@ def create_scatter_plot(
     )
 
     for trace in traces:
-        plot.scatter(
+        plot.line(
             "index",
             trace["col_name"],
             color=trace["colour"],
-            size=2,
             source=source,
             legend_label=trace["name"],
         )
