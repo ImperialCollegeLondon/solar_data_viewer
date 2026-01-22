@@ -1,16 +1,14 @@
 """Views for the main app."""
 
-from pathlib import Path
 from typing import Any
 
 import bokeh
-import numpy as np
-import pandas as pd
 from bokeh.embed import components
 from django.http import HttpRequest, JsonResponse
 from django.views.generic import TemplateView, View
 
 from .plots import create_layout
+from .utils import process_data_from_test_csvs
 
 
 class IndexView(TemplateView):
@@ -29,30 +27,28 @@ class IndexView(TemplateView):
 
 
 class DataView(View):
-    """View for returning measurement data to AjaxDataSource."""
+    """View for returning measurement data to the AjaxDataSource."""
 
-    def get(
+    def get(  # type: ignore
         self,
         request: HttpRequest,
         measurement: str,
         spacecraft: str,
         *args: Any,
         **kwargs: Any,
-    ) -> JsonResponse:  # type: ignore
-        """Method to get data."""
-        csv_files = {
-            "IMAP": Path(__file__).parent / "data" / "test_data1.csv",
-            "SO": Path(__file__).parent / "data" / "test_data2.csv",
-        }
-        df = pd.read_csv(csv_files[spacecraft], parse_dates=True)
-        # Nan values are not JSON serializable
-        df = df.replace({np.nan: None})
-        # Format datetime as Unix epoch time
-        df = df.rename(columns={df.columns[0]: "date"})
-        df["date"] = pd.to_datetime(df["date"], utc=True).astype("int64") // 10**6
+    ) -> JsonResponse:
+        """Method to handle GET requests for spacecraft data.
 
-        # Create JSON response
-        dates = df["date"].tolist()
-        measurements = df[measurement].tolist()
-        data = {"measurement": measurements, "date": dates}
+        Args:
+            request: The incoming HTTP request.
+            measurement: Name of the measurement to get data for.
+            spacecraft: Name of the spacecraft to retrieve data for.
+            *args: Additional positional arguments.
+            **kwargs: Additional key word arguments.
+
+        Returns:
+            A JSON response containing the dates and values for the specific
+                spacecraft and measurement type.
+        """
+        data = process_data_from_test_csvs(spacecraft, measurement)
         return JsonResponse(data)
