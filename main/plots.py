@@ -11,16 +11,16 @@ from bokeh.models.layouts import Column
 from bokeh.plotting import figure
 
 
-def create_scatter_plot(traces, spacecrafts: dict[str, str]) -> figure:
+def create_scatter_plot(
+    traces: tuple[dict[str, str], ...], spacecrafts: dict[str, dict[str, str]]
+) -> figure:
     """Create a timeseries scatter plot.
 
     Args:
-        traces: A tuple of dictionaries for each trace to add to the plot, with keys:
-            "measurement", for measurement name; "name", to use in the legend,
-            and "colours", a nested dictionary with spacecraft as keys and the colour
-            to use for plotting.
-        spacecrafts: A dictionary with the abbreviated spacecraft name to use in the
-            data url and the display name as the value.
+        traces: A tuple of dictionaries for each trace to add to the plot, with keys
+            for the col_name (in the dataframe), name (to use in legend) and colour.
+        spacecrafts: A nested dictionary containing the spacecraft 'code', their names
+            to display in the legend and colours to use.
 
     Returns:
         Bokeh figure for the scatter plot.
@@ -34,10 +34,10 @@ def create_scatter_plot(traces, spacecrafts: dict[str, str]) -> figure:
     for spacecraft in spacecrafts:
         for trace in traces:
             # Create an AjaxDataSource for each spacecraft and measurement
-            display_name = spacecrafts[spacecraft]
+            display_name = spacecrafts[spacecraft]["name"]
 
             source = AjaxDataSource(
-                data_url=f"/data/{trace['measurement']}/{spacecraft}",
+                data_url=f"/data/{trace['col_name']}/{spacecraft}",
                 polling_interval=1000,
                 method="GET",
             )
@@ -45,7 +45,7 @@ def create_scatter_plot(traces, spacecrafts: dict[str, str]) -> figure:
             plot.scatter(
                 "date",
                 "measurement",
-                color=trace["colours"][spacecraft],
+                color=spacecrafts[spacecraft]["colour"],
                 size=2,
                 source=source,
                 legend_label=f"{display_name}: {trace['name']}",
@@ -63,51 +63,21 @@ def create_plots() -> list[figure]:
     Returns:
         A list containing the five Bokeh plots for each measurement.
     """
-    # TODO: Move plot args into a config file
+    # TODO: Move into a config file
     plot_args = (
         (
-            {
-                "measurement": "bt",
-                "name": "Bt",
-                "colours": {"IMAP": "black", "SO": "gray"},
-            },
-            {
-                "measurement": "bz_gsm",
-                "name": "Bz GSM",
-                "colours": {"IMAP": "darkred", "SO": "red"},
-            },
+            {"col_name": "bt", "name": "Bt"},
+            {"col_name": "bz_gsm", "name": "Bz GSM"},
         ),
-        (
-            {
-                "measurement": "lon_gsm",
-                "name": "Phi GSM (deg)",
-                "colours": {"IMAP": "darkblue", "SO": "deepskyblue"},
-            },
-        ),
-        (
-            {
-                "measurement": "density",
-                "name": "Density (1/cm\u00b3)",
-                "colours": {"IMAP": "orangered", "SO": "orange"},
-            },
-        ),
-        (
-            {
-                "measurement": "speed",
-                "name": "Speed (km/s)",
-                "colours": {"IMAP": "darkviolet", "SO": "violet"},
-            },
-        ),
-        (
-            {
-                "measurement": "temperature",
-                "name": "Temperature (K)",
-                "colours": {"IMAP": "darkgreen", "SO": "green"},
-            },
-        ),
+        ({"col_name": "lon_gsm", "name": "Phi GSM (deg)"},),
+        ({"col_name": "density", "name": "Density (1/cm\u00b3)"},),
+        ({"col_name": "speed", "name": "Speed (km/s)"},),
+        ({"col_name": "temperature", "name": "Temperature (K)"},),
     )
-
-    spacecrafts = {"IMAP": "IMAP", "SO": "Solar Orbiter"}
+    spacecrafts = {
+        "IMAP": {"name": "IMAP", "colour": "red"},
+        "SO": {"name": "Solar Orbiter", "colour": "blue"},
+    }
 
     # Create tooltips and crosshair tool to use across all plots
     hover = HoverTool(
