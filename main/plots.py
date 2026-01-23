@@ -1,26 +1,27 @@
 """Plots for displaying science data."""
 
 from bokeh.layouts import column
-from bokeh.models import (
-    AjaxDataSource,
-    CrosshairTool,
-    HoverTool,
-)
+from bokeh.models import AjaxDataSource, CrosshairTool, HoverTool
 from bokeh.models.annotations.geometry import Span
 from bokeh.models.layouts import Column
+from bokeh.models.widgets.groups import CheckboxButtonGroup
 from bokeh.plotting import figure
+
+from .widgets import add_callback_to_checkbox_button, checkbox_button_group
 
 
 def create_scatter_plot(
-    traces: tuple[dict[str, str], ...], spacecrafts: dict[str, dict[str, str]]
+    traces: tuple[dict[str, str], ...],
+    spacecrafts: dict[str, str],
+    default_spacecraft: str = "IMAP",
 ) -> figure:
     """Create a timeseries scatter plot.
 
     Args:
         traces: A tuple of dictionaries for each trace to add to the plot, with keys
             for the col_name (in the dataframe), name (to use in legend) and colour.
-        spacecrafts: A nested dictionary containing the spacecraft 'code', their names
-            to display in the legend and colours to use.
+        spacecrafts: A dictionary mapping spacecraft to plot colours.
+        default_spacecraft: The spacecraft data to display as default.
 
     Returns:
         Bokeh figure for the scatter plot.
@@ -34,7 +35,7 @@ def create_scatter_plot(
     for spacecraft in spacecrafts:
         for trace in traces:
             # Create an AjaxDataSource for each spacecraft and measurement
-            display_name = spacecrafts[spacecraft]["name"]
+            visible = True if spacecraft == default_spacecraft else False
 
             source = AjaxDataSource(
                 data_url=f"/data/{trace['col_name']}/{spacecraft}",
@@ -45,10 +46,12 @@ def create_scatter_plot(
             plot.scatter(
                 "date",
                 "measurement",
-                color=spacecrafts[spacecraft]["colour"],
+                name=spacecraft,  # Enables selecting data in callback
+                color=spacecrafts[spacecraft],
                 size=2,
                 source=source,
-                legend_label=f"{display_name}: {trace['name']}",
+                legend_label=f"{spacecraft}: {trace['name']}",
+                visible=visible,
             )
 
     plot.legend.click_policy = "hide"
@@ -57,13 +60,18 @@ def create_scatter_plot(
     return plot
 
 
-def create_plots() -> list[figure]:
+def create_plots(
+    button: CheckboxButtonGroup, spacecrafts: dict[str, str]
+) -> list[figure]:
     """Create five plots to display solar weather data.
+
+    Args:
+        button: A checkbox button to select the spacecraft to display data for.
+        spacecrafts: A dictionary mapping spacecraft to plot colours.
 
     Returns:
         A list containing the five Bokeh plots for each measurement.
     """
-    # TODO: Move into a config file
     plot_args = (
         (
             {"col_name": "bt", "name": "Bt"},
@@ -74,10 +82,6 @@ def create_plots() -> list[figure]:
         ({"col_name": "speed", "name": "Speed (km/s)"},),
         ({"col_name": "temperature", "name": "Temperature (K)"},),
     )
-    spacecrafts = {
-        "IMAP": {"name": "IMAP", "colour": "red"},
-        "SO": {"name": "Solar Orbiter", "colour": "blue"},
-    }
 
     # Create tooltips and crosshair tool to use across all plots
     hover = HoverTool(
@@ -92,6 +96,7 @@ def create_plots() -> list[figure]:
         plot = create_scatter_plot(traces, spacecrafts)
         plot.add_tools(hover)
         plot.add_tools(crosshair)
+        add_callback_to_checkbox_button(plot=plot, button=button)
         plots.append(plot)
 
     return plots
@@ -103,7 +108,12 @@ def create_layout() -> Column:
     Returns:
         A Column object containing the five Bokeh plots and widgets.
     """
-    plots = create_plots()
-    layout = column(plots, sizing_mode="stretch_width")
+    spacecrafts = {
+        "IMAP": "red",
+        "SO": "blue",
+    }
+    button = checkbox_button_group([craft for craft in spacecrafts])
+    plots = create_plots(button, spacecrafts)
+    layout = column([button, *plots], sizing_mode="stretch_width")
 
     return layout

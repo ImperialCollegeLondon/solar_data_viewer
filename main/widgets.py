@@ -1,7 +1,7 @@
 """Widgets for interacting with Bokeh plots."""
 
 from bokeh.models import ColumnDataSource, CustomJS
-from bokeh.models.widgets.groups import RadioButtonGroup
+from bokeh.models.widgets.groups import CheckboxButtonGroup, RadioButtonGroup
 from bokeh.plotting import figure
 
 
@@ -17,18 +17,43 @@ def _copy_sources(sources: list[ColumnDataSource]) -> list[ColumnDataSource]:
     return [ColumnDataSource(data=source.data) for source in sources]
 
 
-def radio_button(labels: list[str], default_index: int) -> RadioButtonGroup:
-    """Create RadioButtonGroup.
+def checkbox_button_group(
+    labels: list[str], default_indexes: list[int] = [0]
+) -> CheckboxButtonGroup:
+    """Create CheckboxButtonGroup.
 
     Args:
         labels: A list of names for the spacecraft.
-        default_index: The index for which spacecraft data to display as default.
+        default_indexes: A list of indexes for which spacecraft to show as default.
 
     Returns:
         A RadioButtonGroup widget for selecting the spacecraft.
     """
-    button = RadioButtonGroup(labels=labels, active=default_index)
+    button = CheckboxButtonGroup(labels=labels, active=default_indexes)
     return button
+
+
+def add_callback_to_checkbox_button(
+    plot: figure,
+    button: CheckboxButtonGroup,
+) -> None:
+    """Enables the data in the plot to be updated depending on the checkbox button.
+
+    Args:
+        plot: A Bokeh figure for a scatter plot.
+        button: A checkbox button group to select the spacecraft to display data for.
+    """
+    callback = CustomJS(
+        args=dict(plot=plot, button=button),
+        code="""const selection = button.active;
+
+        plot.renderers.forEach((renderer) => {
+            const name = renderer.name;
+            const index = button.labels.indexOf(name);
+            renderer.visible = selection.includes(index);
+        })""",
+    )
+    button.js_on_event("button_click", callback)
 
 
 def add_callback_to_button(
