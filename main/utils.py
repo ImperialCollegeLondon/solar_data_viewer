@@ -24,8 +24,8 @@ def process_data_from_test_csvs(
         "SO": Path(__file__).parent / "data" / "test_data2.csv",
     }
     df = pd.read_csv(csv_files[spacecraft], parse_dates=True)
-    # Nan values are not JSON serializable
-    df = df.replace({np.nan: None})
+    # Replace null values with nan to avoid Bokeh errors
+    df = df.replace({np.nan: "nan"})
     # Format datetime as Unix epoch time
     df = df.rename(columns={df.columns[0]: "date"})
     df["date"] = pd.to_datetime(df["date"], utc=True).astype("int64") // 10**6
