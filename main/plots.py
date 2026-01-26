@@ -13,7 +13,7 @@ from .widgets import add_callback_to_checkbox_button, checkbox_button_group
 def create_scatter_plot(
     traces: tuple[dict[str, str], ...],
     spacecrafts: dict[str, str],
-    default_spacecraft: str = "IMAP",
+    default_spacecraft: str,
 ) -> figure:
     """Create a timeseries scatter plot.
 
@@ -61,13 +61,16 @@ def create_scatter_plot(
 
 
 def create_plots(
-    button: CheckboxButtonGroup, spacecrafts: dict[str, str]
+    button: CheckboxButtonGroup,
+    spacecrafts: dict[str, str],
+    default_spacecraft: str = "IMAP",
 ) -> list[figure]:
     """Create five plots to display solar weather data.
 
     Args:
         button: A checkbox button to select the spacecraft to display data for.
         spacecrafts: A dictionary mapping spacecraft to plot colours.
+        default_spacecraft: The spacecraft data to display as default.
 
     Returns:
         A list containing the five Bokeh plots for each measurement.
@@ -93,7 +96,7 @@ def create_plots(
 
     plots = []
     for traces in plot_args:
-        plot = create_scatter_plot(traces, spacecrafts)
+        plot = create_scatter_plot(traces, spacecrafts, default_spacecraft)
         plot.add_tools(hover)
         plot.add_tools(crosshair)
         add_callback_to_checkbox_button(plot=plot, button=button)
@@ -112,8 +115,9 @@ def create_layout() -> Column:
         "IMAP": "red",
         "SO": "blue",
     }
-    button = checkbox_button_group([craft for craft in spacecrafts])
-    plots = create_plots(button, spacecrafts)
+    default_spacecraft = "IMAP"
+    button = checkbox_button_group([craft for craft in spacecrafts], default_spacecraft)
+    plots = create_plots(button, spacecrafts, default_spacecraft)
     layout = column([button, *plots], sizing_mode="stretch_width")
 
     return layout
