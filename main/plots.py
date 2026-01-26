@@ -43,12 +43,11 @@ def create_scatter_plot(
                 method="GET",
             )
 
-            plot.scatter(
+            plot.line(
                 "date",
                 "measurement",
                 name=spacecraft,  # Enables selecting data in callback
                 color=spacecrafts[spacecraft],
-                size=2,
                 source=source,
                 legend_label=f"{spacecraft}: {trace['name']}",
                 visible=visible,
