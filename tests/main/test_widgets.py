@@ -1,45 +1,39 @@
 """Test suite for the widgets."""
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
-from bokeh.models import ColumnDataSource
-from bokeh.models.widgets.groups import RadioButtonGroup
+from bokeh.models.widgets.groups import CheckboxButtonGroup
 
 
-def test_add_callback_to_button():
-    """Test the add_callback_to_button function."""
+@patch("main.utils.process_data_from_test_csvs")
+def test_add_callback_to_checkbox_button(process_data_mock: Mock):
+    """Test the add_callback_to_checkbox_button function."""
     from main.plots import create_scatter_plot
-    from main.widgets import add_callback_to_button, radio_button
+    from main.widgets import add_callback_to_checkbox_button, checkbox_button_group
 
-    sources = [
-        ColumnDataSource({"speed": [1, 2, 3], "density": [56, 67, 78]}),
-        ColumnDataSource({"speed": [6, 8, 7], "density": [66, 44, 22]}),
-    ]
+    process_data_mock.return_value = {
+        "measurement": [3.0, 4.0, 5.0],
+        "date": [1767867720000, 1767867780000, 1767867840000],
+    }
+
+    button = checkbox_button_group(labels=["A", "B"], default_spacecraft="A")
     traces = (
-        {"col_name": "speed", "name": "Speed", "colour": "black"},
-        {"col_name": "density", "name": "Density", "colour": "red"},
+        {"col_name": "speed", "name": "Speed"},
+        {"col_name": "density", "name": "Density"},
     )
-
-    button = radio_button(labels=["A", "B"], default_index=0)
-    plot = create_scatter_plot(traces, sources[0])
-
+    spacecrafts = {"A": "blue", "B": "red"}
+    plot = create_scatter_plot(traces, spacecrafts, "A")
     expected_code = """const selection = button.active;
-        const orig_source = plot.renderers[0].data_source;
-        const new_source = sources[selection];
 
-        const n = new_source.data.index.length;
-        plot.x_range.start = new_source.data.index[0];
-        plot.x_range.end = new_source.data.index[n-1];
+        plot.renderers.forEach((renderer) => {
+            const name = renderer.name;
+            const index = button.labels.indexOf(name);
+            renderer.visible = selection.includes(index);
+        })"""
 
-        orig_source.data = new_source.data;"""
-
-    with patch.object(RadioButtonGroup, "js_on_event") as js_mock:
-        add_callback_to_button(plot, button, sources)
+    with patch.object(CheckboxButtonGroup, "js_on_event") as js_mock:
+        add_callback_to_checkbox_button(plot, button)
         called_args = js_mock.call_args.args[1]
         assert called_args.args["plot"] == plot
         assert called_args.args["button"] == button
-        assert all(
-            isinstance(source, ColumnDataSource)
-            for source in called_args.args["sources"]
-        )
         assert called_args.code == expected_code
