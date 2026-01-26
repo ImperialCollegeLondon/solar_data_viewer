@@ -70,13 +70,41 @@ def create_plots(
     source = sources[default_index]
     plot_args = (
         (
-            {"col_name": "bt", "name": "Bt", "colour": "black"},
-            {"col_name": "bz_gsm", "name": "Bz GSM", "colour": "red"},
+            {"col_name": "bt", "name": "Bt", "unit": "nT", "colour": "black"},
+            {"col_name": "bz_gsm", "name": "Bz GSM", "unit": "nT", "colour": "red"},
         ),
-        ({"col_name": "lon_gsm", "name": "Phi GSM (deg)", "colour": "deepskyblue"},),
-        ({"col_name": "density", "name": "Density (1/cm\u00b3)", "colour": "orange"},),
-        ({"col_name": "speed", "name": "Speed (km/s)", "colour": "darkviolet"},),
-        ({"col_name": "temperature", "name": "Temperature (K)", "colour": "green"},),
+        (
+            {
+                "col_name": "lon_gsm",
+                "name": "Phi GSM",
+                "unit": "deg",
+                "colour": "deepskyblue",
+            },
+        ),
+        (
+            {
+                "col_name": "density",
+                "name": "Density",
+                "unit": "1/cm³",
+                "colour": "orange",
+            },
+        ),
+        (
+            {
+                "col_name": "speed",
+                "name": "Speed",
+                "unit": "km/s",
+                "colour": "darkviolet",
+            },
+        ),
+        (
+            {
+                "col_name": "temperature",
+                "name": "Temperature",
+                "unit": "K",
+                "colour": "green",
+            },
+        ),
     )
 
     # Create tooltips and crosshair tool to use across all plots
@@ -94,6 +122,7 @@ def create_plots(
         plot.add_tools(hover)
         plot.add_tools(crosshair)
         plot.x_range = range
+        plot.yaxis.axis_label = f"{traces[0]['name']} ({traces[0]['unit']})"
         add_callback_to_button(plot, button, sources)
         plots.append(plot)
 
