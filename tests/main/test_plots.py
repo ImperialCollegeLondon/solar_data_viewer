@@ -28,7 +28,7 @@ def test_create_scatter_plot():
     ]
     assert all(legend in legend_items for legend in expected_legend)
 
-    # Check two traces have been plotted
+    # Check four traces have been plotted
     assert len(plot.renderers) == 4
 
 
