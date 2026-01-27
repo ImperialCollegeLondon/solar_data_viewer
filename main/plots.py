@@ -76,13 +76,37 @@ def create_plots(
     """
     plot_args = (
         (
-            {"col_name": "bt", "name": "Bt"},
-            {"col_name": "bz_gsm", "name": "Bz GSM"},
+            {"col_name": "bt", "name": "Bt", "unit": "nT"},
+            {"col_name": "bz_gsm", "name": "Bz GSM", "unit": "nT"},
         ),
-        ({"col_name": "lon_gsm", "name": "Phi GSM (deg)"},),
-        ({"col_name": "density", "name": "Density (1/cm\u00b3)"},),
-        ({"col_name": "speed", "name": "Speed (km/s)"},),
-        ({"col_name": "temperature", "name": "Temperature (K)"},),
+        (
+            {
+                "col_name": "lon_gsm",
+                "name": "Phi GSM",
+                "unit": "deg",
+            },
+        ),
+        (
+            {
+                "col_name": "density",
+                "name": "Density",
+                "unit": "1/cm³",
+            },
+        ),
+        (
+            {
+                "col_name": "speed",
+                "name": "Speed",
+                "unit": "km/s",
+            },
+        ),
+        (
+            {
+                "col_name": "temperature",
+                "name": "Temperature",
+                "unit": "K",
+            },
+        ),
     )
 
     # Create tooltips and crosshair tool to use across all plots
@@ -99,6 +123,7 @@ def create_plots(
         plot.add_tools(hover)
         plot.add_tools(crosshair)
         add_callback_to_checkbox_button(plot=plot, button=button)
+        plot.yaxis.axis_label = f"{traces[0]['name']} ({traces[0]['unit']})"
         plots.append(plot)
 
     return plots
