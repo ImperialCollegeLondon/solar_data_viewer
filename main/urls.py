@@ -8,4 +8,7 @@ app_name = "main"
 
 urlpatterns = [
     path("", views.IndexView.as_view(), name="index"),
+    path(
+        "data/<str:measurement>/<str:spacecraft>", views.DataView.as_view(), name="data"
+    ),
 ]

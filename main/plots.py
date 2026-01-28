@@ -1,32 +1,25 @@
 """Plots for displaying science data."""
 
-from pathlib import Path
-
-import pandas as pd
 from bokeh.layouts import column
-from bokeh.models import (
-    ColumnDataSource,
-    CrosshairTool,
-    HoverTool,
-    Range1d,
-)
+from bokeh.models import AjaxDataSource, CrosshairTool, HoverTool
 from bokeh.models.annotations.geometry import Span
 from bokeh.models.layouts import Column
-from bokeh.models.widgets.groups import RadioButtonGroup
+from bokeh.models.widgets.groups import CheckboxButtonGroup
 from bokeh.plotting import figure
 
-from .widgets import add_callback_to_button, radio_button
+from .widgets import add_callback_to_checkbox_button, checkbox_button_group
 
 
 def create_scatter_plot(
-    traces: tuple[dict[str, str], ...], source: ColumnDataSource
+    traces: tuple[dict[str, str], ...],
+    spacecrafts: dict[str, str],
 ) -> figure:
     """Create a timeseries scatter plot.
 
     Args:
         traces: A tuple of dictionaries for each trace to add to the plot, with keys
             for the col_name (in the dataframe), name (to use in legend) and colour.
-        source: The ColumnDataSource containing the data.
+        spacecrafts: A dictionary mapping spacecraft to plot colours.
 
     Returns:
         Bokeh figure for the scatter plot.
@@ -37,14 +30,24 @@ def create_scatter_plot(
         height=300,
     )
 
-    for trace in traces:
-        plot.line(
-            "index",
-            trace["col_name"],
-            color=trace["colour"],
-            source=source,
-            legend_label=trace["name"],
-        )
+    for spacecraft in spacecrafts:
+        for trace in traces:
+            # Create an AjaxDataSource for each spacecraft and measurement
+            source = AjaxDataSource(
+                data_url=f"/data/{trace['col_name']}/{spacecraft}",
+                polling_interval=1000,
+                method="GET",
+            )
+
+            plot.line(
+                "date",
+                "measurement",
+                name=spacecraft,  # Enables selecting data in callback
+                color=spacecrafts[spacecraft],
+                source=source,
+                legend_label=f"{spacecraft}: {trace['name']}",
+                visible=False,
+            )
 
     plot.legend.click_policy = "hide"
     plot.legend.location = "bottom_right"
@@ -53,32 +56,30 @@ def create_scatter_plot(
 
 
 def create_plots(
-    sources: list[ColumnDataSource],
-    button: RadioButtonGroup,
-    default_index: int = 0,
+    button: CheckboxButtonGroup,
+    spacecrafts: dict[str, str],
+    default_spacecraft: str = "IMAP",
 ) -> list[figure]:
     """Create five plots to display solar weather data.
 
     Args:
-        sources: A list of ColumnDataSources for the plots for each spacecraft.
-        button: A radio button to select the spacecraft to display data for.
-        default_index: The index for which spacecraft data to display as default.
+        button: A checkbox button to select the spacecraft to display data for.
+        spacecrafts: A dictionary mapping spacecraft to plot colours.
+        default_spacecraft: The spacecraft data to display as default.
 
     Returns:
         A list containing the five Bokeh plots for each measurement.
     """
-    source = sources[default_index]
     plot_args = (
         (
-            {"col_name": "bt", "name": "Bt", "unit": "nT", "colour": "black"},
-            {"col_name": "bz_gsm", "name": "Bz GSM", "unit": "nT", "colour": "red"},
+            {"col_name": "bt", "name": "Bt", "unit": "nT"},
+            {"col_name": "bz_gsm", "name": "Bz GSM", "unit": "nT"},
         ),
         (
             {
                 "col_name": "lon_gsm",
                 "name": "Phi GSM",
                 "unit": "deg",
-                "colour": "deepskyblue",
             },
         ),
         (
@@ -86,7 +87,6 @@ def create_plots(
                 "col_name": "density",
                 "name": "Density",
                 "unit": "1/cm³",
-                "colour": "orange",
             },
         ),
         (
@@ -94,7 +94,6 @@ def create_plots(
                 "col_name": "speed",
                 "name": "Speed",
                 "unit": "km/s",
-                "colour": "darkviolet",
             },
         ),
         (
@@ -102,7 +101,6 @@ def create_plots(
                 "col_name": "temperature",
                 "name": "Temperature",
                 "unit": "K",
-                "colour": "green",
             },
         ),
     )
@@ -114,44 +112,34 @@ def create_plots(
     )
     height = Span(dimension="height", line_dash="dotted", line_width=2)
     crosshair = CrosshairTool(overlay=height, dimensions="height")
-    range = Range1d(source.data["index"][0], source.data["index"][-1])
 
     plots = []
     for traces in plot_args:
-        plot = create_scatter_plot(traces, source)
+        plot = create_scatter_plot(traces, spacecrafts)
         plot.add_tools(hover)
         plot.add_tools(crosshair)
-        plot.x_range = range
+        # Display data for one spacecraft as default
+        plot.select(name=default_spacecraft).visible = True  # type: ignore[attr-defined]
+        add_callback_to_checkbox_button(plot=plot, button=button)
         plot.yaxis.axis_label = f"{traces[0]['name']} ({traces[0]['unit']})"
-        add_callback_to_button(plot, button, sources)
         plots.append(plot)
 
     return plots
 
 
-def create_layout(
-    csv_files: tuple[Path, ...], labels: list[str], default_index: int
-) -> Column:
+def create_layout() -> Column:
     """Creates a layout object for the spacecraft data plots and widgets.
-
-    Args:
-        csv_files: A list of CSV files to read the processed test data from.
-        labels: A list of names for the spacecraft.
-        default_index: The index for which spacecraft data to display as default.
 
     Returns:
         A Column object containing the five Bokeh plots and widgets.
     """
-    sources = []
-    for csv in csv_files:
-        df = pd.read_csv(csv, index_col=0, parse_dates=True)
-        source = ColumnDataSource(df)
-        sources.append(source)
-
-    # Create button to select the spacecraft
-    button = radio_button(labels, default_index)
-
-    plots = create_plots(sources, button, default_index)
+    spacecrafts = {
+        "IMAP": "red",
+        "SO": "blue",
+    }
+    default_spacecraft = "IMAP"
+    button = checkbox_button_group([craft for craft in spacecrafts], default_spacecraft)
+    plots = create_plots(button, spacecrafts, default_spacecraft)
     layout = column([button, *plots], sizing_mode="stretch_width")
 
     return layout

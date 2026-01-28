@@ -1,7 +1,7 @@
 """Widgets for interacting with Bokeh plots."""
 
 from bokeh.models import ColumnDataSource, CustomJS
-from bokeh.models.widgets.groups import RadioButtonGroup
+from bokeh.models.widgets.groups import CheckboxButtonGroup
 from bokeh.plotting import figure
 
 
@@ -17,48 +17,41 @@ def _copy_sources(sources: list[ColumnDataSource]) -> list[ColumnDataSource]:
     return [ColumnDataSource(data=source.data) for source in sources]
 
 
-def radio_button(labels: list[str], default_index: int) -> RadioButtonGroup:
-    """Create RadioButtonGroup.
+def checkbox_button_group(
+    labels: list[str], default_spacecraft: str
+) -> CheckboxButtonGroup:
+    """Create CheckboxButtonGroup for selecting spacecraft data.
 
     Args:
         labels: A list of names for the spacecraft.
-        default_index: The index for which spacecraft data to display as default.
+        default_spacecraft: The spacecraft data to display as default.
 
     Returns:
         A RadioButtonGroup widget for selecting the spacecraft.
     """
-    button = RadioButtonGroup(labels=labels, active=default_index)
+    default_idx = labels.index(default_spacecraft)
+    button = CheckboxButtonGroup(labels=labels, active=[default_idx])
     return button
 
 
-def add_callback_to_button(
-    plot: figure, button: RadioButtonGroup, sources: list[ColumnDataSource]
+def add_callback_to_checkbox_button(
+    plot: figure,
+    button: CheckboxButtonGroup,
 ) -> None:
-    """Enables the data in the plot to be updated depending on the radio button.
-
-    The data sources have to be copied to prevent modifying their underlying data
-    when the button is clicked. The x-range is also updated in case the date range
-    is different.
+    """Enables the data in the plot to be updated depending on the checkbox button.
 
     Args:
         plot: A Bokeh figure for a scatter plot.
-        button: A radio button to select the spacecraft to display data for.
-        sources: A list of ColumnDataSources for the plots for each spacecraft.
+        button: A checkbox button group to select the spacecraft to display data for.
     """
     callback = CustomJS(
-        args=dict(
-            plot=plot,
-            button=button,
-            sources=_copy_sources(sources),
-        ),
+        args=dict(plot=plot, button=button),
         code="""const selection = button.active;
-        const orig_source = plot.renderers[0].data_source;
-        const new_source = sources[selection];
 
-        const n = new_source.data.index.length;
-        plot.x_range.start = new_source.data.index[0];
-        plot.x_range.end = new_source.data.index[n-1];
-
-        orig_source.data = new_source.data;""",
+        plot.renderers.forEach((renderer) => {
+            const name = renderer.name;
+            const index = button.labels.indexOf(name);
+            renderer.visible = selection.includes(index);
+        })""",
     )
     button.js_on_event("button_click", callback)
