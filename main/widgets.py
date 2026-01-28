@@ -1,6 +1,6 @@
 """Widgets for interacting with Bokeh plots."""
 
-from bokeh.models import ColumnDataSource, CustomJS
+from bokeh.models import ColumnDataSource, CustomJS, Select  # type: ignore
 from bokeh.models.widgets.groups import CheckboxButtonGroup
 from bokeh.plotting import figure
 
@@ -55,3 +55,47 @@ def add_callback_to_checkbox_button(
         })""",
     )
     button.js_on_event("button_click", callback)
+
+
+def create_time_range_dropdown() -> Select:
+    """Create a dropdown Select widget for choosing the time range."""
+    return Select(
+        value="3d",
+        options=[("1d", "1 Day"), ("3d", "3 Days"), ("7d", "7 Days")],
+    )
+
+
+def add_time_range_callback(dropdown: Select, plots: list[figure]) -> None:
+    """Add a callback to the time range dropdown to update the data source URLs.
+
+    Args:
+        dropdown: A Select widget for choosing the time range.
+        plots: A list of Bokeh figures to update when the time range changes.
+    """
+    callback = CustomJS(
+        args=dict(dropdown=dropdown, plots=plots),
+        code="""
+        const range = dropdown.value;
+
+        for (const plot of plots) {
+            for (const renderer of plot.renderers) {
+
+                // Only update glyph renderers
+                if (renderer.data_source && renderer.data_source.data_url) {
+                    const source = renderer.data_source;
+
+                    // Build new URL
+                    const url = new URL(source.data_url, window.location.origin);
+                    url.searchParams.set("range", range);
+                    url.searchParams.set("_ts", Date.now());
+
+                    // Update URL
+                    source.data_url = url.pathname + url.search;
+
+                }
+            }
+        }
+        """,
+    )
+
+    dropdown.js_on_change("value", callback)
