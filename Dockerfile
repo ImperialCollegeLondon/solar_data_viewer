@@ -24,6 +24,7 @@ FROM python:3.13-slim-bookworm
 
 COPY --from=builder /usr/src/app/.venv/lib/python3.13/site-packages/ /usr/local/lib/python3.13/site-packages
 COPY --from=builder /usr/src/app /usr/src/app
+COPY --from=builder /usr/src/app/.venv/bin/uwsgi /usr/local/bin/
 WORKDIR /usr/src/app
 
 RUN python manage.py collectstatic --no-input

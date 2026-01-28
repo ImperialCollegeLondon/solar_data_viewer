@@ -1175,6 +1175,7 @@ source = { editable = "." }
 dependencies = [
     { name = "bokeh" },
     { name = "django" },
+    { name = "uwsgi" },
     { name = "whitenoise" },
 ]
 
@@ -1205,6 +1206,7 @@ doc = [
 requires-dist = [
     { name = "bokeh", specifier = ">=3.8.2" },
     { name = "django", specifier = ">=6.0" },
+    { name = "uwsgi", specifier = ">=2.0.31" },
     { name = "whitenoise", specifier = ">=6.11.0" },
 ]
 
@@ -1303,6 +1305,12 @@ sdist = { url = "https://files.pythonhosted.org/packages/1e/24/a2a2ed9addd907787
 wheels = [
     { url = "https://files.pythonhosted.org/packages/6d/b9/4095b668ea3678bf6a0af005527f39de12fb026516fb3df17495a733b7f8/urllib3-2.6.2-py3-none-any.whl", hash = "sha256:ec21cddfe7724fc7cb4ba4bea7aa8e2ef36f607a4bab81aa6ce42a13dc3f03dd", size = 131182, upload-time = "2025-12-11T15:56:38.584Z" },
 ]
+
+[[package]]
+name = "uwsgi"
+version = "2.0.31"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9f/49/2f57640e889ba509fd1fae10cccec1b58972a07c2724486efba94c5ea448/uwsgi-2.0.31.tar.gz", hash = "sha256:e8f8b350ccc106ff93a65247b9136f529c14bf96b936ac5b264c6ff9d0c76257", size = 822796, upload-time = "2025-10-11T19:17:28.794Z" }
 
 [[package]]
 name = "virtualenv"
