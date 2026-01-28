@@ -42,8 +42,6 @@ def create_scatter_plot(
     for spacecraft in spacecrafts:
         for trace in traces:
             # Create an AjaxDataSource for each spacecraft and measurement
-            visible = True if spacecraft == default_spacecraft else False
-
             source = AjaxDataSource(
                 data_url=f"/data/{trace['col_name']}/{spacecraft}?range={time_range}",
                 polling_interval=5000,
@@ -57,7 +55,7 @@ def create_scatter_plot(
                 color=spacecrafts[spacecraft],
                 source=source,
                 legend_label=f"{spacecraft}: {trace['name']}",
-                visible=visible,
+                visible=False,
             )
 
     plot.legend.click_policy = "hide"
@@ -133,6 +131,8 @@ def create_plots(
         )
         plot.add_tools(hover)
         plot.add_tools(crosshair)
+        # Display data for one spacecraft as default
+        plot.select(name=default_spacecraft).visible = True  # type: ignore[attr-defined]
         add_callback_to_checkbox_button(plot=plot, button=button)
         plot.yaxis.axis_label = f"{traces[0]['name']} ({traces[0]['unit']})"
         plots.append(plot)

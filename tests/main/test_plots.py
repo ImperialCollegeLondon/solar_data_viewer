@@ -15,9 +15,8 @@ def test_create_scatter_plot():
         {"col_name": "density", "name": "Density"},
     )
     spacecrafts = {"A": "red", "B": "blue"}
-    default_spacecraft = "B"
 
-    plot = create_scatter_plot(traces, spacecrafts, default_spacecraft)
+    plot = create_scatter_plot(traces, spacecrafts)
 
     assert isinstance(plot, figure)
 
