@@ -18,7 +18,6 @@ from .widgets import (
 def create_scatter_plot(
     traces: tuple[dict[str, str], ...],
     spacecrafts: dict[str, str],
-    default_spacecraft: str,
     time_range: str = "3d",
 ) -> figure:
     """Create a timeseries scatter plot.
@@ -27,7 +26,6 @@ def create_scatter_plot(
         traces: A tuple of dictionaries for each trace to add to the plot, with keys
             for the col_name (in the dataframe), name (to use in legend) and colour.
         spacecrafts: A dictionary mapping spacecraft to plot colours.
-        default_spacecraft: The spacecraft data to display as default.
         time_range: The initial time range for the data to display (default is 3 days).
 
     Returns:
@@ -126,9 +124,7 @@ def create_plots(
 
     plots = []
     for traces in plot_args:
-        plot = create_scatter_plot(
-            traces, spacecrafts, default_spacecraft, initial_time_range
-        )
+        plot = create_scatter_plot(traces, spacecrafts, initial_time_range)
         plot.add_tools(hover)
         plot.add_tools(crosshair)
         # Display data for one spacecraft as default

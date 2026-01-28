@@ -15,9 +15,8 @@ def test_create_scatter_plot():
         {"col_name": "density", "name": "Density"},
     )
     spacecrafts = {"A": "red", "B": "blue"}
-    default_spacecraft = "A"
 
-    plot = create_scatter_plot(traces, spacecrafts, default_spacecraft, time_range="7d")
+    plot = create_scatter_plot(traces, spacecrafts, time_range="7d")
 
     assert isinstance(plot, figure)
 
@@ -43,7 +42,6 @@ def test_create_plots():
     from main.widgets import checkbox_button_group
 
     spacecrafts = {"Spacecraft A": "red", "Spacecraft B": "blue"}
-    default_spacecraft = "Spacecraft A"
 
     button = checkbox_button_group(["Spacecraft A", "Spacecraft B"], "Spacecraft A")
     source = AjaxDataSource(
@@ -59,7 +57,7 @@ def test_create_plots():
         with patch("main.plots.AjaxDataSource") as data_source_mock:
             data_source_mock.return_value = source
 
-            plots = create_plots(button, spacecrafts, default_spacecraft)
+            plots = create_plots(button, spacecrafts)
             assert len(plots) == 5
             assert all(isinstance(plot, figure) for plot in plots)
 
