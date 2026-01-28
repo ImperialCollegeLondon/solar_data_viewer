@@ -23,9 +23,9 @@ ADMINS = os.environ["ADMIN_EMAILS"].split(",")
 class InfoFilter(logging.Filter):
     """Filter to only pass INFO and DEBUG level log records."""
 
-    def filter(self, rec):
+    def filter(self, record: logging.LogRecord) -> bool:
         """Return True if the record level is DEBUG or INFO."""
-        return rec.levelno in (logging.DEBUG, logging.INFO)
+        return record.levelno in (logging.DEBUG, logging.INFO)
 
 
 LOGGING = {
