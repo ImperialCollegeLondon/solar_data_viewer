@@ -16,7 +16,9 @@ def test_create_scatter_plot():
     )
     spacecrafts = {"A": "red", "B": "blue"}
 
-    plot = create_scatter_plot(traces, spacecrafts, time_range="7d")
+    x_range = figure(x_axis_type="datetime").x_range
+
+    plot = create_scatter_plot(traces, spacecrafts, x_range, time_range="7d")
 
     assert isinstance(plot, figure)
 
