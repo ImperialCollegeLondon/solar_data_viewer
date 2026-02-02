@@ -1,7 +1,12 @@
 """Plots for displaying science data."""
 
 from bokeh.layouts import column
-from bokeh.models import AjaxDataSource, CrosshairTool, HoverTool
+from bokeh.models import (  # type: ignore
+    AjaxDataSource,
+    CrosshairTool,
+    HoverTool,
+    LegendItem,
+)
 from bokeh.models.annotations.geometry import Span
 from bokeh.models.layouts import Column
 from bokeh.models.widgets.groups import CheckboxButtonGroup
@@ -60,8 +65,9 @@ def create_scatter_plot(
         legend.click_policy = "hide"
         # hide legend items for hidden spacecraft line
         for item in legend.items:
-            if item.renderers and not item.renderers[0].visible:
-                item.visible = False
+            if isinstance(item, LegendItem):
+                if item.renderers and not item.renderers[0].visible:
+                    item.visible = False
     return plot
 
 
