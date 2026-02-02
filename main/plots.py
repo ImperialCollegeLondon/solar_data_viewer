@@ -1,5 +1,7 @@
 """Plots for displaying science data."""
 
+from pathlib import Path
+
 from bokeh.layouts import column
 from bokeh.models import AjaxDataSource, CrosshairTool, HoverTool
 from bokeh.models.annotations.geometry import Span
@@ -7,19 +9,19 @@ from bokeh.models.layouts import Column
 from bokeh.models.widgets.groups import CheckboxButtonGroup
 from bokeh.plotting import figure
 
+from .utils import PlotConfig, load_plot_config
 from .widgets import add_callback_to_checkbox_button, checkbox_button_group
 
 
 def create_scatter_plot(
-    traces: tuple[dict[str, str], ...],
-    spacecrafts: dict[str, str],
+    plot_config: PlotConfig,
 ) -> figure:
     """Create a timeseries scatter plot.
 
     Args:
-        traces: A tuple of dictionaries for each trace to add to the plot, with keys
-            for the col_name (in the dataframe), name (to use in legend) and colour.
-        spacecrafts: A dictionary mapping spacecraft to plot colours.
+        plot_config: A dictionary containing the title, unit, measurements (a nested
+            dictionary for each measurement, including their label and colours for each
+            spacecraft trace.
 
     Returns:
         Bokeh figure for the scatter plot.
@@ -30,11 +32,11 @@ def create_scatter_plot(
         height=300,
     )
 
-    for spacecraft in spacecrafts:
-        for trace in traces:
+    for measurement, args in plot_config["measurements"].items():
+        for spacecraft, colour in args["traces"].items():
             # Create an AjaxDataSource for each spacecraft and measurement
             source = AjaxDataSource(
-                data_url=f"/data/{trace['col_name']}/{spacecraft}",
+                data_url=f"/data/{measurement}/{spacecraft}",
                 polling_interval=1000,
                 method="GET",
             )
@@ -43,9 +45,9 @@ def create_scatter_plot(
                 "date",
                 "measurement",
                 name=spacecraft,  # Enables selecting data in callback
-                color=spacecrafts[spacecraft],
+                color=colour,
                 source=source,
-                legend_label=f"{spacecraft}: {trace['name']}",
+                legend_label=f"{spacecraft}: {args['label']}",
                 visible=False,
             )
 
@@ -56,55 +58,21 @@ def create_scatter_plot(
 
 
 def create_plots(
+    plots_config: list[PlotConfig],
     button: CheckboxButtonGroup,
-    spacecrafts: dict[str, str],
     default_spacecraft: str = "IMAP",
 ) -> list[figure]:
     """Create five plots to display solar weather data.
 
     Args:
+        plots_config: A list of dictionaries containing the config arguments for each
+            plot, as defined in the config TOML file.
         button: A checkbox button to select the spacecraft to display data for.
-        spacecrafts: A dictionary mapping spacecraft to plot colours.
         default_spacecraft: The spacecraft data to display as default.
 
     Returns:
         A list containing the five Bokeh plots for each measurement.
     """
-    plot_args = (
-        (
-            {"col_name": "bt", "name": "Bt", "unit": "nT"},
-            {"col_name": "bz_gsm", "name": "Bz GSM", "unit": "nT"},
-        ),
-        (
-            {
-                "col_name": "lon_gsm",
-                "name": "Phi GSM",
-                "unit": "deg",
-            },
-        ),
-        (
-            {
-                "col_name": "density",
-                "name": "Density",
-                "unit": "1/cm³",
-            },
-        ),
-        (
-            {
-                "col_name": "speed",
-                "name": "Speed",
-                "unit": "km/s",
-            },
-        ),
-        (
-            {
-                "col_name": "temperature",
-                "name": "Temperature",
-                "unit": "K",
-            },
-        ),
-    )
-
     # Create tooltips and crosshair tool to use across all plots
     hover = HoverTool(
         tooltips=[("Time", "$x{%Y-%m-%d %H:%M:%S}"), ("Value", "$y{0.00}")],
@@ -114,14 +82,13 @@ def create_plots(
     crosshair = CrosshairTool(overlay=height, dimensions="height")
 
     plots = []
-    for traces in plot_args:
-        plot = create_scatter_plot(traces, spacecrafts)
-        plot.add_tools(hover)
-        plot.add_tools(crosshair)
+    for plot_config in plots_config:
+        plot = create_scatter_plot(plot_config)
+        plot.add_tools(hover, crosshair)
         # Display data for one spacecraft as default
         plot.select(name=default_spacecraft).visible = True  # type: ignore[attr-defined]
         add_callback_to_checkbox_button(plot=plot, button=button)
-        plot.yaxis.axis_label = f"{traces[0]['name']} ({traces[0]['unit']})"
+        plot.yaxis.axis_label = f"{plot_config['title']} ({plot_config['unit']})"
         plots.append(plot)
 
     return plots
@@ -133,13 +100,11 @@ def create_layout() -> Column:
     Returns:
         A Column object containing the five Bokeh plots and widgets.
     """
-    spacecrafts = {
-        "IMAP": "red",
-        "SO": "blue",
-    }
-    default_spacecraft = "IMAP"
-    button = checkbox_button_group([craft for craft in spacecrafts], default_spacecraft)
-    plots = create_plots(button, spacecrafts, default_spacecraft)
+    plots_config, spacecrafts, default_spacecraft = load_plot_config(
+        config_file=Path(__file__).parent / "config" / "plots.toml"
+    )
+    button = checkbox_button_group(spacecrafts, default_spacecraft)
+    plots = create_plots(plots_config, button, default_spacecraft)
     layout = column([button, *plots], sizing_mode="stretch_width")
 
     return layout

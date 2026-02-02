@@ -45,9 +45,9 @@ def add_callback_to_checkbox_button(
         button: A checkbox button group to select the spacecraft to display data for.
     """
     callback = CustomJS(
-        args=dict(plot=plot, button=button),
+        args=dict(plot=plot, button=button, legend=plot.legend),
         code="""const selection = button.active;
-
+        console.log(legend);
         plot.renderers.forEach((renderer) => {
             const name = renderer.name;
             const index = button.labels.indexOf(name);

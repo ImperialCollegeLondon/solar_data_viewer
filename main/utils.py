@@ -1,9 +1,42 @@
 """General utilities for Solar Data Viewer."""
 
+import tomllib
 from pathlib import Path
+from typing import TypedDict
 
 import numpy as np
 import pandas as pd
+
+
+class MeasurementConfig(TypedDict):
+    """Configuration for measurement details."""
+
+    label: str
+    traces: dict[str, str]
+
+
+class PlotConfig(TypedDict):
+    """Configuration for plot details."""
+
+    title: str
+    unit: str
+    measurements: dict[str, MeasurementConfig]
+
+
+def load_plot_config(config_file: Path) -> tuple[list[PlotConfig], list[str], str]:
+    """Load the config details for the plots from the TOML file.
+
+    Returns:
+        A tuple containing the plot config, the list of spacecrafts and
+            the default spacecraft.
+    """
+    with open(config_file, "rb") as f:
+        config = tomllib.load(f)
+
+    plots_config = config["plots"]
+    spacecrafts = config["spacecrafts"]["names"]
+    default_spacecraft = config["spacecrafts"]["default"]
+    return plots_config, spacecrafts, default_spacecraft
 
 
 def process_data_from_test_csvs(
