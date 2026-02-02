@@ -19,9 +19,9 @@ def create_timeseries_plot(
     """Create a timeseries plot.
 
     Args:
-        plot_config: A dictionary containing the title, unit, measurements (a nested
-            dictionary for each measurement, including their label and colours for each
-            spacecraft trace.
+        plot_config: A dictionary containing the title, unit and measurements. The
+            measurements are represented as a dictionary containing their label and
+            colours to be used for the traces for each spacecraft.
 
     Returns:
         Bokeh figure for the timeseries plot.
