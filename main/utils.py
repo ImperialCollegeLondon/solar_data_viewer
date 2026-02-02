@@ -26,6 +26,9 @@ class PlotConfig(TypedDict):
 def load_plot_config(config_file: Path) -> tuple[list[PlotConfig], list[str], str]:
     """Load the config details for the plots from the TOML file.
 
+    Args:
+        config_file: The path to the config file for the plots.
+
     Returns:
         A tuple containing the plot config, the list of spacecrafts and
             the default spacecraft.
