@@ -13,10 +13,10 @@ from .utils import PlotConfig, load_plot_config
 from .widgets import add_callback_to_checkbox_button, checkbox_button_group
 
 
-def create_scatter_plot(
+def create_timeseries_plot(
     plot_config: PlotConfig,
 ) -> figure:
-    """Create a timeseries scatter plot.
+    """Create a timeseries plot.
 
     Args:
         plot_config: A dictionary containing the title, unit, measurements (a nested
@@ -24,7 +24,7 @@ def create_scatter_plot(
             spacecraft trace.
 
     Returns:
-        Bokeh figure for the scatter plot.
+        Bokeh figure for the timeseries plot.
     """
     plot = figure(  # type: ignore[call-arg]
         x_axis_type="datetime",
@@ -83,7 +83,7 @@ def create_plots(
 
     plots = []
     for plot_config in plots_config:
-        plot = create_scatter_plot(plot_config)
+        plot = create_timeseries_plot(plot_config)
         plot.add_tools(hover, crosshair)
         # Display data for one spacecraft as default
         plot.select(name=default_spacecraft).visible = True  # type: ignore[attr-defined]
