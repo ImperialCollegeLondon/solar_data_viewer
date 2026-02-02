@@ -13,6 +13,7 @@ from .widgets import add_callback_to_checkbox_button, checkbox_button_group
 def create_scatter_plot(
     traces: tuple[dict[str, str], ...],
     spacecrafts: dict[str, str],
+    default_spacecraft: str = "IMAP",
 ) -> figure:
     """Create a timeseries scatter plot.
 
@@ -20,6 +21,7 @@ def create_scatter_plot(
         traces: A tuple of dictionaries for each trace to add to the plot, with keys
             for the col_name (in the dataframe), name (to use in legend) and colour.
         spacecrafts: A dictionary mapping spacecraft to plot colours.
+        default_spacecraft: The spacecraft data to display as default.
 
     Returns:
         Bokeh figure for the scatter plot.
@@ -46,12 +48,20 @@ def create_scatter_plot(
                 color=spacecrafts[spacecraft],
                 source=source,
                 legend_label=f"{spacecraft}: {trace['name']}",
-                visible=False,
+                visible=True if spacecraft == default_spacecraft else False,
             )
 
     plot.legend.click_policy = "hide"
     plot.legend.location = "bottom_right"
 
+    if plot.legend:
+        legend = plot.legend[0]
+        plot.add_layout(legend, "right")
+        legend.click_policy = "hide"
+        # hide legend items for hidden spacecraft line
+        for item in legend.items:
+            if item.renderers and not item.renderers[0].visible:
+                item.visible = False
     return plot
 
 
@@ -115,7 +125,7 @@ def create_plots(
 
     plots = []
     for traces in plot_args:
-        plot = create_scatter_plot(traces, spacecrafts)
+        plot = create_scatter_plot(traces, spacecrafts, default_spacecraft)
         plot.add_tools(hover)
         plot.add_tools(crosshair)
         # Display data for one spacecraft as default

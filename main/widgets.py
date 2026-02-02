@@ -44,14 +44,38 @@ def add_callback_to_checkbox_button(
         plot: A Bokeh figure for a scatter plot.
         button: A checkbox button group to select the spacecraft to display data for.
     """
-    callback = CustomJS(
-        args=dict(plot=plot, button=button),
-        code="""const selection = button.active;
+    legend = plot.legend[0] if isinstance(plot.legend, list) else plot.legend
 
-        plot.renderers.forEach((renderer) => {
-            const name = renderer.name;
-            const index = button.labels.indexOf(name);
-            renderer.visible = selection.includes(index);
-        })""",
+    callback = CustomJS(
+        args=dict(button=button, legend=legend),
+        code="""
+        const selection = button.active;
+        const labels = button.labels;
+
+        if (legend && legend.items) {
+
+            legend.items.forEach((item) => {
+
+                if (item.renderers.length > 0) {
+                    const renderer = item.renderers[0];
+                    const name = renderer.name;
+
+                    // Find button index corresponding to this renderer's name
+                    const index = labels.indexOf(name);
+
+                    // if button found
+                    if (index !== -1) {
+                        const is_active = selection.includes(index);
+
+                        // switch line visibility
+                        renderer.visible = is_active;
+
+                        // switch legend item visibility
+                        item.visible = is_active;
+                    }
+                }
+            });
+        }
+        """,
     )
     button.js_on_event("button_click", callback)
