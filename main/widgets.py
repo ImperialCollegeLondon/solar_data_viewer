@@ -100,13 +100,10 @@ def add_time_range_callback(dropdown: Select, plots: list[figure]) -> None:
         x_range.end = now;
         x_range.start = now - duration;
 
-        // update data source URLs
-        let updatedCount = 0;
-
         for (const plot of plots) {
             for (const renderer of plot.renderers) {
 
-                // Only update renderers that have and AjaxDataSource
+                // Only update renderers that have an AjaxDataSource
                 if (renderer.data_source && renderer.data_source.data_url) {
                     const source = renderer.data_source;
                     const url = new URL(source.data_url, window.location.origin);
@@ -131,7 +128,6 @@ def add_time_range_callback(dropdown: Select, plots: list[figure]) -> None:
                             source.polling_interval = original_interval;
                         });
 
-                    updatedCount++;
                 }
             }
         }
