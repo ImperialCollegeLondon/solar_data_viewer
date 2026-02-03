@@ -20,7 +20,7 @@ class MeasurementConfig(BaseConfig):
 
     traces: dict[str, str]
     """A dictionary mapping the trace for each spacecraft to a Bokeh colour, e.g.
-    {IMAP: 'blue', SO: 'red'}."""
+    {'IMAP': 'blue', 'SO': 'red'}."""
 
 
 class PlotConfig(BaseConfig):
@@ -33,7 +33,7 @@ class PlotConfig(BaseConfig):
     """The unit to display in the y-axis."""
 
     measurements: dict[str, MeasurementConfig]
-    """A dictionary mapping the measurement identifier (e.g. bx_gsm) to
+    """A dictionary mapping the measurement identifier (e.g. 'bx_gsm') to
     its configuration schema."""
 
 
@@ -50,8 +50,8 @@ class PlotsConfig(BaseConfig):
     """The list of plots to include on the page."""
 
     @model_validator(mode="after")
-    def check_valid_spacecrafts(self) -> Self:
-        """Check valid spacecraft names are provided."""
+    def validate_spacecrafts(self) -> Self:
+        """Validate spacecraft names and the default spacecraft."""
         # Check the default spacecraft is in the defined list
         if self.default_spacecraft not in self.spacecrafts:
             raise ValueError(
