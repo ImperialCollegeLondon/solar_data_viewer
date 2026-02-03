@@ -2,6 +2,7 @@
 
 from unittest.mock import Mock, patch
 
+from bokeh.models import Range1d
 from bokeh.models.widgets.groups import CheckboxButtonGroup
 
 from main.config import MeasurementConfig, PlotConfig
@@ -30,18 +31,17 @@ def test_add_callback_to_checkbox_button(process_data_mock: Mock):
         },
     )
 
-    plot = create_timeseries_plot(plot_config)
-    expected_code = """const selection = button.active;
+    default_spacecraft = "A"
 
-        plot.renderers.forEach((renderer) => {
-            const name = renderer.name;
-            const index = button.labels.indexOf(name);
-            renderer.visible = selection.includes(index);
-        })"""
+    x_range = Range1d(start=0, end=1)
+
+    plot = create_timeseries_plot(plot_config, x_range, default_spacecraft)
 
     with patch.object(CheckboxButtonGroup, "js_on_event") as js_mock:
         add_callback_to_checkbox_button(plot, button)
         called_args = js_mock.call_args.args[1]
-        assert called_args.args["plot"] == plot
         assert called_args.args["button"] == button
-        assert called_args.code == expected_code
+        expected_legend = (
+            plot.legend[0] if isinstance(plot.legend, list) else plot.legend
+        )
+        assert called_args.args["legend"] == expected_legend

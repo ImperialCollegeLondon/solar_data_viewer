@@ -23,7 +23,9 @@ def test_create_timeseries_plot():
         },
     )
 
-    plot = create_timeseries_plot(plot_config)
+    x_range = figure(x_axis_type="datetime").x_range
+
+    plot = create_timeseries_plot(plot_config, x_range, time_range="7d")
 
     assert isinstance(plot, figure)
 
@@ -36,6 +38,11 @@ def test_create_timeseries_plot():
 
     # Check four traces have been plotted
     assert len(plot.renderers) == 4
+
+    # Check that the URL includes the time range parameter
+    first_source = plot.renderers[0].data_source
+    assert isinstance(first_source, AjaxDataSource)
+    assert "range=7d" in first_source.data_url
 
 
 def test_create_plots():
