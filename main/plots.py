@@ -9,7 +9,8 @@ from bokeh.models.layouts import Column
 from bokeh.models.widgets.groups import CheckboxButtonGroup
 from bokeh.plotting import figure
 
-from .utils import PlotConfig, load_plot_config
+from .config import PlotConfig
+from .utils import load_plot_config
 from .widgets import add_callback_to_checkbox_button, checkbox_button_group
 
 
@@ -32,8 +33,8 @@ def create_timeseries_plot(
         height=300,
     )
 
-    for measurement, args in plot_config["measurements"].items():
-        for spacecraft, colour in args["traces"].items():
+    for measurement, args in plot_config.measurements.items():
+        for spacecraft, colour in args.traces.items():
             # Create an AjaxDataSource for each spacecraft and measurement
             source = AjaxDataSource(
                 data_url=f"/data/{measurement}/{spacecraft}",
@@ -47,7 +48,7 @@ def create_timeseries_plot(
                 name=spacecraft,  # Enables selecting data in callback
                 color=colour,
                 source=source,
-                legend_label=f"{spacecraft}: {args['label']}",
+                legend_label=f"{spacecraft}: {args.label}",
                 visible=False,
             )
 
@@ -88,7 +89,7 @@ def create_plots(
         # Display data for one spacecraft as default
         plot.select(name=default_spacecraft).visible = True  # type: ignore[attr-defined]
         add_callback_to_checkbox_button(plot=plot, button=button)
-        plot.yaxis.axis_label = f"{plot_config['title']} ({plot_config['unit']})"
+        plot.yaxis.axis_label = f"{plot_config.title} ({plot_config.unit})"
         plots.append(plot)
 
     return plots
