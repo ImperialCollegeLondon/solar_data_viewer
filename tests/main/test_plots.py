@@ -16,7 +16,9 @@ def test_create_scatter_plot():
     )
     spacecrafts = {"A": "red", "B": "blue"}
 
-    plot = create_scatter_plot(traces, spacecrafts)
+    x_range = figure(x_axis_type="datetime").x_range
+
+    plot = create_scatter_plot(traces, spacecrafts, x_range, time_range="7d")
 
     assert isinstance(plot, figure)
 
@@ -30,6 +32,11 @@ def test_create_scatter_plot():
     # Check four traces have been plotted
     assert len(plot.renderers) == 4
 
+    # Check that the URL includes the time range parameter
+    first_source = plot.renderers[0].data_source
+    assert isinstance(first_source, AjaxDataSource)
+    assert "range=7d" in first_source.data_url
+
 
 def test_create_plots():
     """Test the create_plots function."""
@@ -37,7 +44,6 @@ def test_create_plots():
     from main.widgets import checkbox_button_group
 
     spacecrafts = {"Spacecraft A": "red", "Spacecraft B": "blue"}
-    default_spacecraft = "Spacecraft A"
 
     button = checkbox_button_group(["Spacecraft A", "Spacecraft B"], "Spacecraft A")
     source = AjaxDataSource(
@@ -53,7 +59,7 @@ def test_create_plots():
         with patch("main.plots.AjaxDataSource") as data_source_mock:
             data_source_mock.return_value = source
 
-            plots = create_plots(button, spacecrafts, default_spacecraft)
+            plots = create_plots(button, spacecrafts)
             assert len(plots) == 5
             assert all(isinstance(plot, figure) for plot in plots)
 
