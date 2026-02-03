@@ -114,6 +114,9 @@ def add_time_range_callback(dropdown: Select, plots: list[figure]) -> None:
 
                     // Force AjaxDataSource to fetch new data immediately
                     const original_interval = source.polling_interval;
+                    // Pause regular polling while manually fetching new data
+                    // to sync the manual fetching with the scheduled polling.
+                    // Ensures we don't have overlapping requests
                     source.polling_interval = null;
 
                     // Fetch the new data from the backend
