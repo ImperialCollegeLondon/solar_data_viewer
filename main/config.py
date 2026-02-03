@@ -50,7 +50,7 @@ class PlotsConfig(BaseConfig):
     """The list of plots to include on the page."""
 
     @model_validator(mode="after")
-    def check_valid_spacecrafts_provided(self) -> Self:
+    def check_valid_spacecrafts(self) -> Self:
         """Check valid spacecraft names are provided."""
         # Check the default spacecraft is in the defined list
         if self.default_spacecraft not in self.spacecrafts:
@@ -68,8 +68,8 @@ class PlotsConfig(BaseConfig):
                 ]
                 if invalid_spacecraft:
                     raise ValueError(
-                        f"Invalid spacecraft(s) ({invalid_spacecraft}) provided for"
-                        f" plot {plot.title} - {measurement_id}."
+                        f"Invalid spacecraft(s) ({', '.join(invalid_spacecraft)}) "
+                        f"provided for plot {plot.title} ({measurement_id})."
                     )
 
         return self

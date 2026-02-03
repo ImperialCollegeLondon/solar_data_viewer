@@ -101,9 +101,11 @@ def create_layout() -> Column:
     Returns:
         A Column object containing the five Bokeh plots and widgets.
     """
-    plots_config, spacecrafts, default_spacecraft = load_plot_config(
-        config_file=Path(__file__).parent / "config" / "plots.toml"
-    )
+    config = load_plot_config(Path(__file__).parent / "config" / "plots.toml")
+    plots_config = config.plots
+    spacecrafts = config.spacecrafts
+    default_spacecraft = config.default_spacecraft
+
     button = checkbox_button_group(spacecrafts, default_spacecraft)
     plots = create_plots(plots_config, button, default_spacecraft)
     layout = column([button, *plots], sizing_mode="stretch_width")

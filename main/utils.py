@@ -2,29 +2,31 @@
 
 import tomllib
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
 
-from .config import PlotConfig, PlotsConfig
+from .config import PlotsConfig
 
 
-def load_plot_config(config_file: Path) -> tuple[list[PlotConfig], list[str], str]:
+def load_plot_config(source: Path | dict[str, Any]) -> PlotsConfig:  # type: ignore[explicit-any]
     """Load the config details for the plots page from the TOML file.
 
     Args:
-        config_file: The path to the config file for the plots.
+        source: The path or dictionary to load the config from.
 
     Returns:
-        A tuple containing the plot config, the list of spacecrafts and
-            the default spacecraft.
+        The validated config for the plots page.
     """
-    with open(config_file, "rb") as f:
-        raw_config = tomllib.load(f)
+    if isinstance(source, Path):
+        with open(source, "rb") as f:
+            raw_config = tomllib.load(f)
 
-    config = PlotsConfig.model_validate(raw_config)
+    else:
+        raw_config = source
 
-    return config.plots, config.spacecrafts, config.default_spacecraft
+    return PlotsConfig.model_validate(raw_config)
 
 
 def process_data_from_test_csvs(
