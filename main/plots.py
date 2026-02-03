@@ -20,9 +20,9 @@ def create_timeseries_plot(
     """Create a timeseries plot.
 
     Args:
-        plot_config: A dictionary containing the title, unit and measurements. The
-            measurements are represented as a dictionary containing their label and
-            colours to be used for the traces for each spacecraft.
+        plot_config: A Pydantic model containing fields for the title, unit and
+            measurements. The measurements are Pydantic models containing their label
+            and colours to be used for the traces for each spacecraft.
 
     Returns:
         Bokeh figure for the timeseries plot.
@@ -66,8 +66,8 @@ def create_plots(
     """Create five plots to display solar weather data.
 
     Args:
-        plots_config: A list of dictionaries containing the config arguments for each
-            plot, as defined in the config TOML file.
+        plots_config: A list of PlotConfig objects containing the config arguments for
+            each plot, as defined in the config TOML file.
         button: A checkbox button to select the spacecraft to display data for.
         default_spacecraft: The spacecraft data to display as default.
 

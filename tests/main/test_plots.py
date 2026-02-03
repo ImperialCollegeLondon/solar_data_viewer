@@ -5,19 +5,23 @@ from unittest.mock import patch
 from bokeh.models import AjaxDataSource, CrosshairTool, HoverTool
 from bokeh.plotting import figure
 
+from main.config import MeasurementConfig, PlotConfig
+
 
 def test_create_timeseries_plot():
     """Test the create_timeseries_plot function."""
     from main.plots import create_timeseries_plot
 
-    plot_config = {
-        "title": "Title",
-        "unit": "Unit",
-        "measurements": {
-            "speed": {"label": "Speed", "traces": {"A": "red", "B": "blue"}},
-            "density": {"label": "Density", "traces": {"A": "red", "B": "blue"}},
+    plot_config = PlotConfig(
+        title="Title",
+        unit="Unit",
+        measurements={
+            "speed": MeasurementConfig(label="Speed", traces={"A": "red", "B": "blue"}),
+            "density": MeasurementConfig(
+                label="Density", traces={"A": "red", "B": "blue"}
+            ),
         },
-    }
+    )
 
     plot = create_timeseries_plot(plot_config)
 
@@ -40,24 +44,28 @@ def test_create_plots():
     from main.widgets import checkbox_button_group
 
     plots_config = [
-        {
-            "title": "Title 1",
-            "unit": "Unit",
-            "measurements": {
-                "speed": {"label": "Speed", "traces": {"A": "red", "B": "blue"}},
-                "density": {"label": "Density", "traces": {"A": "red", "B": "blue"}},
+        PlotConfig(
+            title="Title 1",
+            unit="Unit",
+            measurements={
+                "speed": MeasurementConfig(
+                    label="Speed", traces={"A": "red", "B": "blue"}
+                ),
+                "density": MeasurementConfig(
+                    label="Density", traces={"A": "red", "B": "blue"}
+                ),
             },
-        },
-        {
-            "title": "Title 2",
-            "unit": "Unit",
-            "measurements": {
-                "temperature": {
-                    "label": "Temperature",
-                    "traces": {"A": "red", "B": "blue"},
-                },
+        ),
+        PlotConfig(
+            title="Title 2",
+            unit="Unit",
+            measurements={
+                "temperature": MeasurementConfig(
+                    label="Temperature",
+                    traces={"A": "red", "B": "blue"},
+                ),
             },
-        },
+        ),
     ]
     spacecrafts = ["A", "B"]
     default_spacecraft = "A"
