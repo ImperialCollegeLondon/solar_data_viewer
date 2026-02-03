@@ -75,17 +75,23 @@ def create_scatter_plot(
 
     plot.legend.click_policy = "hide"
 
-    if plot.legend:
-        legend = plot.legend[0]  # extract the first legend box from the list
-        plot.add_layout(legend, "right")
-        legend.click_policy = "hide"
-        # hide legend items for hidden spacecraft line
-        for item in legend.items:
-            if isinstance(item, LegendItem):
-                # A legend item can control multiple glyphs so we need to check
-                # the first renderer to see if the main line is visible.
-                if item.renderers and not item.renderers[0].visible:
-                    item.visible = False
+    if not plot.legend:
+        return plot
+
+    legend = plot.legend[0]  # extract the first legend box from the list
+    plot.add_layout(legend, "right")
+    legend.click_policy = "hide"
+
+    # Hide legend items for hidden spacecraft line
+    # A legend item can control multiple glyphs so we need to check
+    # the first renderer to see if the main line is visible.
+    for item in legend.items:
+        if (
+            isinstance(item, LegendItem)
+            and item.renderers
+            and not item.renderers[0].visible
+        ):
+            item.visible = False
     return plot
 
 
