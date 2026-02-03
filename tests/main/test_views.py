@@ -43,4 +43,4 @@ class TestDataView:
             endpoint = reverse("main:data", args=[measurement, spacecraft])
             response = client.get(endpoint)
             assert isinstance(response, JsonResponse)
-            process_data_mock.assert_called_with(spacecraft, measurement)
+            process_data_mock.assert_called_with(spacecraft, measurement, "3d")

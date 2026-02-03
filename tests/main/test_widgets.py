@@ -2,6 +2,7 @@
 
 from unittest.mock import Mock, patch
 
+from bokeh.models import Range1d
 from bokeh.models.widgets.groups import CheckboxButtonGroup
 
 
@@ -22,7 +23,11 @@ def test_add_callback_to_checkbox_button(process_data_mock: Mock):
         {"col_name": "density", "name": "Density"},
     )
     spacecrafts = {"A": "blue", "B": "red"}
-    plot = create_scatter_plot(traces, spacecrafts)
+    default_spacecraft = "Spacecraft A"
+
+    x_range = Range1d(start=0, end=1)
+
+    plot = create_scatter_plot(traces, spacecrafts, x_range, default_spacecraft)
     expected_code = """const selection = button.active;
 
         plot.renderers.forEach((renderer) => {
