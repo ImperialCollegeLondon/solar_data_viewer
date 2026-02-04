@@ -1,6 +1,7 @@
 """Plots for displaying science data."""
 
 import datetime
+from pathlib import Path
 
 from bokeh.layouts import column, row
 from bokeh.models import (  # type: ignore
@@ -15,6 +16,8 @@ from bokeh.models.layouts import Column
 from bokeh.models.widgets.groups import CheckboxButtonGroup
 from bokeh.plotting import figure
 
+from .config import PlotConfig
+from .utils import load_plot_config
 from .widgets import (
     add_callback_to_checkbox_button,
     add_time_range_callback,
@@ -23,25 +26,24 @@ from .widgets import (
 )
 
 
-def create_scatter_plot(
-    traces: tuple[dict[str, str], ...],
-    spacecrafts: dict[str, str],
+def create_timeseries_plot(
+    plot_config: PlotConfig,
     x_range: Range1d,
     time_range: str = "3d",
     default_spacecraft: str = "IMAP",
 ) -> figure:
-    """Create a timeseries scatter plot.
+    """Create a timeseries plot.
 
     Args:
-        traces: A tuple of dictionaries for each trace to add to the plot, with keys
-            for the col_name (in the dataframe), name (to use in legend) and colour.
-        spacecrafts: A dictionary mapping spacecraft to plot colours.
+        plot_config: A Pydantic model containing fields for the title, unit and
+            measurements. The measurements are Pydantic models containing their label
+            and colours to be used for the traces for each spacecraft.
         x_range: The shared x-axis range for the plots.
         time_range: The initial time range for the data to display (default is 3 days).
         default_spacecraft: The spacecraft data to display as default.
 
     Returns:
-        Bokeh figure for the scatter plot.
+        Bokeh figure for the timeseries plot.
     """
     plot = figure(  # type: ignore[call-arg]
         x_axis_type="datetime",
@@ -54,11 +56,11 @@ def create_scatter_plot(
     # are always fully rendered and not greyed out.
     plot.lod_threshold = None
 
-    for spacecraft in spacecrafts:
-        for trace in traces:
+    for measurement, args in plot_config.measurements.items():
+        for spacecraft, colour in args.traces.items():
             # Create an AjaxDataSource for each spacecraft and measurement
             source = AjaxDataSource(
-                data_url=f"/data/{trace['col_name']}/{spacecraft}?range={time_range}",
+                data_url=f"/data/{measurement}/{spacecraft}?range={time_range}",
                 polling_interval=300000,
                 method="GET",
             )
@@ -67,9 +69,9 @@ def create_scatter_plot(
                 "date",
                 "measurement",
                 name=spacecraft,  # Enables selecting data in callback
-                color=spacecrafts[spacecraft],
+                color=colour,
                 source=source,
-                legend_label=f"{spacecraft}: {trace['name']}",
+                legend_label=f"{spacecraft}: {args.label}",
                 visible=spacecraft == default_spacecraft,
             )
 
@@ -96,57 +98,23 @@ def create_scatter_plot(
 
 
 def create_plots(
+    plots_config: list[PlotConfig],
     button: CheckboxButtonGroup,
-    spacecrafts: dict[str, str],
     default_spacecraft: str = "IMAP",
     initial_time_range: str = "3d",
 ) -> list[figure]:
     """Create five plots to display solar weather data.
 
     Args:
+        plots_config: A list of PlotConfig objects containing the config arguments for
+            each plot, as defined in the config TOML file.
         button: A checkbox button to select the spacecraft to display data for.
-        spacecrafts: A dictionary mapping spacecraft to plot colours.
         default_spacecraft: The spacecraft data to display as default.
         initial_time_range: The initial time range for the data to display.
 
     Returns:
         A list containing the five Bokeh plots for each measurement.
     """
-    plot_args = (
-        (
-            {"col_name": "bt", "name": "Bt", "unit": "nT"},
-            {"col_name": "bz_gsm", "name": "Bz GSM", "unit": "nT"},
-        ),
-        (
-            {
-                "col_name": "lon_gsm",
-                "name": "Phi GSM",
-                "unit": "deg",
-            },
-        ),
-        (
-            {
-                "col_name": "density",
-                "name": "Density",
-                "unit": "1/cm³",
-            },
-        ),
-        (
-            {
-                "col_name": "speed",
-                "name": "Speed",
-                "unit": "km/s",
-            },
-        ),
-        (
-            {
-                "col_name": "temperature",
-                "name": "Temperature",
-                "unit": "K",
-            },
-        ),
-    )
-
     # Create tooltips and crosshair tool to use across all plots
     hover = HoverTool(
         tooltips=[("Time", "$x{%Y-%m-%d %H:%M:%S}"), ("Value", "$y{0.00}")],
@@ -163,16 +131,13 @@ def create_plots(
     shared_x_range = Range1d(start=start_time, end=end_time)
 
     plots = []
-    for traces in plot_args:
-        plot = create_scatter_plot(
-            traces, spacecrafts, shared_x_range, initial_time_range, default_spacecraft
+    for plot_config in plots_config:
+        plot = create_timeseries_plot(
+            plot_config, shared_x_range, initial_time_range, default_spacecraft
         )
-        plot.add_tools(hover)
-        plot.add_tools(crosshair)
-        # Display data for one spacecraft as default
-        plot.select(name=default_spacecraft).visible = True  # type: ignore[attr-defined]
+        plot.add_tools(hover, crosshair)
         add_callback_to_checkbox_button(plot=plot, button=button)
-        plot.yaxis.axis_label = f"{traces[0]['name']} ({traces[0]['unit']})"
+        plot.yaxis.axis_label = f"{plot_config.title} ({plot_config.unit})"
         plots.append(plot)
 
     return plots
@@ -184,14 +149,14 @@ def create_layout() -> Column:
     Returns:
         A Column object containing the five Bokeh plots and widgets.
     """
-    spacecrafts = {
-        "IMAP": "red",
-        "SO": "blue",
-    }
-    default_spacecraft = "IMAP"
-    button = checkbox_button_group([craft for craft in spacecrafts], default_spacecraft)
+    config = load_plot_config(Path(__file__).parent / "config" / "plots.toml")
+    plots_config = config.plots
+    spacecrafts = config.spacecrafts
+    default_spacecraft = config.default_spacecraft
+
+    button = checkbox_button_group(spacecrafts, default_spacecraft)
     time_dropdown = create_time_range_dropdown()
-    plots = create_plots(button, spacecrafts, default_spacecraft, time_dropdown.value)
+    plots = create_plots(plots_config, button, default_spacecraft, time_dropdown.value)
     add_time_range_callback(time_dropdown, plots)
 
     widgets = row(button, time_dropdown, sizing_mode="stretch_width")

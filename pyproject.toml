@@ -10,7 +10,13 @@ license = "BSD-3-Clause"
 license-files = ["LICENSE"]
 requires-python = ">=3.13"
 
-dependencies = ["bokeh>=3.8.2", "django>=6.0", "gunicorn>=24.1.1", "whitenoise>=6.11.0"]
+dependencies = [
+    "bokeh>=3.8.2",
+    "django>=6.0",
+    "gunicorn>=24.1.1",
+    "pydantic>=2.12.5",
+    "whitenoise>=6.11.0",
+]
 
 [dependency-groups]
 dev = [
@@ -36,7 +42,7 @@ doc = [
 ]
 
 [tool.mypy]
-plugins = ["mypy_django_plugin.main"]
+plugins = ["mypy_django_plugin.main", "pydantic.mypy"]
 disallow_any_explicit = true
 disallow_any_generics = true
 warn_unreachable = true

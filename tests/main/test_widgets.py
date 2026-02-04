@@ -5,11 +5,13 @@ from unittest.mock import Mock, patch
 from bokeh.models import Range1d
 from bokeh.models.widgets.groups import CheckboxButtonGroup
 
+from main.config import MeasurementConfig, PlotConfig
+
 
 @patch("main.utils.process_data_from_test_csvs")
 def test_add_callback_to_checkbox_button(process_data_mock: Mock):
     """Test the add_callback_to_checkbox_button function."""
-    from main.plots import create_scatter_plot
+    from main.plots import create_timeseries_plot
     from main.widgets import add_callback_to_checkbox_button, checkbox_button_group
 
     process_data_mock.return_value = {
@@ -18,16 +20,22 @@ def test_add_callback_to_checkbox_button(process_data_mock: Mock):
     }
 
     button = checkbox_button_group(labels=["A", "B"], default_spacecraft="A")
-    traces = (
-        {"col_name": "speed", "name": "Speed"},
-        {"col_name": "density", "name": "Density"},
+    plot_config = PlotConfig(
+        title="Title",
+        unit="Unit",
+        measurements={
+            "speed": MeasurementConfig(label="Speed", traces={"A": "red", "B": "blue"}),
+            "density": MeasurementConfig(
+                label="Density", traces={"A": "red", "B": "blue"}
+            ),
+        },
     )
-    spacecrafts = {"A": "blue", "B": "red"}
-    default_spacecraft = "Spacecraft A"
+
+    default_spacecraft = "A"
 
     x_range = Range1d(start=0, end=1)
 
-    plot = create_scatter_plot(traces, spacecrafts, x_range, default_spacecraft)
+    plot = create_timeseries_plot(plot_config, x_range, default_spacecraft)
 
     with patch.object(CheckboxButtonGroup, "js_on_event") as js_mock:
         add_callback_to_checkbox_button(plot, button)

@@ -43,7 +43,7 @@ def add_callback_to_checkbox_button(
     """Enables the data in the plot to be updated depending on the checkbox button.
 
     Args:
-        plot: A Bokeh figure for a scatter plot.
+        plot: A Bokeh figure for a timeseries plot.
         button: A checkbox button group to select the spacecraft to display data for.
     """
     legend = plot.legend[0] if isinstance(plot.legend, list) else plot.legend

@@ -5,27 +5,34 @@ from unittest.mock import patch
 from bokeh.models import AjaxDataSource, CrosshairTool, HoverTool
 from bokeh.plotting import figure
 
+from main.config import MeasurementConfig, PlotConfig
 
-def test_create_scatter_plot():
-    """Test the create_scatter_plot function."""
-    from main.plots import create_scatter_plot
 
-    traces = (
-        {"col_name": "speed", "name": "Speed"},
-        {"col_name": "density", "name": "Density"},
+def test_create_timeseries_plot():
+    """Test the create_timeseries_plot function."""
+    from main.plots import create_timeseries_plot
+
+    plot_config = PlotConfig(
+        title="Title",
+        unit="Unit",
+        measurements={
+            "speed": MeasurementConfig(label="Speed", traces={"A": "red", "B": "blue"}),
+            "density": MeasurementConfig(
+                label="Density", traces={"A": "red", "B": "blue"}
+            ),
+        },
     )
-    spacecrafts = {"A": "red", "B": "blue"}
 
     x_range = figure(x_axis_type="datetime").x_range
 
-    plot = create_scatter_plot(traces, spacecrafts, x_range, time_range="7d")
+    plot = create_timeseries_plot(plot_config, x_range, time_range="7d")
 
     assert isinstance(plot, figure)
 
     # Check legend items added
     legend_items = [item.label.value for item in plot.legend.items]
     expected_legend = [
-        f"{craft}: {trace['name']}" for craft in spacecrafts for trace in traces
+        f"{craft}: {label}" for craft in ["A", "B"] for label in ["Speed", "Density"]
     ]
     assert all(legend in legend_items for legend in expected_legend)
 
@@ -43,9 +50,34 @@ def test_create_plots():
     from main.plots import create_plots
     from main.widgets import checkbox_button_group
 
-    spacecrafts = {"Spacecraft A": "red", "Spacecraft B": "blue"}
+    plots_config = [
+        PlotConfig(
+            title="Title 1",
+            unit="Unit",
+            measurements={
+                "speed": MeasurementConfig(
+                    label="Speed", traces={"A": "red", "B": "blue"}
+                ),
+                "density": MeasurementConfig(
+                    label="Density", traces={"A": "red", "B": "blue"}
+                ),
+            },
+        ),
+        PlotConfig(
+            title="Title 2",
+            unit="Unit",
+            measurements={
+                "temperature": MeasurementConfig(
+                    label="Temperature",
+                    traces={"A": "red", "B": "blue"},
+                ),
+            },
+        ),
+    ]
+    spacecrafts = ["A", "B"]
+    default_spacecraft = "A"
 
-    button = checkbox_button_group(["Spacecraft A", "Spacecraft B"], "Spacecraft A")
+    button = checkbox_button_group(spacecrafts, default_spacecraft)
     source = AjaxDataSource(
         data={
             "measurement": [3.0, 4.0, 5.0],
@@ -59,8 +91,8 @@ def test_create_plots():
         with patch("main.plots.AjaxDataSource") as data_source_mock:
             data_source_mock.return_value = source
 
-            plots = create_plots(button, spacecrafts)
-            assert len(plots) == 5
+            plots = create_plots(plots_config, button, default_spacecraft)
+            assert len(plots) == 2
             assert all(isinstance(plot, figure) for plot in plots)
 
             # Check tools have been added
@@ -69,4 +101,4 @@ def test_create_plots():
             assert any(isinstance(tool, CrosshairTool) for tool in tools)
 
             # Check callback added to buttons
-            data_source_mock.call_count == 12
+            data_source_mock.call_count == 6
