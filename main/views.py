@@ -26,6 +26,12 @@ class IndexView(TemplateView):
         return context
 
 
+class SolarOrbiterView(TemplateView):
+    """View to display the Solar Orbiter data."""
+
+    template_name = "main/solar_orbiter.html"
+
+
 class DataView(View):
     """View for returning measurement data to the AjaxDataSource."""
 
