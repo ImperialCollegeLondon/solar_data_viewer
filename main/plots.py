@@ -1,17 +1,19 @@
 """Plots for displaying science data."""
 
 import datetime
+import math
 from pathlib import Path
 
 from bokeh.layouts import column, row
-from bokeh.models import (  # type: ignore
+from bokeh.models import (  # type: ignore  # type: ignore
     AjaxDataSource,
     CrosshairTool,
     HoverTool,
+    Label,
     LegendItem,
     Range1d,
+    Span,
 )
-from bokeh.models.annotations.geometry import Span
 from bokeh.models.layouts import Column
 from bokeh.models.widgets.groups import CheckboxButtonGroup
 from bokeh.plotting import figure
@@ -75,6 +77,36 @@ def create_timeseries_plot(
                 visible=spacecraft == default_spacecraft,
             )
 
+    current_time = datetime.datetime.now()
+    now_ts = (
+        current_time.timestamp() * 1000
+    )  # convert to milliseconds for JS compatibility
+
+    # Vertical line for current time
+    now_line = Span(
+        location=current_time,
+        dimension="height",
+        line_color="gray",
+        line_dash="dashed",
+        line_width=1,
+    )
+    plot.add_layout(now_line)
+
+    # Add 'Now' label next to the vertical line
+    now_label = Label(
+        x=now_ts,
+        y=220,
+        y_units="screen",  # use screen pixels, not data coordinates
+        text="Now",
+        text_font_size="9pt",
+        angle=math.pi / 2,  # rotate text
+        text_align="left",
+        text_baseline="middle",
+        x_offset=7,  # small gap from the line
+        name="now_label",
+    )
+    plot.add_layout(now_label)
+
     plot.legend.click_policy = "hide"
 
     if not plot.legend:
@@ -125,8 +157,10 @@ def create_plots(
 
     # Calculate start and end times
     delta = datetime.timedelta(days=3)
-    end_time = datetime.datetime.now()
-    start_time = end_time - delta
+    future_buffer = datetime.timedelta(days=1)
+    current_time = datetime.datetime.now()
+    end_time = current_time + future_buffer
+    start_time = current_time - delta
 
     shared_x_range = Range1d(start=start_time, end=end_time)
 

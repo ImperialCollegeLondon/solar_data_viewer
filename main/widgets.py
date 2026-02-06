@@ -104,15 +104,27 @@ def add_time_range_callback(dropdown: Select, plots: list[figure]) -> None:
         code="""
         const range_selection = dropdown.value;
         const now = Date.now();
+        const future_buffer = 24 * 60 * 60 * 1000;
 
         // x-axis range
         const duration = range_map[range_selection] || range_map["3d"];
 
         // shared x-axis
-        x_range.end = now;
+        x_range.end = now + future_buffer;
         x_range.start = now - duration;
 
         for (const plot of plots) {
+
+            // Update Line
+            const lines = plot.select({name: "now_line"});
+            if (lines.length > 0) lines[0].location = now;
+
+            // Update Now Label
+            const labels = plot.select({name: "now_label"});
+            if (labels.length > 0) {
+                labels[0].x = now;
+            }
+
             for (const renderer of plot.renderers) {
 
                 // Only update renderers that have an AjaxDataSource
