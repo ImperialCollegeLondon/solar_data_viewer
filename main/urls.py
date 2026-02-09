@@ -12,4 +12,9 @@ urlpatterns = [
     path(
         "data/<str:measurement>/<str:spacecraft>", views.DataView.as_view(), name="data"
     ),
+    path(
+        "trajectory_data/<str:unit>/<str:datatype>",
+        views.TrajectoryDataView.as_view(),
+        name="trajectory_data",
+    ),
 ]
