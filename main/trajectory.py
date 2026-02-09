@@ -1,14 +1,10 @@
 """Plots for displaying trajectory data."""
 
 from datetime import datetime
-from typing import Any, Literal
+from typing import Any
 
 import numpy as np
 from astropy.coordinates import SkyCoord
-from bokeh.layouts import row
-from bokeh.models import AjaxDataSource, HoverTool
-from bokeh.models.layouts import Row
-from bokeh.plotting import figure
 from sunpy.coordinates import get_body_heliographic_stonyhurst, get_horizons_coord
 from sunpy.coordinates.frames import HeliographicStonyhurst
 
@@ -151,88 +147,3 @@ def trajectory_solar_orbiter_data(
         ]
 
     return {"x": [coord[0] for coord in coords], "y": [coord[1] for coord in coords]}
-
-
-def solar_orbiter_plot(
-    title: str,
-    x_axis_label: str,
-    y_axis_label: str,
-    unit: Literal["AU", "angle"],
-    radii: list[float],
-) -> figure:
-    """Create the Solar Orbiter plot using the fixed Earth frame.
-
-    Returns:
-        A Bokeh figure containing the trajectory of Solar Orbiter in the fixed
-            Earth frame.
-    """
-    plot = figure(  # type: ignore[call-arg]
-        title=title,
-        width=600,
-        height=600,
-        match_aspect=True,
-        x_axis_label=x_axis_label,
-        y_axis_label=y_axis_label,
-    )
-
-    # Create an AjaxDataSource for the spacecraft static position
-    static_source = AjaxDataSource(
-        data_url=f"/trajectory_data/{unit}/static",
-        polling_interval=None,
-        method="GET",
-    )
-    objects = plot.scatter(
-        "x", "y", color="colour", legend_field="name", size=15, source=static_source
-    )
-
-    # Create an AjaxDataSource for the trajectory data
-    trajectory_source = AjaxDataSource(
-        data_url=f"/trajectory_data/{unit}/trajectory",
-        polling_interval=None,
-        method="GET",
-    )
-    plot.line(
-        "x", "y", color="blue", source=trajectory_source, legend_label="Next 7 days"
-    )
-
-    for r in radii:
-        plot.circle(
-            x=0,
-            y=0,
-            radius=r,
-            fill_alpha=0,
-            line_color="gray",
-            line_dash="dotted",
-            line_width=1,
-        )
-    hover = HoverTool(tooltips=[("ID", "@name")], renderers=[objects])
-    plot.add_tools(hover)
-
-    return plot
-
-
-def create_solar_orbiter_layout() -> Row:
-    """Create a layout object for the Solar Orbiter trajectory plots.
-
-    Returns:
-        A Row object containing the two Bokeh plots.
-    """
-    layout = row(
-        [
-            solar_orbiter_plot(
-                title="Fixed Earth frame",
-                x_axis_label="AU",
-                y_axis_label="AU",
-                unit="AU",
-                radii=[0.5, 0.75, 1.0],
-            ),
-            solar_orbiter_plot(
-                title="Earth-Sun-spacecraft angle",
-                x_axis_label="Longitude separation (deg)",
-                y_axis_label="Latitude separation (deg)",
-                unit="angle",
-                radii=[10, 20],
-            ),
-        ]
-    )
-    return layout
