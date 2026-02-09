@@ -32,6 +32,35 @@ class IndexView(TemplateView):
         return context
 
 
+class DataView(View):
+    """View for returning measurement data to the AjaxDataSource."""
+
+    def get(  # type: ignore
+        self,
+        request: HttpRequest,
+        measurement: str,
+        spacecraft: str,
+        *args: Any,
+        **kwargs: Any,
+    ) -> JsonResponse:
+        """Method to handle GET requests for spacecraft data.
+
+        Args:
+            request: The incoming HTTP request.
+            measurement: Name of the measurement to get data for.
+            spacecraft: Name of the spacecraft to retrieve data for.
+            *args: Additional positional arguments.
+            **kwargs: Additional key word arguments.
+
+        Returns:
+            A JSON response containing the dates and values for the specific
+                spacecraft and measurement type.
+        """
+        range_param = request.GET.get("range", "3d")
+        data = process_data_from_test_csvs(spacecraft, measurement, range_param)
+        return JsonResponse(data)
+
+
 class SolarOrbiterView(TemplateView):
     """View to display the Solar Orbiter data."""
 
@@ -79,32 +108,3 @@ class TrajectoryDataView(View):
             return JsonResponse(static_solar_orbiter_data(time, unit))
 
         return JsonResponse(trajectory_solar_orbiter_data(times, unit))
-
-
-class DataView(View):
-    """View for returning measurement data to the AjaxDataSource."""
-
-    def get(  # type: ignore
-        self,
-        request: HttpRequest,
-        measurement: str,
-        spacecraft: str,
-        *args: Any,
-        **kwargs: Any,
-    ) -> JsonResponse:
-        """Method to handle GET requests for spacecraft data.
-
-        Args:
-            request: The incoming HTTP request.
-            measurement: Name of the measurement to get data for.
-            spacecraft: Name of the spacecraft to retrieve data for.
-            *args: Additional positional arguments.
-            **kwargs: Additional key word arguments.
-
-        Returns:
-            A JSON response containing the dates and values for the specific
-                spacecraft and measurement type.
-        """
-        range_param = request.GET.get("range", "3d")
-        data = process_data_from_test_csvs(spacecraft, measurement, range_param)
-        return JsonResponse(data)
