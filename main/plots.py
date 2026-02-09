@@ -5,7 +5,7 @@ import math
 from pathlib import Path
 
 from bokeh.layouts import column, row
-from bokeh.models import (  # type: ignore  # type: ignore
+from bokeh.models import (  # type: ignore
     AjaxDataSource,
     CrosshairTool,
     HoverTool,
