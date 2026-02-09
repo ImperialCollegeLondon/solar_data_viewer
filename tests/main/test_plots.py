@@ -45,9 +45,9 @@ def test_create_timeseries_plot():
     assert "range=7d" in first_source.data_url
 
 
-def test_create_plots():
-    """Test the create_plots function."""
-    from main.plots import create_plots
+def test_create_timeseries_plots():
+    """Test the create_timeseries_plots function."""
+    from main.plots import create_timeseries_plots
     from main.widgets import checkbox_button_group
 
     plots_config = [
@@ -91,7 +91,7 @@ def test_create_plots():
         with patch("main.plots.AjaxDataSource") as data_source_mock:
             data_source_mock.return_value = source
 
-            plots = create_plots(plots_config, button, default_spacecraft)
+            plots = create_timeseries_plots(plots_config, button, default_spacecraft)
             assert len(plots) == 2
             assert all(isinstance(plot, figure) for plot in plots)
 

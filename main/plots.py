@@ -2,6 +2,7 @@
 
 import datetime
 from pathlib import Path
+from typing import Literal
 
 from bokeh.layouts import column, row
 from bokeh.models import (  # type: ignore
@@ -12,7 +13,7 @@ from bokeh.models import (  # type: ignore
     Range1d,
 )
 from bokeh.models.annotations.geometry import Span
-from bokeh.models.layouts import Column
+from bokeh.models.layouts import Column, Row
 from bokeh.models.widgets.groups import CheckboxButtonGroup
 from bokeh.plotting import figure
 
@@ -97,7 +98,7 @@ def create_timeseries_plot(
     return plot
 
 
-def create_plots(
+def create_timeseries_plots(
     plots_config: list[PlotConfig],
     button: CheckboxButtonGroup,
     default_spacecraft: str = "IMAP",
@@ -143,7 +144,7 @@ def create_plots(
     return plots
 
 
-def create_layout() -> Column:
+def create_timeseries_layout() -> Column:
     """Creates a layout object for the spacecraft data plots and widgets.
 
     Returns:
@@ -156,10 +157,105 @@ def create_layout() -> Column:
 
     button = checkbox_button_group(spacecrafts, default_spacecraft)
     time_dropdown = create_time_range_dropdown()
-    plots = create_plots(plots_config, button, default_spacecraft, time_dropdown.value)
+    plots = create_timeseries_plots(
+        plots_config, button, default_spacecraft, time_dropdown.value
+    )
     add_time_range_callback(time_dropdown, plots)
 
     widgets = row(button, time_dropdown, sizing_mode="stretch_width")
     layout = column([widgets, *plots], sizing_mode="stretch_width")
 
+    return layout
+
+
+def create_solar_orbiter_plot(
+    title: str,
+    x_axis_label: str,
+    y_axis_label: str,
+    unit: Literal["AU", "angle"],
+    radii: list[float],
+) -> figure:
+    """Create a plot for the Solar Orbiter trajectory.
+
+    Args:
+        title: The plot title.
+        x_axis_label: Label to display on the x-axis.
+        y_axis_label: Label to display on the y-axis.
+        unit: Whether to plot in AU (the fixed Earth frame) or angle (the Earth-Sun-
+            spacecraft angle).
+        radii: A list of radii for plotting dashed circles.
+
+    Returns:
+        A Bokeh figure containing the trajectory of Solar Orbiter in the fixed
+            Earth frame.
+    """
+    plot = figure(  # type: ignore[call-arg]
+        title=title,
+        width=600,
+        height=600,
+        match_aspect=True,
+        x_axis_label=x_axis_label,
+        y_axis_label=y_axis_label,
+    )
+
+    # Create an AjaxDataSource for the spacecraft static position
+    static_source = AjaxDataSource(
+        data_url=f"/trajectory_data/{unit}/static",
+        polling_interval=None,
+        method="GET",
+    )
+    objects = plot.scatter(
+        "x", "y", color="colour", legend_field="name", size=15, source=static_source
+    )
+
+    # Create an AjaxDataSource for the trajectory data
+    trajectory_source = AjaxDataSource(
+        data_url=f"/trajectory_data/{unit}/trajectory",
+        polling_interval=None,
+        method="GET",
+    )
+    plot.line(
+        "x", "y", color="blue", source=trajectory_source, legend_label="Next 7 days"
+    )
+
+    for r in radii:
+        plot.circle(
+            x=0,
+            y=0,
+            radius=r,
+            fill_alpha=0,
+            line_color="gray",
+            line_dash="dotted",
+            line_width=1,
+        )
+    hover = HoverTool(tooltips=[("ID", "@name")], renderers=[objects])
+    plot.add_tools(hover)
+
+    return plot
+
+
+def create_solar_orbiter_layout() -> Row:
+    """Create a layout object for the Solar Orbiter trajectory plots.
+
+    Returns:
+        A Row object containing the two Bokeh plots.
+    """
+    layout = row(
+        [
+            create_solar_orbiter_plot(
+                title="Fixed Earth frame",
+                x_axis_label="AU",
+                y_axis_label="AU",
+                unit="AU",
+                radii=[0.5, 0.75, 1.0],
+            ),
+            create_solar_orbiter_plot(
+                title="Earth-Sun-spacecraft angle",
+                x_axis_label="Longitude separation (deg)",
+                y_axis_label="Latitude separation (deg)",
+                unit="angle",
+                radii=[10, 20],
+            ),
+        ]
+    )
     return layout

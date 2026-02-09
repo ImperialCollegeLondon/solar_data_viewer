@@ -8,7 +8,7 @@ from bokeh.embed import components
 from django.http import HttpRequest, JsonResponse
 from django.views.generic import TemplateView, View
 
-from .plots import create_layout
+from .plots import create_timeseries_layout
 from .trajectory import (
     create_solar_orbiter_layout,
     static_solar_orbiter_data,
@@ -25,7 +25,7 @@ class IndexView(TemplateView):
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:  # type: ignore
         """Add HTML components and Bokeh version to the context."""
         context = super().get_context_data(**kwargs)
-        layout = create_layout()
+        layout = create_timeseries_layout()
         script, div = components(layout)
         context.update({"script": script, "div": div})
         context["bokeh_version"] = bokeh.__version__
