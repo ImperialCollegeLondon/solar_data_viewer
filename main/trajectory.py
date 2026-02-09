@@ -1,7 +1,6 @@
 """Plots for displaying trajectory data."""
 
 from datetime import datetime
-from typing import Any
 
 import numpy as np
 from astropy.coordinates import SkyCoord
@@ -79,7 +78,9 @@ def get_JPL_spacecraft_coordinates(
         return get_horizons_coord(spacecraft, time)
 
 
-def static_solar_orbiter_data(time: datetime, unit: str) -> dict[str, Any]:  # type: ignore[explicit-any]
+def static_solar_orbiter_data(
+    time: datetime, unit: str
+) -> dict[str, list[str | float]]:
     """Get the data for the static Solar Orbiter glyphs.
 
     Args:

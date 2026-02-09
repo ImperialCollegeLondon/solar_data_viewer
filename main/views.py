@@ -8,9 +8,8 @@ from bokeh.embed import components
 from django.http import HttpRequest, JsonResponse
 from django.views.generic import TemplateView, View
 
-from .plots import create_timeseries_layout
+from .plots import create_solar_orbiter_layout, create_timeseries_layout
 from .trajectory import (
-    create_solar_orbiter_layout,
     static_solar_orbiter_data,
     trajectory_solar_orbiter_data,
 )
