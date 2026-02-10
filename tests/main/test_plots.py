@@ -4,7 +4,7 @@ import math
 from datetime import datetime
 from unittest.mock import patch
 
-from bokeh.models import (
+from bokeh.models import (  # type: ignore
     AjaxDataSource,
     CrosshairTool,
     HoverTool,
