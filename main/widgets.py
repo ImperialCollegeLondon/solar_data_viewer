@@ -121,9 +121,7 @@ def add_time_range_callback(dropdown: Select, plots: list[figure]) -> None:
 
             // Update Now Label
             const labels = plot.select({name: "now_label"});
-            if (labels.length > 0) {
-                labels[0].x = now;
-            }
+            if (labels.length > 0) labels[0].x = now;
 
             for (const renderer of plot.renderers) {
 

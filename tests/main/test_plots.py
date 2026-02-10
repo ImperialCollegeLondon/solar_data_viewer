@@ -1,8 +1,17 @@
 """Test suite for the plots."""
 
+import math
+from datetime import datetime
 from unittest.mock import patch
 
-from bokeh.models import AjaxDataSource, CrosshairTool, HoverTool
+from bokeh.models import (
+    AjaxDataSource,
+    CrosshairTool,
+    HoverTool,
+    Legend,
+    LegendItem,
+    Span,
+)
 from bokeh.plotting import figure
 
 from main.config import MeasurementConfig, PlotConfig
@@ -102,3 +111,50 @@ def test_create_plots():
 
             # Check callback added to buttons
             data_source_mock.call_count == 6
+
+
+def test_get_now_vertical_line():
+    """Test the get_now_vertical_line function."""
+    from main.plots import get_now_vertical_line
+
+    now = datetime.now().timestamp() * 1000
+    line = get_now_vertical_line(now)
+
+    assert isinstance(line, Span)
+    assert line.location == now
+    assert line.line_dash == [6]  # Bokeh maps 'dashed' to [6]
+    assert line.line_color == "gray"
+
+
+def test_get_now_label():
+    """Test the get_now_label function."""
+    from main.plots import get_now_label
+
+    ts = 1739
+    label = get_now_label(ts)
+
+    assert label.x == ts
+    assert label.text == "Now"
+    assert label.angle == math.pi / 2
+    assert label.y_units == "screen"
+    assert label.name == "now_label"
+
+
+def test_update_legend_hides_invisible_renderers():
+    """Test that the update_legend_on_spacecraft_selection function hides legend items
+    for invisible renderers.
+    """  # noqa: D205
+    from main.plots import update_legend_on_spacecraft_selection
+
+    p = figure()
+    # Create a renderer and set it to invisible
+    r = p.line([0, 1], [0, 1], visible=False)
+
+    # Build a legend structure
+    item = LegendItem(label="Test", renderers=[r])
+    legend = Legend(items=[item])
+    p.add_layout(legend)
+
+    update_legend_on_spacecraft_selection(p)
+
+    assert item.visible is False

@@ -28,6 +28,75 @@ from .widgets import (
 )
 
 
+def get_now_vertical_line(current_time: datetime.date) -> Span:
+    """Create a vertical line to indicate the current time on the plots.
+
+    Args:
+        current_time: The current timestamp to position the vertical line.
+
+    Returns:
+        A Span object representing the vertical line for the current time.
+    """
+    now_line = Span(
+        location=current_time,
+        dimension="height",
+        line_color="gray",
+        line_dash="dashed",
+        line_width=1,
+    )
+    return now_line
+
+
+def get_now_label(now_ts: float) -> Label:
+    """Create a label to indicate the current time on the plots.
+
+    Args:
+        now_ts: The current timestamp to position the label.
+
+    Returns:
+        A Label object representing the label for the current time.
+    """
+    now_label = Label(
+        x=now_ts,
+        y=220,
+        y_units="screen",  # use screen pixels
+        text="Now",
+        text_font_size="9pt",
+        angle=math.pi / 2,  # rotate text
+        text_align="left",
+        text_baseline="middle",
+        x_offset=7,  # small gap from the line
+        name="now_label",
+    )
+    return now_label
+
+
+def update_legend_on_spacecraft_selection(plot: figure) -> figure:
+    """Update the legend to hide hidden spacecraft lines.
+
+    Args:
+        plot: A Bokeh figure for a timeseries plot.
+    """
+    if not plot.legend:
+        return plot
+
+    legend = plot.legend[0]  # extract the first legend box from the list
+    plot.add_layout(legend, "right")
+    legend.click_policy = "hide"
+
+    # Hide legend items for hidden spacecraft line
+    # A legend item can control multiple glyphs so we need to check
+    # the first renderer to see if the main line is visible.
+    for item in legend.items:
+        if (
+            isinstance(item, LegendItem)
+            and item.renderers
+            and not item.renderers[0].visible
+        ):
+            item.visible = False
+    return plot
+
+
 def create_timeseries_plot(
     plot_config: PlotConfig,
     x_range: Range1d,
@@ -76,56 +145,15 @@ def create_timeseries_plot(
                 legend_label=f"{spacecraft}: {args.label}",
                 visible=spacecraft == default_spacecraft,
             )
-
     current_time = datetime.datetime.now()
-    now_ts = (
-        current_time.timestamp() * 1000
-    )  # convert to milliseconds for JS compatibility
-
-    # Vertical line for current time
-    now_line = Span(
-        location=current_time,
-        dimension="height",
-        line_color="gray",
-        line_dash="dashed",
-        line_width=1,
-    )
-    plot.add_layout(now_line)
-
+    now_ts = current_time.timestamp() * 1000  # Convert to milliseconds
+    # Add vertical line for current time
+    plot.add_layout(get_now_vertical_line(current_time))
     # Add 'Now' label next to the vertical line
-    now_label = Label(
-        x=now_ts,
-        y=220,
-        y_units="screen",  # use screen pixels, not data coordinates
-        text="Now",
-        text_font_size="9pt",
-        angle=math.pi / 2,  # rotate text
-        text_align="left",
-        text_baseline="middle",
-        x_offset=7,  # small gap from the line
-        name="now_label",
-    )
-    plot.add_layout(now_label)
+    plot.add_layout(get_now_label(now_ts))
+    # Update legend to show/hide selected spacecraft data
+    update_legend_on_spacecraft_selection(plot)
 
-    plot.legend.click_policy = "hide"
-
-    if not plot.legend:
-        return plot
-
-    legend = plot.legend[0]  # extract the first legend box from the list
-    plot.add_layout(legend, "right")
-    legend.click_policy = "hide"
-
-    # Hide legend items for hidden spacecraft line
-    # A legend item can control multiple glyphs so we need to check
-    # the first renderer to see if the main line is visible.
-    for item in legend.items:
-        if (
-            isinstance(item, LegendItem)
-            and item.renderers
-            and not item.renderers[0].visible
-        ):
-            item.visible = False
     return plot
 
 
