@@ -201,7 +201,7 @@ def create_solar_orbiter_plot(
     # Create an AjaxDataSource for the spacecraft static position
     static_source = AjaxDataSource(
         data_url=f"/trajectory_data/{unit}/static",
-        polling_interval=None,
+        polling_interval=30000,
         method="GET",
     )
     objects = plot.scatter(
@@ -211,7 +211,7 @@ def create_solar_orbiter_plot(
     # Create an AjaxDataSource for the trajectory data
     trajectory_source = AjaxDataSource(
         data_url=f"/trajectory_data/{unit}/trajectory",
-        polling_interval=None,
+        polling_interval=30000,
         method="GET",
     )
     plot.line(
