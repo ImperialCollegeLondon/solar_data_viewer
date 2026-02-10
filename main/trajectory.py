@@ -1,6 +1,7 @@
 """Plots for displaying trajectory data."""
 
 from datetime import datetime
+from typing import Literal
 
 import numpy as np
 from astropy.coordinates import SkyCoord
@@ -79,13 +80,14 @@ def get_JPL_spacecraft_coordinates(
 
 
 def static_solar_orbiter_data(
-    time: datetime, unit: str
+    time: datetime,
+    unit: Literal["AU", "angle"],
 ) -> dict[str, list[str | float]]:
     """Get the data for the static Solar Orbiter glyphs.
 
     Args:
         time: A datetime to retrieve coordinates for.
-        unit: The units on the plot, either AU (astronomical units) or angles
+        unit: The units on the plot, either AU (astronomical units) or angle
             (Earth separation angles).
 
     Returns:
@@ -121,13 +123,14 @@ def static_solar_orbiter_data(
 
 
 def trajectory_solar_orbiter_data(
-    times: list[datetime], unit: str
+    times: list[datetime],
+    unit: Literal["AU", "angle"],
 ) -> dict[str, list[float]]:
     """Get the data for the trajectory Solar Orbiter glyphs.
 
     Args:
         times: A list of datetimes to retrieve coordinates for.
-        unit: The units on the plot, either AU (astronomical units) or angles
+        unit: The units on the plot, either AU (astronomical units) or angle
             (Earth separation angles).
 
     Returns:

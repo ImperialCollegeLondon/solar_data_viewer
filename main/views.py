@@ -90,7 +90,7 @@ class TrajectoryDataView(View):
 
         Args:
             request: The incoming HTTP request.
-            unit: The units on the plot, either AU (astronomical units) or angles
+            unit: The units on the plot, either AU (astronomical units) or angle
                 (Earth separation angles).
             datatype: Whether to retrieve static or trajectory data.
             *args: Additional positional arguments.
