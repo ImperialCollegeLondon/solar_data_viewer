@@ -28,7 +28,7 @@ from .widgets import (
 )
 
 
-def get_now_vertical_line(current_time: datetime.date) -> Span:
+def get_now_vertical_line(current_time: datetime.datetime) -> Span:
     """Create a vertical line to indicate the current time on the plots.
 
     Args:
@@ -47,17 +47,17 @@ def get_now_vertical_line(current_time: datetime.date) -> Span:
     return now_line
 
 
-def get_now_label(now_ts: float) -> Label:
+def get_now_label(current_time: datetime.datetime) -> Label:
     """Create a label to indicate the current time on the plots.
 
     Args:
-        now_ts: The current timestamp to position the label.
+        current_time: The current timestamp to position the vertical line.
 
     Returns:
         A Label object representing the label for the current time.
     """
     now_label = Label(
-        x=now_ts,
+        x=current_time.timestamp() * 1000,  # Convert to milliseconds,
         y=220,
         y_units="screen",  # use screen pixels
         text="Now",
@@ -146,11 +146,10 @@ def create_timeseries_plot(
                 visible=spacecraft == default_spacecraft,
             )
     current_time = datetime.datetime.now()
-    now_ts = current_time.timestamp() * 1000  # Convert to milliseconds
     # Add vertical line for current time
     plot.add_layout(get_now_vertical_line(current_time))
     # Add 'Now' label next to the vertical line
-    plot.add_layout(get_now_label(now_ts))
+    plot.add_layout(get_now_label(current_time))
     # Update legend to show/hide selected spacecraft data
     update_legend_on_spacecraft_selection(plot)
 

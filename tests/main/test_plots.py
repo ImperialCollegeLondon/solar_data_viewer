@@ -130,10 +130,10 @@ def test_get_now_label():
     """Test the get_now_label function."""
     from main.plots import get_now_label
 
-    ts = 1739
-    label = get_now_label(ts)
+    now = datetime.now()
+    label = get_now_label(now)
 
-    assert label.x == ts
+    assert label.x == now.timestamp() * 1000
     assert label.text == "Now"
     assert label.angle == math.pi / 2
     assert label.y_units == "screen"
