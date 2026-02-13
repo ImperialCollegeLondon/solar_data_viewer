@@ -62,19 +62,22 @@ def get_earth_coordinates(
 
 
 def get_JPL_spacecraft_coordinates(
-    spacecraft: str | int, time: datetime | list[datetime]
+    spacecraft: str | int, time: datetime | tuple[datetime, datetime]
 ) -> SkyCoord | list[SkyCoord]:
     """Get the coordinate(s) of a spacecraft by querying JPL horizons.
 
     Args:
         spacecraft: The name or numerical identifier for the spacecraft.
-        time: A datetime or list of datetimes to retrieve coordinates for.
+        time: A datetime or tuple of start and end datetimes to retrieve
+            coordinates for.
 
     Returns:
         The coordinate or list of coordinates as Astropy SkyCoord(s).
     """
-    if isinstance(time, list):
-        return [get_horizons_coord(spacecraft, t) for t in time]
+    if isinstance(time, tuple):
+        return get_horizons_coord(
+            spacecraft, {"start": time[0], "stop": time[-1], "step": "1d"}
+        )
     else:
         return get_horizons_coord(spacecraft, time)
 

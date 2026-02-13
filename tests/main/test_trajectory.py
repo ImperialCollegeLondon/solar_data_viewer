@@ -32,7 +32,7 @@ def test_get_JPL_spacecraft_coordinates():
     coord = get_JPL_spacecraft_coordinates(-92, time)
     assert isinstance(coord, SkyCoord)
 
-    times = [datetime.now() + timedelta(days=i) for i in range(3)]
+    times = (time, time + timedelta(days=3))
     coords = get_JPL_spacecraft_coordinates("DSCOVR", times)
     assert all(isinstance(coord, SkyCoord) for coord in coords)
 
