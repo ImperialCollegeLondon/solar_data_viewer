@@ -1,7 +1,7 @@
 """Plots for displaying trajectory data."""
 
 from datetime import datetime
-from typing import Literal
+from typing import cast
 
 import numpy as np
 from astropy.coordinates import SkyCoord
@@ -45,7 +45,7 @@ def heliographic_to_earth_separation_angles(
 
 def get_earth_coordinates(
     time: datetime | list[datetime],
-) -> HeliographicStonyhurst:
+) -> HeliographicStonyhurst | list[HeliographicStonyhurst]:
     """Get the coordinates of the earth at a specific time.
 
     Args:
@@ -84,7 +84,7 @@ def get_JPL_spacecraft_coordinates(
 
 def static_solar_orbiter_data(
     time: datetime,
-    unit: Literal["AU", "angle"],
+    unit: str,
 ) -> dict[str, list[str | float]]:
     """Get the data for the static Solar Orbiter glyphs.
 
@@ -100,7 +100,7 @@ def static_solar_orbiter_data(
     earth = get_body_heliographic_stonyhurst("Earth", time)
 
     # Get coordinates of Solar Orbiter
-    so = get_JPL_spacecraft_coordinates("Solar Orbiter", time)
+    so = cast(SkyCoord, get_JPL_spacecraft_coordinates("Solar Orbiter", time))
 
     if unit == "AU":
         # Convert to Cartesian coordinates
@@ -126,8 +126,8 @@ def static_solar_orbiter_data(
 
 
 def trajectory_solar_orbiter_data(
-    times: list[datetime],
-    unit: Literal["AU", "angle"],
+    times: tuple[datetime, datetime],
+    unit: str,
 ) -> dict[str, list[float]]:
     """Get the data for the trajectory Solar Orbiter glyphs.
 
