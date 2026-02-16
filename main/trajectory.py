@@ -148,3 +148,52 @@ def trajectory_solar_orbiter_data(
         ]
 
     return {"x": [coord[0] for coord in coords], "y": [coord[1] for coord in coords]}
+
+
+def generate_solar_orbiter_statistics() -> dict[str, str | float]:
+    """Generate statistics to display in the dashboard."""
+    time = datetime.now()
+    earth = get_earth_coordinates(time)
+    so = cast(SkyCoord, get_JPL_spacecraft_coordinates("Solar Orbiter", time))
+
+    # Angle from the Sun-Earth line
+    angles = heliographic_to_earth_separation_angles(so, earth)
+    sun_earth_angle = round(angles[0])
+
+    # Visibility
+    status = "AMAZING"
+    if angles[0] > 5:
+        status = "GOOD"
+    if angles[0] > 10:
+        status = "USEFUL"
+    if angles[0] > 20:
+        status = "POOR"
+    if angles[0] > 30:
+        status = "NOT USEFUL"
+
+    # Distance upstream of Earth
+    dist_upstream_earth = earth.radius.to_value("AU") - so.radius.to_value("AU")
+
+    # CME warnings
+    AU = 150e6
+    CME400time = round(dist_upstream_earth * AU / (400 * 3600))
+    CME1000time = round(dist_upstream_earth * AU / (1000 * 3600))
+
+    # Sun-spacecraft distance
+    sun_spacecraft_distance = round(so.radius.to_value("AU"), 1)
+
+    # Latitude relative to Earth
+    lat = round(abs(angles[1]))
+    lat_dir = "S" if lat < 0 else "N"
+
+    data = {
+        "sun_earth_angle": sun_earth_angle,
+        "visibility": status,
+        "dist_upstream_earth": round(dist_upstream_earth, 1),
+        "CME400time": CME400time,
+        "CME1000time": CME1000time,
+        "sun_spacecraft_distance": sun_spacecraft_distance,
+        "lat_relative_to_earth": abs,
+        "lat_direction": lat_dir,
+    }
+    return data
