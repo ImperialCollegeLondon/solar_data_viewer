@@ -103,4 +103,8 @@ class TrajectoryDataView(View):
         )
         if not data:
             set_trajectory_cache()
+            data = cache.get(
+                "trajectory_data",
+            )
+
         return JsonResponse(data[datatype][unit])
