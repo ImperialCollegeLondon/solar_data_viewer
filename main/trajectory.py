@@ -43,22 +43,16 @@ def heliographic_to_earth_separation_angles(
     return coord.lon.deg - earth.lon.deg, coord.lat.deg - earth.lat.deg
 
 
-def get_earth_coordinates(
-    time: datetime | list[datetime],
-) -> HeliographicStonyhurst | list[HeliographicStonyhurst]:
+def get_earth_coordinates(time: datetime) -> HeliographicStonyhurst:
     """Get the coordinates of the earth at a specific time.
 
     Args:
-        time: A datetime or list of datetimes to retrieve coordinates for.
+        time: A datetime to retrieve coordinates for.
 
     Returns:
-        The coordinate or list of coordinates of the Earth using the Stonyhurst
-            Heliographic system.
+        The coordinates of the Earth using the Stonyhurst Heliographic system.
     """
-    if isinstance(time, list):
-        return [get_body_heliographic_stonyhurst("Earth", t) for t in time]
-    else:
-        return get_body_heliographic_stonyhurst("Earth", time)
+    return get_body_heliographic_stonyhurst("Earth", time)
 
 
 def get_JPL_spacecraft_coordinates(
