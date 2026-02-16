@@ -1,6 +1,7 @@
 """Plots for displaying science data."""
 
 import datetime
+import math
 from pathlib import Path
 from typing import Literal
 
@@ -9,10 +10,11 @@ from bokeh.models import (  # type: ignore
     AjaxDataSource,
     CrosshairTool,
     HoverTool,
+    Label,
     LegendItem,
     Range1d,
+    Span,
 )
-from bokeh.models.annotations.geometry import Span
 from bokeh.models.layouts import Column, Row
 from bokeh.models.widgets.groups import CheckboxButtonGroup
 from bokeh.plotting import figure
@@ -25,6 +27,75 @@ from .widgets import (
     checkbox_button_group,
     create_time_range_dropdown,
 )
+
+
+def get_now_vertical_line(current_time: datetime.datetime) -> Span:
+    """Create a vertical line to indicate the current time on the plots.
+
+    Args:
+        current_time: The current timestamp to position the vertical line.
+
+    Returns:
+        A Span object representing the vertical line for the current time.
+    """
+    now_line = Span(
+        location=current_time,
+        dimension="height",
+        line_color="gray",
+        line_dash="dashed",
+        line_width=1,
+    )
+    return now_line
+
+
+def get_now_label(current_time: datetime.datetime) -> Label:
+    """Create a label to indicate the current time on the plots.
+
+    Args:
+        current_time: The current timestamp to position the vertical line.
+
+    Returns:
+        A Label object representing the label for the current time.
+    """
+    now_label = Label(
+        x=current_time.timestamp() * 1000,  # Convert to milliseconds,
+        y=220,
+        y_units="screen",  # use screen pixels
+        text="Now",
+        text_font_size="9pt",
+        angle=math.pi / 2,  # rotate text
+        text_align="left",
+        text_baseline="middle",
+        x_offset=7,  # small gap from the line
+        name="now_label",
+    )
+    return now_label
+
+
+def update_legend_on_spacecraft_selection(plot: figure) -> figure:
+    """Update the legend to hide hidden spacecraft lines.
+
+    Args:
+        plot: A Bokeh figure for a timeseries plot.
+    """
+    if not plot.legend:
+        return plot
+
+    legend = plot.legend[0]  # extract the first legend box from the list
+    plot.add_layout(legend, "right")
+    legend.click_policy = "hide"
+
+    # Hide legend items for hidden spacecraft line
+    # A legend item can control multiple glyphs so we need to check
+    # the first renderer to see if the main line is visible.
+    for item in legend.items:
+        if (
+            isinstance(item, LegendItem)
+            and item.renderers
+            and not item.renderers[0].visible
+        ):
+            item.visible = False
+    return plot
 
 
 def create_timeseries_plot(
@@ -75,26 +146,14 @@ def create_timeseries_plot(
                 legend_label=f"{spacecraft}: {args.label}",
                 visible=spacecraft == default_spacecraft,
             )
+    current_time = datetime.datetime.now()
+    # Add vertical line for current time
+    plot.add_layout(get_now_vertical_line(current_time))
+    # Add 'Now' label next to the vertical line
+    plot.add_layout(get_now_label(current_time))
+    # Update legend to show/hide selected spacecraft data
+    update_legend_on_spacecraft_selection(plot)
 
-    plot.legend.click_policy = "hide"
-
-    if not plot.legend:
-        return plot
-
-    legend = plot.legend[0]  # extract the first legend box from the list
-    plot.add_layout(legend, "right")
-    legend.click_policy = "hide"
-
-    # Hide legend items for hidden spacecraft line
-    # A legend item can control multiple glyphs so we need to check
-    # the first renderer to see if the main line is visible.
-    for item in legend.items:
-        if (
-            isinstance(item, LegendItem)
-            and item.renderers
-            and not item.renderers[0].visible
-        ):
-            item.visible = False
     return plot
 
 
@@ -126,8 +185,10 @@ def create_timeseries_plots(
 
     # Calculate start and end times
     delta = datetime.timedelta(days=3)
-    end_time = datetime.datetime.now()
-    start_time = end_time - delta
+    future_buffer = datetime.timedelta(days=1)
+    current_time = datetime.datetime.now()
+    end_time = current_time + future_buffer
+    start_time = current_time - delta
 
     shared_x_range = Range1d(start=start_time, end=end_time)
 
