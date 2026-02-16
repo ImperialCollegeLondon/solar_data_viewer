@@ -1,18 +1,15 @@
 """Views for the main app."""
 
-from datetime import datetime, timedelta
 from typing import Any, Literal
 
 import bokeh
 from bokeh.embed import components
+from django.core.cache import cache
 from django.http import HttpRequest, JsonResponse
 from django.views.generic import TemplateView, View
 
 from .plots import create_solar_orbiter_layout, create_timeseries_layout
-from .trajectory import (
-    static_solar_orbiter_data,
-    trajectory_solar_orbiter_data,
-)
+from .tasks import set_trajectory_cache
 from .utils import process_data_from_test_csvs
 
 
@@ -70,7 +67,8 @@ class SolarOrbiterView(TemplateView):
         context = super().get_context_data(**kwargs)
         layout = create_solar_orbiter_layout()
         script, div = components(layout)
-        context.update({"script": script, "div": div})
+        time = cache.get("time_generated") or None
+        context.update({"script": script, "div": div, "time": time})
         context["bokeh_version"] = bokeh.__version__
         return context
 
@@ -100,10 +98,9 @@ class TrajectoryDataView(View):
             A JSON response containing the dates and values for the specific
                 spacecraft and measurement type.
         """
-        time = datetime.now()
-        times = [time + timedelta(days=i) for i in range(8)]
-
-        if datatype == "static":
-            return JsonResponse(static_solar_orbiter_data(time, unit))
-
-        return JsonResponse(trajectory_solar_orbiter_data(times, unit))
+        data = cache.get(
+            "trajectory_data",
+        )
+        if not data:
+            set_trajectory_cache()
+        return JsonResponse(data[datatype][unit])

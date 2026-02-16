@@ -90,7 +90,7 @@ class TestTrajectoryDataView:
                 static_data_mock.assert_called_with(time, unit)
 
             with patch("main.views.trajectory_solar_orbiter_data") as traj_data_mock:
-                times = [time + timedelta(days=i) for i in range(8)]
+                times = (time, time + timedelta(days=8))
                 traj_data_mock.return_value = {
                     "x": [0.0, 1.1, 2.2],
                     "y": [0.0, 3.3, 4.4],

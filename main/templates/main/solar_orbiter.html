@@ -13,4 +13,8 @@
   {{ script | safe }}
   {{ div | safe }}
 
+  {% if time %}
+    <p>This plot was made at {{ time }}.</p>
+  {% endif %}
+
 {% endblock content %}
