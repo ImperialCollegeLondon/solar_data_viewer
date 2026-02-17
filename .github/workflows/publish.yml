@@ -3,7 +3,7 @@ name: Build and Publish
 on:
   push:
     branches:
-      - 65-automate-deployment-to-app-service
+      - main
 
 jobs:
   build-and-publish:
