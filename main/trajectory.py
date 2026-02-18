@@ -151,7 +151,12 @@ def trajectory_solar_orbiter_data(
 
 
 def generate_solar_orbiter_statistics() -> dict[str, str | float]:
-    """Generate statistics to display in the dashboard."""
+    """Generate Solar Orbiter statistics to display in the dashboard.
+
+    Returns:
+        Dictionary containing statistics that can be accessed in the HTML
+            template.
+    """
     time = datetime.now()
     earth = get_earth_coordinates(time)
     so = cast(SkyCoord, get_JPL_spacecraft_coordinates("Solar Orbiter", time))
@@ -193,7 +198,7 @@ def generate_solar_orbiter_statistics() -> dict[str, str | float]:
         "CME400time": CME400time,
         "CME1000time": CME1000time,
         "sun_spacecraft_distance": sun_spacecraft_distance,
-        "lat_relative_to_earth": abs,
+        "lat_relative_to_earth": lat,
         "lat_direction": lat_dir,
     }
     return data
