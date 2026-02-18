@@ -189,7 +189,7 @@ def generate_solar_orbiter_statistics() -> dict[str, str | float]:
 
     # Latitude relative to Earth
     lat = round(abs(angles[1]))
-    lat_dir = "S" if lat < 0 else "N"
+    lat_dir = "S" if angles[1] < 0 else "N"
 
     data = {
         "sun_earth_angle": sun_earth_angle,
