@@ -54,7 +54,7 @@ class TestSolarOrbiterView(TemplateOkMixin):
     def _get_url(self):
         return reverse("main:solar_orbiter")
 
-    @patch("main.trajectory.generate_solar_orbiter_statistics")
+    @patch("main.views.generate_solar_orbiter_statistics")
     def test_get(self, stats_mock, client):
         """Tests the get method and the data provided."""
         import bokeh
