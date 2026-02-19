@@ -44,3 +44,69 @@ class TestDataView:
             response = client.get(endpoint)
             assert isinstance(response, JsonResponse)
             process_data_mock.assert_called_with(spacecraft, measurement, "3d")
+
+
+class TestSolarOrbiterView(TemplateOkMixin):
+    """Test suite for the Solar Orbiter view."""
+
+    _template_name = "main/solar_orbiter.html"
+
+    def _get_url(self):
+        return reverse("main:solar_orbiter")
+
+    def test_get(self, client):
+        """Tests the get method and the data provided."""
+        import bokeh
+
+        endpoint = reverse("main:solar_orbiter")
+        response = client.get(endpoint)
+        assert response.status_code == HTTPStatus.OK
+        assert "<script" in response.context["script"]
+        assert "<div" in response.context["div"]
+        assert response.context["bokeh_version"] == bokeh.__version__
+
+
+class TestTrajectoryDataView:
+    """Test suite for the Trajectory Data view."""
+
+    def test_get(self, client):
+        """Test the get method."""
+        mock_data = {
+            "static": {
+                "AU": {
+                    "x": [0.0, 1.1, 2.2],
+                    "y": [0.0, 3.3, 4.4],
+                },
+                "angle": {
+                    "x": [5.5, 6.6, 7.7],
+                    "y": [8.8, 9.9, 10.10],
+                },
+            },
+            "trajectory": {
+                "AU": {
+                    "x": [5, 6],
+                    "y": [7, 8],
+                },
+                "angle": {
+                    "x": [4, 3],
+                    "y": [2, 1],
+                },
+            },
+        }
+
+        with patch("main.views.cache") as cache_mock:
+            cache_mock.get.return_value = mock_data
+            for unit in ["AU", "angle"]:
+                for datatype in ["trajectory", "static"]:
+                    endpoint = reverse("main:trajectory_data", args=[unit, datatype])
+                    response = client.get(endpoint)
+                    cache_mock.get.assert_called_with("trajectory_data")
+                    assert isinstance(response, JsonResponse)
+                    assert response.json() == mock_data[datatype][unit]
+
+        with patch("main.views.cache") as empty_cache_mock:
+            with patch("main.views.set_trajectory_cache") as cache_setter_mock:
+                empty_cache_mock.get.side_effect = [None, mock_data]
+                endpoint = reverse("main:trajectory_data", args=["AU", "static"])
+                response = client.get(endpoint)
+                cache_setter_mock.assert_called_once()
