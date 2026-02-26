@@ -1,1 +1,27 @@
 """Models for the main app."""
+
+from django.db import models
+
+
+class BaseMagneticField(models.Model):
+    """Model describing the components of the magnetic field on a specific datetime."""
+
+    time = models.DateTimeField(
+        primary_key=True, null=False, help_text="Time for the data."
+    )
+    B_r = models.FloatField(help_text="'r' component of the magnetic field.")
+    B_t = models.FloatField(help_text="'t' component of the magnetic field.")
+    B_n = models.FloatField(help_text="'n' component of the magnetic field.")
+    B_mod = models.FloatField(help_text="Module of the magnetic field.")
+    file_date = models.DateField(help_text="Date of the file containing the data.")
+
+    class Meta:  # noqa: D106
+        abstract = True
+
+
+class SOMagneticField(BaseMagneticField):
+    """Magnetic field model for the Solar Orbiter mission."""
+
+    class Meta:  # noqa: D106
+        db_table = "solo_L2_mag-rtn-ll-internal"
+        managed = False
