@@ -22,6 +22,7 @@ from .config import PlotConfig
 from .utils import load_plot_config
 from .widgets import (
     add_callback_to_checkbox_button,
+    add_passes_checkbox,
     add_time_range_callback,
     checkbox_button_group,
     create_time_range_dropdown,
@@ -103,18 +104,15 @@ def create_timeseries_plot(
     time_range: str = "3d",
     default_spacecraft: str = "IMAP",
 ) -> figure:
-    """Create a timeseries plot.
+    """Create a timeseries plot for a given measurement.
 
     Args:
-        plot_config: A Pydantic model containing fields for the title, unit and
-            measurements. The measurements are Pydantic models containing their label
-            and colours to be used for the traces for each spacecraft.
-        x_range: The shared x-axis range for the plots.
-        time_range: The initial time range for the data to display (default is 3 days).
+        plot_config: A PlotConfig object containing the config arguments for the plot,
+            as defined in the config TOML file.
+        x_range: A Range1d object representing the shared x-axis range for all plots.
+        time_range: The initial time range for the data to display.
         default_spacecraft: The spacecraft data to display as default.
-
-    Returns:
-        Bokeh figure for the timeseries plot.
+        Returns:        A Bokeh figure for the timeseries plot.
     """
     plot = figure(  # type: ignore[call-arg]
         x_axis_type="datetime",
@@ -123,8 +121,6 @@ def create_timeseries_plot(
         x_range=x_range,
     )
 
-    # Disable level-of-detail downsampling to ensure the lines
-    # are always fully rendered and not greyed out.
     plot.lod_threshold = None
 
     for measurement, args in plot_config.measurements.items():
@@ -139,18 +135,34 @@ def create_timeseries_plot(
             plot.line(
                 "date",
                 "measurement",
-                name=spacecraft,  # Enables selecting data in callback
+                name=spacecraft,
                 color=colour,
                 source=source,
                 legend_label=f"{spacecraft}: {args.label}",
                 visible=spacecraft == default_spacecraft,
             )
+            pass_source = AjaxDataSource(
+                data_url=f"/data/passes/{spacecraft}?range={time_range}",
+                polling_interval=None,
+                method="GET",
+            )
+
+            # pass_source.data = {"pass_start": [], "pass_end": []}
+
+            plot.vstrip(
+                x0="pass_start",
+                x1="pass_end",
+                source=pass_source,
+                fill_color="grey",
+                fill_alpha=0.05,
+                line_color=None,
+                name="pass_data",
+                visible=False,
+            )
+
     current_time = datetime.datetime.now()
-    # Add vertical line for current time
     plot.add_layout(get_now_vertical_line(current_time))
-    # Add 'Now' label next to the vertical line
     plot.add_layout(get_now_label(current_time))
-    # Update legend to show/hide selected spacecraft data
     update_legend_on_spacecraft_selection(plot)
 
     return plot
@@ -219,8 +231,9 @@ def create_layout() -> Column:
     time_dropdown = create_time_range_dropdown()
     plots = create_plots(plots_config, button, default_spacecraft, time_dropdown.value)
     add_time_range_callback(time_dropdown, plots)
+    passes_button = add_passes_checkbox(plots)
 
     widgets = row(button, time_dropdown, sizing_mode="stretch_width")
-    layout = column([widgets, *plots], sizing_mode="stretch_width")
+    layout = column([widgets, passes_button, *plots], sizing_mode="stretch_width")
 
     return layout

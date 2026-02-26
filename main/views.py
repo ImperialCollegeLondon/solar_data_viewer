@@ -8,7 +8,7 @@ from django.http import HttpRequest, JsonResponse
 from django.views.generic import TemplateView, View
 
 from .plots import create_layout
-from .utils import process_data_from_test_csvs
+from .utils import process_data_from_test_csvs, process_pass_data_from_test_csvs
 
 
 class IndexView(TemplateView):
@@ -52,4 +52,33 @@ class DataView(View):
         """
         range_param = request.GET.get("range", "3d")
         data = process_data_from_test_csvs(spacecraft, measurement, range_param)
+        return JsonResponse(data)
+
+
+class PassView(View):
+    """View for returning pass data to the AjaxDataSource."""
+
+    def get(  # type: ignore
+        self,
+        request: HttpRequest,
+        spacecraft: str,
+        *args: Any,
+        **kwargs: Any,
+    ) -> JsonResponse:
+        """Method to handle GET requests for spacecraft pass data.
+
+        Args:
+            request: The incoming HTTP request.
+            spacecraft: Name of the spacecraft to retrieve pass data for.
+            *args: Additional positional arguments.
+            **kwargs: Additional key word arguments.
+
+        Returns:
+            A JSON response containing the start and end times for the specific
+            spacecraft passes in milliseconds.
+        """
+        range_param = request.GET.get("range", "3d")
+
+        data = process_pass_data_from_test_csvs(spacecraft, range_param)
+
         return JsonResponse(data)

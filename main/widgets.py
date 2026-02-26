@@ -2,7 +2,12 @@
 
 from datetime import timedelta
 
-from bokeh.models import ColumnDataSource, CustomJS, Select  # type: ignore
+from bokeh.models import (  # type: ignore
+    CheckboxGroup,
+    ColumnDataSource,
+    CustomJS,
+    Select,
+)
 from bokeh.models.widgets.groups import CheckboxButtonGroup
 from bokeh.plotting import figure
 
@@ -115,13 +120,18 @@ def add_time_range_callback(dropdown: Select, plots: list[figure]) -> None:
 
         for (const plot of plots) {
 
-            // Update Line
-            const lines = plot.select({name: "now_line"});
-            if (lines.length > 0) lines[0].location = now;
+            for (const renderer of plot.renderers) {
 
-            // Update Now Label
-            const labels = plot.select({name: "now_label"});
-            if (labels.length > 0) labels[0].x = now;
+                // 1. Move the "Now" Line
+                if (renderer.name === "now_line") {
+                    renderer.location = now;
+                }
+
+                // 2. Move the "Now" Label
+                if (renderer.name === "now_label") {
+                    renderer.x = now;
+                }
+            }
 
             for (const renderer of plot.renderers) {
 
@@ -160,3 +170,54 @@ def add_time_range_callback(dropdown: Select, plots: list[figure]) -> None:
     )
 
     dropdown.js_on_change("value", callback)
+
+
+def add_passes_checkbox(plots: list[figure]) -> CheckboxGroup:
+    """Create a Checkbox to show/hide passes on the plots."""
+    # 1. Create the Checkbox
+    pass_data_checkbox = CheckboxGroup(labels=["Show Pass Data"], active=[1])
+
+    # 2. Define the Callback Logic
+    callback = CustomJS(
+        args=dict(plots=plots),
+        code="""
+        // CheckboxGroup 'active' is an array of ticked indices.
+        // If 0 is in the array, our single checkbox is ticked.
+        const show_data = cb_obj.active.includes(0);
+
+        console.log("Checkbox ticked! Show data:", show_data);
+
+        for (const plot of plots) {
+
+            // Loop through all renderers safely
+            for (const renderer of plot.renderers) {
+                if (renderer.name === "pass_data") {
+
+                    renderer.visible = show_data;
+
+                    if (renderer.data_source && show_data) {
+                        const source = renderer.data_source;
+                        source.polling_interval = 300000;
+
+                        // Force immediate fetch!
+                        const url = new URL(source.data_url, window.location.origin);
+                        fetch(url.pathname + url.search)
+                            .then(response => response.json())
+                            .then(data => {
+                                source.data = data;
+                                source.change.emit(); // Force redraw
+                            })
+                            .catch(error => console.error("Fetch failed:", error));
+
+                    } else if (renderer.data_source && !show_data) {
+                        renderer.data_source.polling_interval = null;
+                    }
+                }
+            }
+        }
+        """,
+    )
+
+    pass_data_checkbox.js_on_change("active", callback)
+
+    return pass_data_checkbox

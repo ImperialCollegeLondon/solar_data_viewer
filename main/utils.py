@@ -74,3 +74,51 @@ def process_data_from_test_csvs(
     measurements = df[measurement].tolist()
     data = {"measurement": measurements, "date": dates}
     return data
+
+
+def process_pass_data_from_test_csvs(
+    spacecraft: str, range_param: str
+) -> dict[str, list[float]]:
+    """Reads pass data from a CSV, filters by time, and converts to milliseconds.
+
+    Args:
+        spacecraft: Name of the spacecraft to retrieve data for.
+        range_param: The time range for which to retrieve data (e.g., '1d', '3d').
+
+    Returns:
+        A dictionary containing the start and end datetimes in UNIX epoch
+        time format (milliseconds) for Bokeh to plot.
+    """
+    csv_file = Path(__file__).parent / "data" / f"passes_{spacecraft}.csv"
+
+    # 1. Read the CSV
+    df = pd.read_csv(csv_file)
+
+    # 2. Drop rows with missing pass data to avoid corrupting the Bokeh axis
+    df = df.dropna(subset=["pass_start", "pass_end"])
+
+    # 3. Convert to Datetime (Ensure UTC)
+    df["pass_start"] = pd.to_datetime(df["pass_start"], utc=True)
+    df["pass_end"] = pd.to_datetime(df["pass_end"], utc=True)
+
+    # 4. Time range filtering
+    # NOTE: If you want to filter relative to the actual current time,
+    # change `latest = df["pass_end"].max()` to `latest = pd.Timestamp.utcnow()`
+    latest = df["pass_end"].max()
+    ranges = {
+        "1d": pd.Timedelta(days=1),
+        "3d": pd.Timedelta(days=3),
+        "7d": pd.Timedelta(days=7),
+    }
+
+    delta = ranges.get(range_param, pd.Timedelta(days=3))
+    df = df[df["pass_end"] >= latest - delta]
+
+    df["pass_start"] = df["pass_start"].apply(lambda x: int(x.timestamp() * 1000))
+    df["pass_end"] = df["pass_end"].apply(lambda x: int(x.timestamp() * 1000))
+
+    # 6. Create JSON response
+    return {
+        "pass_start": df["pass_start"].tolist(),
+        "pass_end": df["pass_end"].tolist(),
+    }
