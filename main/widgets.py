@@ -101,7 +101,6 @@ def add_callback_to_checkbox_button(
             """,
     )
 
-    # js_on_change("active") is the most reliable way to listen to CheckboxButtonGroups
     button.js_on_change("active", callback)
 
 
@@ -230,7 +229,6 @@ def add_passes_checkbox(
 
                     if (renderer.data_source && show_data) {
                         const source = renderer.data_source;
-                        source.polling_interval = 300000;
 
                         // Force immediate fetch
                         const url = new URL(source.data_url, window.location.origin);

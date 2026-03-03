@@ -89,6 +89,12 @@ def process_pass_data_from_test_csvs(
         A dictionary containing the start and end datetimes in UNIX epoch
         time format (milliseconds) for Bokeh to plot.
     """
+    # for now we only want SO passes
+    if spacecraft != "SO":
+        return {
+            "start_time": [],
+            "end_time": [],
+        }
     csv_file = Path(__file__).parent / "data" / f"passes_{spacecraft}.csv"
 
     df = pd.read_csv(csv_file)
