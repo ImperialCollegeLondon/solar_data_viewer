@@ -15,7 +15,6 @@ from bokeh.models import (  # type: ignore
     Span,
 )
 from bokeh.models.layouts import Column
-from bokeh.models.widgets.groups import CheckboxButtonGroup
 from bokeh.plotting import figure
 
 from .config import PlotConfig
@@ -95,6 +94,7 @@ def update_legend_on_spacecraft_selection(plot: figure) -> figure:
             and not item.renderers[0].visible
         ):
             item.visible = False
+
     return plot
 
 
@@ -104,15 +104,18 @@ def create_timeseries_plot(
     time_range: str = "3d",
     default_spacecraft: str = "IMAP",
 ) -> figure:
-    """Create a timeseries plot for a given measurement.
+    """Create a timeseries plot.
 
     Args:
-        plot_config: A PlotConfig object containing the config arguments for the plot,
-            as defined in the config TOML file.
-        x_range: A Range1d object representing the shared x-axis range for all plots.
-        time_range: The initial time range for the data to display.
+        plot_config: A Pydantic model containing fields for the title, unit and
+            measurements. The measurements are Pydantic models containing their label
+            and colours to be used for the traces for each spacecraft.
+        x_range: The shared x-axis range for the plots.
+        time_range: The initial time range for the data to display (default is 3 days).
         default_spacecraft: The spacecraft data to display as default.
-        Returns:        A Bokeh figure for the timeseries plot.
+
+    Returns:
+        Bokeh figure for the timeseries plot.
     """
     plot = figure(  # type: ignore[call-arg]
         x_axis_type="datetime",
@@ -131,7 +134,7 @@ def create_timeseries_plot(
                 polling_interval=300000,
                 method="GET",
             )
-
+            source.data = {"date": [], "measurement": []}
             plot.line(
                 "date",
                 "measurement",
@@ -141,23 +144,23 @@ def create_timeseries_plot(
                 legend_label=f"{spacecraft}: {args.label}",
                 visible=spacecraft == default_spacecraft,
             )
+
             pass_source = AjaxDataSource(
                 data_url=f"/data/passes/{spacecraft}?range={time_range}",
                 polling_interval=None,
                 method="GET",
             )
 
-            # pass_source.data = {"pass_start": [], "pass_end": []}
-
             plot.vstrip(
-                x0="pass_start",
-                x1="pass_end",
+                x0="start_time",
+                x1="end_time",
                 source=pass_source,
                 fill_color="grey",
-                fill_alpha=0.05,
+                fill_alpha=0.1,
                 line_color=None,
                 name="pass_data",
                 visible=False,
+                legend_label="Passes",
             )
 
     current_time = datetime.datetime.now()
@@ -170,7 +173,6 @@ def create_timeseries_plot(
 
 def create_plots(
     plots_config: list[PlotConfig],
-    button: CheckboxButtonGroup,
     default_spacecraft: str = "IMAP",
     initial_time_range: str = "3d",
 ) -> list[figure]:
@@ -209,7 +211,6 @@ def create_plots(
             plot_config, shared_x_range, initial_time_range, default_spacecraft
         )
         plot.add_tools(hover, crosshair)
-        add_callback_to_checkbox_button(plot=plot, button=button)
         plot.yaxis.axis_label = f"{plot_config.title} ({plot_config.unit})"
         plots.append(plot)
 
@@ -229,9 +230,14 @@ def create_layout() -> Column:
 
     button = checkbox_button_group(spacecrafts, default_spacecraft)
     time_dropdown = create_time_range_dropdown()
-    plots = create_plots(plots_config, button, default_spacecraft, time_dropdown.value)
+    plots = create_plots(plots_config, default_spacecraft, time_dropdown.value)
     add_time_range_callback(time_dropdown, plots)
     passes_button = add_passes_checkbox(plots)
+
+    for plot in plots:
+        add_callback_to_checkbox_button(
+            plot=plot, button=button, pass_checkbox=passes_button
+        )
 
     widgets = row(button, time_dropdown, sizing_mode="stretch_width")
     layout = column([widgets, passes_button, *plots], sizing_mode="stretch_width")

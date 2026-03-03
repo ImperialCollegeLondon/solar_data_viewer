@@ -44,24 +44,51 @@ def checkbox_button_group(
 def add_callback_to_checkbox_button(
     plot: figure,
     button: CheckboxButtonGroup,
+    pass_checkbox: CheckboxGroup = None,
 ) -> None:
     """Enables the data in the plot to be updated depending on the checkbox button.
 
     Args:
         plot: A Bokeh figure for a timeseries plot.
         button: A checkbox button group to select the spacecraft to display data for.
+        pass_checkbox: An optional CheckboxGroup to show/hide pass data when "SO"
+                is selected.
     """
     legend = plot.legend[0] if isinstance(plot.legend, list) else plot.legend
 
+    # add pass checkbox to args if it exists, so we can use it in the callback
+    js_args = dict(button=button, legend=legend, plot=plot)
+    if pass_checkbox:
+        js_args["pass_checkbox"] = pass_checkbox
+
     callback = CustomJS(
-        args=dict(button=button, legend=legend),
+        args=js_args,
         code="""
             const { active: selection, labels } = button;
 
-            if (!legend?.items) return;
+            //  Check if "SO" is selected
+            const so_index = labels.indexOf("SO");
+            // Check if 'show pass dat' is selected
+            const is_so_active = so_index !== -1 && selection.includes(so_index);
+
+            //  Hide or show 'Show Pass Data' checkbox based on whether "SO" is selected
+            if (typeof pass_checkbox !== 'undefined') {
+                pass_checkbox.visible = is_so_active;
+            }
+
+            // Hide or show the pass data strips on plots
+            for (const renderer of plot.renderers) {
+                if (renderer.name === "pass_data") {
+                    const is_pass_ticked = (typeof pass_checkbox !== 'undefined')
+                                            ? pass_checkbox.active.includes(0)
+                                            : false;
+                    renderer.visible = (is_so_active && is_pass_ticked);
+                }
+            }
+            if (!legend.items) return;
 
             legend.items.forEach(item => {
-                const renderer = item.renderers?.[0];
+                const renderer = item.renderers[0];
                 if (!renderer) return;
 
                 const index = labels.indexOf(renderer.name);
@@ -73,7 +100,9 @@ def add_callback_to_checkbox_button(
             });
             """,
     )
-    button.js_on_event("button_click", callback)
+
+    # js_on_change("active") is the most reliable way to listen to CheckboxButtonGroups
+    button.js_on_change("active", callback)
 
 
 def create_time_range_dropdown() -> Select:
@@ -122,12 +151,12 @@ def add_time_range_callback(dropdown: Select, plots: list[figure]) -> None:
 
             for (const renderer of plot.renderers) {
 
-                // 1. Move the "Now" Line
+                // Update line
                 if (renderer.name === "now_line") {
                     renderer.location = now;
                 }
 
-                // 2. Move the "Now" Label
+                // Update now label
                 if (renderer.name === "now_label") {
                     renderer.x = now;
                 }
@@ -172,24 +201,28 @@ def add_time_range_callback(dropdown: Select, plots: list[figure]) -> None:
     dropdown.js_on_change("value", callback)
 
 
-def add_passes_checkbox(plots: list[figure]) -> CheckboxGroup:
-    """Create a Checkbox to show/hide passes on the plots."""
-    # 1. Create the Checkbox
-    pass_data_checkbox = CheckboxGroup(labels=["Show Pass Data"], active=[1])
+def add_passes_checkbox(
+    plots: list[figure], default_spacecraft: str = "IMAP"
+) -> CheckboxGroup:
+    """Create a Checkbox to show/hide passes on the plots.
 
-    # 2. Define the Callback Logic
+    Args:
+        plots: A list of Bokeh figures to add the pass data to.
+        default_spacecraft: The spacecraft to show the pass data for by default.
+
+    Returns:
+        A CheckboxGroup widget to show/hide pass data.
+    """
+    pass_data_checkbox = CheckboxGroup(
+        labels=["Show Pass Data"], active=[], visible=(default_spacecraft == "SO")
+    )
+
     callback = CustomJS(
         args=dict(plots=plots),
         code="""
-        // CheckboxGroup 'active' is an array of ticked indices.
-        // If 0 is in the array, our single checkbox is ticked.
         const show_data = cb_obj.active.includes(0);
 
-        console.log("Checkbox ticked! Show data:", show_data);
-
         for (const plot of plots) {
-
-            // Loop through all renderers safely
             for (const renderer of plot.renderers) {
                 if (renderer.name === "pass_data") {
 
@@ -199,7 +232,7 @@ def add_passes_checkbox(plots: list[figure]) -> CheckboxGroup:
                         const source = renderer.data_source;
                         source.polling_interval = 300000;
 
-                        // Force immediate fetch!
+                        // Force immediate fetch
                         const url = new URL(source.data_url, window.location.origin);
                         fetch(url.pathname + url.search)
                             .then(response => response.json())

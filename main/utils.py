@@ -67,7 +67,7 @@ def process_data_from_test_csvs(
     df = df[df["date"] >= latest - delta]
 
     # Format datetime as Unix epoch time
-    df["date"] = df["date"].astype("int64") // 10**6
+    df["date"] = df["date"].astype("int64") // 10**3
 
     # Create JSON response
     dates = df["date"].tolist()
@@ -79,11 +79,11 @@ def process_data_from_test_csvs(
 def process_pass_data_from_test_csvs(
     spacecraft: str, range_param: str
 ) -> dict[str, list[float]]:
-    """Reads pass data from a CSV, filters by time, and converts to milliseconds.
+    """Read pass data from csv files.
 
     Args:
         spacecraft: Name of the spacecraft to retrieve data for.
-        range_param: The time range for which to retrieve data (e.g., '1d', '3d').
+        range_param: The time range for which to retrieve data.
 
     Returns:
         A dictionary containing the start and end datetimes in UNIX epoch
@@ -91,20 +91,14 @@ def process_pass_data_from_test_csvs(
     """
     csv_file = Path(__file__).parent / "data" / f"passes_{spacecraft}.csv"
 
-    # 1. Read the CSV
     df = pd.read_csv(csv_file)
 
-    # 2. Drop rows with missing pass data to avoid corrupting the Bokeh axis
-    df = df.dropna(subset=["pass_start", "pass_end"])
+    df = df.dropna(subset=["start_time", "end_time"])
 
-    # 3. Convert to Datetime (Ensure UTC)
-    df["pass_start"] = pd.to_datetime(df["pass_start"], utc=True)
-    df["pass_end"] = pd.to_datetime(df["pass_end"], utc=True)
+    df["start_time"] = pd.to_datetime(df["start_time"], utc=True)
+    df["end_time"] = pd.to_datetime(df["end_time"], utc=True)
 
-    # 4. Time range filtering
-    # NOTE: If you want to filter relative to the actual current time,
-    # change `latest = df["pass_end"].max()` to `latest = pd.Timestamp.utcnow()`
-    latest = df["pass_end"].max()
+    latest = pd.Timestamp.utcnow()
     ranges = {
         "1d": pd.Timedelta(days=1),
         "3d": pd.Timedelta(days=3),
@@ -112,13 +106,12 @@ def process_pass_data_from_test_csvs(
     }
 
     delta = ranges.get(range_param, pd.Timedelta(days=3))
-    df = df[df["pass_end"] >= latest - delta]
+    df = df[df["end_time"] >= latest - delta]
 
-    df["pass_start"] = df["pass_start"].apply(lambda x: int(x.timestamp() * 1000))
-    df["pass_end"] = df["pass_end"].apply(lambda x: int(x.timestamp() * 1000))
+    df["start_time"] = df["start_time"].apply(lambda x: int(x.timestamp() * 1000))
+    df["end_time"] = df["end_time"].apply(lambda x: int(x.timestamp() * 1000))
 
-    # 6. Create JSON response
     return {
-        "pass_start": df["pass_start"].tolist(),
-        "pass_end": df["pass_end"].tolist(),
+        "start_time": df["start_time"].tolist(),
+        "end_time": df["end_time"].tolist(),
     }
