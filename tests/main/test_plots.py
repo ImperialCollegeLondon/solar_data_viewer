@@ -54,9 +54,9 @@ def test_create_timeseries_plot():
     assert "range=7d" in first_source.data_url
 
 
-def test_create_plots():
-    """Test the create_plots function."""
-    from main.plots import create_plots
+def test_create_timeseries_plots():
+    """Test the create_timeseries_plots function."""
+    from main.plots import create_timeseries_plots
     from main.widgets import checkbox_button_group
 
     plots_config = [
@@ -100,7 +100,7 @@ def test_create_plots():
         with patch("main.plots.AjaxDataSource") as data_source_mock:
             data_source_mock.return_value = source
 
-            plots = create_plots(plots_config, button, default_spacecraft)
+            plots = create_timeseries_plots(plots_config, button, default_spacecraft)
             assert len(plots) == 2
             assert all(isinstance(plot, figure) for plot in plots)
 
@@ -111,6 +111,49 @@ def test_create_plots():
 
             # Check callback added to buttons
             data_source_mock.call_count == 6
+
+
+def test_create_solar_orbiter_plot():
+    """Test the create_solar_orbiter_plot function."""
+    from main.plots import create_solar_orbiter_plot
+
+    create_solar_orbiter_plot(
+        title="Fixed Earth frame",
+        x_axis_label="AU",
+        y_axis_label="AU",
+        unit="AU",
+        radii=[0.5, 0.75, 1.0],
+    )
+
+    source = AjaxDataSource(
+        data={
+            "name": ["Sun", "Earth", "SO"],
+            "x": [1.0, 2.0, 3.0],
+            "y": [3.0, 4.0, 5.0],
+            "colour": ["black", "gold", "pink"],
+        },
+        polling_interval=None,
+        method="GET",
+    )
+
+    with patch("main.views.DataView.get"):
+        with patch("main.plots.AjaxDataSource") as data_source_mock:
+            data_source_mock.return_value = source
+
+            plot = create_solar_orbiter_plot(
+                title="Test plot",
+                x_axis_label="AU",
+                y_axis_label="AU",
+                unit="AU",
+                radii=[0.5, 1.0],
+            )
+            assert isinstance(plot, figure)
+
+            # 4 renderers for the points, traj, and 2 circles
+            assert len(plot.renderers) == 4
+
+            # Check hover has been added
+            assert any(isinstance(tool, HoverTool) for tool in plot.tools)
 
 
 def test_get_now_vertical_line():

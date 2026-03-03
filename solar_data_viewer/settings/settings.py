@@ -115,6 +115,18 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
-INSTALLED_APPS += ["main"]
+INSTALLED_APPS += [
+    "main",
+    "huey.contrib.djhuey",
+]
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+HUEY = {
+    "huey_class": "huey.SqliteHuey",
+    "name": "huey",
+    "connection": {"filename": BASE_DIR / "db" / "huey.db"},
+    "consumer": {"workers": 2, "worker_type": "thread"},
+    "immediate": False,
+    "utc": False,
+}
