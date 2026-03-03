@@ -150,6 +150,28 @@ def trajectory_solar_orbiter_data(
     return {"x": [coord[0] for coord in coords], "y": [coord[1] for coord in coords]}
 
 
+def get_visibility_status(angle: float) -> str:
+    """Get the visibility status depending on the separation angle.
+
+    Args:
+        angle: The longitude separation angle from the Sun-Earth line.
+
+    Returns:
+        The visibility status.
+    """
+    if angle <= 5:
+        status = "AMAZING"
+    elif angle <= 10:
+        status = "GOOD"
+    elif angle <= 20:
+        status = "USEFUL"
+    elif angle <= 30:
+        status = "POOR"
+    else:
+        status = "NOT USEFUL"
+    return status
+
+
 def generate_solar_orbiter_statistics() -> dict[str, str | float]:
     """Generate Solar Orbiter statistics to display in the dashboard.
 
@@ -166,15 +188,7 @@ def generate_solar_orbiter_statistics() -> dict[str, str | float]:
     sun_earth_angle = round(angles[0])
 
     # Visibility
-    status = "AMAZING"
-    if angles[0] > 5:
-        status = "GOOD"
-    if angles[0] > 10:
-        status = "USEFUL"
-    if angles[0] > 20:
-        status = "POOR"
-    if angles[0] > 30:
-        status = "NOT USEFUL"
+    status = get_visibility_status(angles[0])
 
     # Distance upstream of Earth
     dist_upstream_earth = earth.radius.to_value("AU") - so.radius.to_value("AU")
