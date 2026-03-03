@@ -156,7 +156,7 @@ def create_timeseries_plot(
                 x1="end_time",
                 source=pass_source,
                 fill_color="grey",
-                fill_alpha=0.1,
+                fill_alpha=0.3,
                 line_color=None,
                 name="pass_data",
                 visible=False,
