@@ -12,7 +12,7 @@ class BaseMagneticField(models.Model):
     B_r = models.FloatField(help_text="'r' component of the magnetic field.")
     B_t = models.FloatField(help_text="'t' component of the magnetic field.")
     B_n = models.FloatField(help_text="'n' component of the magnetic field.")
-    B_mod = models.FloatField(help_text="Module of the magnetic field.")
+    B_mod = models.FloatField(help_text="Modulus of the magnetic field.")
     file_date = models.DateField(help_text="Date of the file containing the data.")
 
     class Meta:  # noqa: D106
