@@ -10,6 +10,9 @@ from django.views.generic import TemplateView, View
 
 from .plots import create_solar_orbiter_layout, create_timeseries_layout
 from .tasks import set_trajectory_cache
+from .trajectory import (
+    generate_solar_orbiter_statistics,
+)
 from .utils import process_data_from_test_csvs
 
 
@@ -69,6 +72,8 @@ class SolarOrbiterView(TemplateView):
         script, div = components(layout)
         time = cache.get("time_generated") or None
         context.update({"script": script, "div": div, "time": time})
+        stats = generate_solar_orbiter_statistics()
+        context.update(stats)
         context["bokeh_version"] = bokeh.__version__
         return context
 
