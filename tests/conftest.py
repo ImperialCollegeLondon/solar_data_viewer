@@ -16,17 +16,15 @@ def plots_config() -> dict[str, Any]:  # type: ignore[explicit-any]
     return config
 
 
-# Source - https://stackoverflow.com/a/50849037
-# Posted by Randall, modified by community. See post 'Timeline' for change history
-# Retrieved 2026-03-04, License - CC BY-SA 4.0
+@pytest.fixture(scope="session")
+def django_db_setup():
+    """Forces the use of an existing DB rather than creating a test one.
 
+    See https://pytest-django.readthedocs.io/en/latest/database.html#using-an-existing-external-database-for-tests
+    """
+    from django.conf import settings
 
-@pytest.fixture(autouse=True, scope="session")
-def django_test_environment(django_test_environment):
-    """Enable the use of not managed models."""
-    from django.apps import apps
-
-    get_models = apps.get_models
-
-    for m in [m for m in get_models() if not m._meta.managed]:
-        m._meta.managed = True
+    settings.DATABASES["default"] = {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": settings.BASE_DIR / "db" / "db.sqlite3",
+    }
