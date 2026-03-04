@@ -54,9 +54,23 @@ class TestSolarOrbiterView(TemplateOkMixin):
     def _get_url(self):
         return reverse("main:solar_orbiter")
 
-    def test_get(self, client):
+    @patch("main.views.generate_solar_orbiter_statistics")
+    def test_get(self, stats_mock, client):
         """Tests the get method and the data provided."""
         import bokeh
+
+        # Check SO stats are added
+        mocked_stats = {
+            "sun_earth_angle": 10,
+            "visibility": "GOOD",
+            "dist_upstream_earth": 5,
+            "CME400time": 11,
+            "CME1000time": 14,
+            "sun_spacecraft_distance": 300,
+            "lat_relative_to_earth": 2,
+            "lat_direction": "N",
+        }
+        stats_mock.return_value = mocked_stats
 
         endpoint = reverse("main:solar_orbiter")
         response = client.get(endpoint)
@@ -64,6 +78,9 @@ class TestSolarOrbiterView(TemplateOkMixin):
         assert "<script" in response.context["script"]
         assert "<div" in response.context["div"]
         assert response.context["bokeh_version"] == bokeh.__version__
+
+        stats_mock.assert_called_once()
+        assert all(mocked_stats[k] == response.context[k] for k in mocked_stats.keys())
 
 
 class TestTrajectoryDataView:
