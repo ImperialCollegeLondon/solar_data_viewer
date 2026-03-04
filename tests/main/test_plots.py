@@ -46,7 +46,7 @@ def test_create_timeseries_plot():
     assert all(legend in legend_items for legend in expected_legend)
 
     # Check four traces have been plotted
-    assert len(plot.renderers) == 4
+    assert len(plot.renderers) == 8  # 4 lines + 4 vstrips for pass data
 
     # Check that the URL includes the time range parameter
     first_source = plot.renderers[0].data_source
