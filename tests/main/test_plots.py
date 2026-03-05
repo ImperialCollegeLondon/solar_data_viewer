@@ -15,6 +15,7 @@ from bokeh.models import (  # type: ignore
 from bokeh.plotting import figure
 
 from main.config import MeasurementConfig, PlotConfig
+from main.plots import add_pass_contact_vstrip, add_pass_source
 
 
 def test_create_timeseries_plot():
@@ -46,7 +47,7 @@ def test_create_timeseries_plot():
     assert all(legend in legend_items for legend in expected_legend)
 
     # Check four traces have been plotted
-    assert len(plot.renderers) == 8  # 4 lines + 4 vstrips for pass data
+    assert len(plot.renderers) == 5  # 4 lines + 1 vstrip
 
     # Check that the URL includes the time range parameter
     first_source = plot.renderers[0].data_source
@@ -110,7 +111,7 @@ def test_create_timeseries_plots():
             assert any(isinstance(tool, CrosshairTool) for tool in tools)
 
             # Check callback added to buttons
-            data_source_mock.call_count == 6
+            data_source_mock.call_count == 5
 
 
 def test_create_solar_orbiter_plot():
@@ -201,3 +202,35 @@ def test_update_legend_hides_invisible_renderers():
     update_legend_on_spacecraft_selection(p)
 
     assert item.visible is False
+
+
+@patch("main.utils.process_data_from_test_csvs")
+def test_add_pass_source(plot_context):
+    """Test that add_pass_source adds an AjaxDataSource and a vstrip."""
+    plot = plot_context["plot"]
+    spacecraft = "SO"
+    time_range = "7d"
+
+    source = add_pass_source(plot, spacecraft, time_range)
+
+    assert isinstance(source, AjaxDataSource)
+    assert source.data_url == f"/data/passes/{spacecraft}?range={time_range}"
+
+
+def test_add_pass_contact_vstrip():
+    """Test add_pass_contact_vstrip function."""
+    plot = figure()
+    spacecraft = "SO"
+    time_range = "7d"
+
+    source = add_pass_source(plot, spacecraft, time_range)
+
+    add_pass_contact_vstrip(source, plot)
+
+    pass_renderers = [r for r in plot.renderers if r.name == "pass_data"]
+    assert len(pass_renderers) == 1
+
+    renderer = pass_renderers[0]
+    assert renderer.data_source == source
+    assert renderer.glyph.x0 == "start_time"
+    assert renderer.glyph.x1 == "end_time"

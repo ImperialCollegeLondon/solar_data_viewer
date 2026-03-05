@@ -222,10 +222,13 @@ def add_passes_checkbox(
         const show_data = cb_obj.active.includes(0);
 
         for (const plot of plots) {
+
             for (const renderer of plot.renderers) {
+
                 if (renderer.name === "pass_data") {
 
                     renderer.visible = show_data;
+
 
                     if (renderer.data_source && show_data) {
                         const source = renderer.data_source;

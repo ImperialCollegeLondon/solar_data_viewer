@@ -72,6 +72,47 @@ def get_now_label(current_time: datetime.datetime) -> Label:
     return now_label
 
 
+def add_pass_source(plot, pass_spacecraft: str, time_range: str) -> AjaxDataSource:
+    """Add a data source for pass data to the plot.
+
+    Args:
+        plot: The Bokeh figure to add the pass data to.
+        pass_spacecraft: The spacecraft to show pass data for.
+        time_range: The time range for the pass data to show.
+
+    Returns:
+        An AjaxDataSource for the pass data.
+    """
+    pass_source = AjaxDataSource(
+        data_url=f"/data/passes/{pass_spacecraft}?range={time_range}",
+        polling_interval=None,
+        method="GET",
+    )
+    return pass_source
+
+
+def add_pass_contact_vstrip(pass_source: AjaxDataSource, plot: figure) -> None:
+    """Add a vstrip to the plot to show pass contact times.
+
+    Args:
+        pass_source: An AjaxDataSource containing the pass contact times.
+        plot: The Bokeh figure to add the vstrip to.
+    """
+    plot.vstrip(
+        x0="start_time",
+        x1="end_time",
+        source=pass_source,
+        fill_color="blue",
+        fill_alpha=0.3,
+        line_color=None,
+        name="pass_data",
+        visible=False,
+        legend_label="Passes",
+    )
+
+    return plot
+
+
 def update_legend_on_spacecraft_selection(plot: figure) -> figure:
     """Update the legend to hide hidden spacecraft lines.
 
@@ -135,7 +176,6 @@ def create_timeseries_plot(
                 polling_interval=300000,
                 method="GET",
             )
-            source.data = {"date": [], "measurement": []}
             plot.line(
                 "date",
                 "measurement",
@@ -145,24 +185,10 @@ def create_timeseries_plot(
                 legend_label=f"{spacecraft}: {args.label}",
                 visible=spacecraft == default_spacecraft,
             )
-
-            pass_source = AjaxDataSource(
-                data_url=f"/data/passes/{spacecraft}?range={time_range}",
-                polling_interval=None,
-                method="GET",
-            )
-
-            plot.vstrip(
-                x0="start_time",
-                x1="end_time",
-                source=pass_source,
-                fill_color="grey",
-                fill_alpha=0.3,
-                line_color=None,
-                name="pass_data",
-                visible=False,
-                legend_label="Passes",
-            )
+    # Show pass data for SO only
+    pass_spacecraft = "SO"
+    pass_contact_data_srouce = add_pass_source(plot, pass_spacecraft, time_range)
+    add_pass_contact_vstrip(pass_contact_data_srouce, plot)
 
     current_time = datetime.datetime.now()
     plot.add_layout(get_now_vertical_line(current_time))

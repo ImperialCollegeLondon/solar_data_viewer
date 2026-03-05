@@ -106,17 +106,16 @@ def process_pass_data_from_test_csvs(
     df["end_time"] = pd.to_datetime(df["end_time"], utc=True)
 
     latest = pd.Timestamp.utcnow()
-    ranges = {
-        "1d": pd.Timedelta(days=1),
-        "3d": pd.Timedelta(days=3),
-        "7d": pd.Timedelta(days=7),
-    }
 
-    delta = ranges.get(range_param, pd.Timedelta(days=3))
-    df = df[df["end_time"] >= latest - delta]
+    # Only show passes in the future
+    df = df[
+        (df["end_time"] >= latest) & (df["start_time"] <= latest + pd.Timedelta(days=1))
+    ]
 
     df["start_time"] = df["start_time"].apply(lambda x: int(x.timestamp() * 1000))
     df["end_time"] = df["end_time"].apply(lambda x: int(x.timestamp() * 1000))
+    df["label_text"] = "Pass Start"
+    df["tick_mark"] = "|"
 
     return {
         "start_time": df["start_time"].tolist(),

@@ -1,55 +1,16 @@
 """Test suite for the widgets."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
-import pytest
-from bokeh.models import CustomJS, Range1d, Select
+from bokeh.models import CustomJS, Select
 from bokeh.models.widgets.groups import CheckboxButtonGroup, CheckboxGroup
 
-from main.config import MeasurementConfig, PlotConfig
-from main.plots import create_timeseries_plot
 from main.widgets import (
     add_callback_to_checkbox_button,
     add_passes_checkbox,
     add_time_range_callback,
     checkbox_button_group,
 )
-
-
-@pytest.fixture
-def plot_context(process_data_mock: Mock):
-    """Provides a standard plot environment for widget tests."""
-    # Mock the data processing function
-    process_data_mock = process_data_mock.patch(
-        "main.utils.process_data_from_test_csvs"
-    )
-    process_data_mock.return_value = {
-        "measurement": [3.0, 4.0, 5.0],
-        "date": [1767867720000, 1767867780000, 1767867840000],
-    }
-
-    plot_config = PlotConfig(
-        title="Title",
-        unit="Unit",
-        measurements={
-            "speed": MeasurementConfig(label="Speed", traces={"A": "red", "B": "blue"}),
-            "density": MeasurementConfig(
-                label="Density", traces={"A": "red", "B": "blue"}
-            ),
-        },
-    )
-
-    default_spacecraft = "A"
-    x_range = Range1d(start=0, end=1)
-
-    plot = create_timeseries_plot(plot_config, x_range, default_spacecraft)
-
-    return {
-        "plot": plot,
-        "config": plot_config,
-        "x_range": x_range,
-        "default_spacecraft": default_spacecraft,
-    }
 
 
 @patch("main.utils.process_data_from_test_csvs")
@@ -92,7 +53,7 @@ def test_add_time_range_callback(plot_context: dict):
 @patch("main.utils.process_data_from_test_csvs")
 def test_add_passes_checkbox(plot_context: dict):
     """Test the add_passes_checkbox function."""
-    plots = [plot_context["plot"]]
+    plots = plot_context["plot"]
 
     # Test checkbox is hidden when IMAP is selected
     checkbox_imap = add_passes_checkbox(plots, default_spacecraft="IMAP")
