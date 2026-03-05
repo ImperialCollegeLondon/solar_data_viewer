@@ -33,7 +33,7 @@ jobs:
         run: mypy .
 
       - name: Install so-pipeline tools
-        run: uv tool install --python 3.10 "git+https://${{ secrets.GH_TOKEN }}@github.com/ImperialCollegeLondon/so-pipeline-core-rse@dalonsoa-patch-1"
+        run: uv tool install --python 3.10 "git+https://${{ secrets.SO_PIPELINE_GH_TOKEN }}@github.com/ImperialCollegeLondon/so-pipeline-core-rse@dalonsoa-patch-1"
 
       - name: Run tests
         run: pytest
