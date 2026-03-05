@@ -78,13 +78,10 @@ def process_data_from_test_csvs(
     return data
 
 
-def get_so_magnetic_field(
-    spacecraft: str, measurement: str, range_param: str
-) -> dict[str, list[float]]:
+def get_so_magnetic_field(measurement: str, range_param: str) -> dict[str, list[float]]:
     """Retrieves the chosen component of the magnetic field data for the SO mission.
 
     Args:
-        spacecraft: Name of the spacecraft to retrieve data for.
         measurement: Name of the measurement to get data for.
         range_param: The time range for which to retrieve data.
 
