@@ -30,6 +30,12 @@ To get started:
     uv sync
     ```
 
+1. Install the solar orbiter pipeline command line tools, used for development to create a database with the right schemas that django can connect to. A script has been provided as a shortcut for that:
+
+    ```bash
+    bash setup_db.sh
+    ```
+
 1. Activate the virtual environment, or just preface your commands with `uv run` to use
 the virtual environment (see [uv activate] for more info):
 
