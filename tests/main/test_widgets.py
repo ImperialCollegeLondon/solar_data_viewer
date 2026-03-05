@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from bokeh.models import CustomJS, Select
+from bokeh.models import CustomJS, Select  # type: ignore[attr-defined]
 from bokeh.models.widgets.groups import CheckboxButtonGroup, CheckboxGroup
 
 from main.widgets import (
@@ -14,7 +14,7 @@ from main.widgets import (
 
 
 @patch("main.utils.process_data_from_test_csvs")
-def test_add_callback_to_checkbox_button(plot_context: dict):
+def test_add_callback_to_checkbox_button(plot_context):
     """Test the add_callback_to_checkbox_button function."""
     plot = plot_context["plot"]
     button = checkbox_button_group(labels=["A", "B"], default_spacecraft="A")
@@ -32,7 +32,7 @@ def test_add_callback_to_checkbox_button(plot_context: dict):
 
 
 @patch("main.utils.process_data_from_test_csvs")
-def test_add_time_range_callback(plot_context: dict):
+def test_add_time_range_callback(plot_context):
     """Test the add_time_range_callback function."""
     plots = [plot_context["plot"]]
     dropdown = Select(value="3d", options=[("1d", "1 Day"), ("3d", "3 Days")])
@@ -51,7 +51,7 @@ def test_add_time_range_callback(plot_context: dict):
 
 
 @patch("main.utils.process_data_from_test_csvs")
-def test_add_passes_checkbox(plot_context: dict):
+def test_add_passes_checkbox(plot_context):
     """Test the add_passes_checkbox function."""
     plots = plot_context["plot"]
 

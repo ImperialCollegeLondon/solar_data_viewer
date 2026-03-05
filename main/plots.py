@@ -72,7 +72,9 @@ def get_now_label(current_time: datetime.datetime) -> Label:
     return now_label
 
 
-def add_pass_source(plot, pass_spacecraft: str, time_range: str) -> AjaxDataSource:
+def add_pass_source(
+    plot: figure, pass_spacecraft: str, time_range: str
+) -> AjaxDataSource:
     """Add a data source for pass data to the plot.
 
     Args:
@@ -91,7 +93,7 @@ def add_pass_source(plot, pass_spacecraft: str, time_range: str) -> AjaxDataSour
     return pass_source
 
 
-def add_pass_contact_vstrip(pass_source: AjaxDataSource, plot: figure) -> None:
+def add_pass_contact_vstrip(pass_source: AjaxDataSource, plot: figure) -> figure:
     """Add a vstrip to the plot to show pass contact times.
 
     Args:
