@@ -210,7 +210,6 @@ def create_timeseries_plots(
     Args:
         plots_config: A list of PlotConfig objects containing the config arguments for
             each plot, as defined in the config TOML file.
-        button: A checkbox button to select the spacecraft to display data for.
         default_spacecraft: The spacecraft data to display as default.
         initial_time_range: The initial time range for the data to display.
 
