@@ -15,10 +15,9 @@ def test_load_plot_config(plots_config):
     assert isinstance(config, PlotsConfig)
 
 
-@pytest.mark.django_db
 @pytest.mark.parametrize("measurement", ["B_r", "B_t", "B_n"])
 @pytest.mark.parametrize("days", [1, 3, 7])
-def test_get_so_magnetic_field(measurement, days):
+def test_get_so_magnetic_field(measurement, days, db):
     """Test the get_so_magnetic_field function."""
     import pandas as pd
     from django.utils import timezone

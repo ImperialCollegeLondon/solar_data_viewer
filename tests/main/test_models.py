@@ -1,9 +1,7 @@
-import pytest
 from model_bakery import baker
 
 
-@pytest.mark.django_db
-def test_SOMagneticField():
+def test_SOMagneticField(db):
     """Test SOMagneticField model setup correctly for the external database.
 
     In particular, that the table name and fields are the expected ones.
