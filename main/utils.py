@@ -144,7 +144,7 @@ def get_so_gse_magnetic_field(
     """
     if measurement not in ("B_x", "B_y", "B_z"):
         raise ValueError(
-            "Only RTN magnetic field components can be retrieved by this function."
+            "Only GSE magnetic field components can be retrieved by this function."
         )
     # Get the time range to display
     ranges = {
