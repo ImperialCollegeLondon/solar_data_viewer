@@ -72,13 +72,10 @@ def get_now_label(current_time: datetime.datetime) -> Label:
     return now_label
 
 
-def add_pass_source(
-    plot: figure, pass_spacecraft: str, time_range: str
-) -> AjaxDataSource:
+def add_pass_source(pass_spacecraft: str, time_range: str) -> AjaxDataSource:
     """Add a data source for pass data to the plot.
 
     Args:
-        plot: The Bokeh figure to add the pass data to.
         pass_spacecraft: The spacecraft to show pass data for.
         time_range: The time range for the pass data to show.
 
@@ -189,8 +186,8 @@ def create_timeseries_plot(
             )
     # Show pass data for SO only
     pass_spacecraft = "SO"
-    pass_contact_data_srouce = add_pass_source(plot, pass_spacecraft, time_range)
-    add_pass_contact_vstrip(pass_contact_data_srouce, plot)
+    pass_contact_data_source = add_pass_source(pass_spacecraft, time_range)
+    add_pass_contact_vstrip(pass_contact_data_source, plot)
 
     current_time = datetime.datetime.now()
     plot.add_layout(get_now_vertical_line(current_time))

@@ -105,12 +105,10 @@ def process_pass_data_from_test_csvs(
     df["start_time"] = pd.to_datetime(df["start_time"], utc=True)
     df["end_time"] = pd.to_datetime(df["end_time"], utc=True)
 
-    latest = pd.Timestamp.utcnow()
+    now = pd.Timestamp.utcnow()
 
     # Only show passes in the future
-    df = df[
-        (df["end_time"] >= latest) & (df["start_time"] <= latest + pd.Timedelta(days=1))
-    ]
+    df = df[(df["end_time"] >= now) & (df["start_time"] <= now + pd.Timedelta(days=1))]
 
     df["start_time"] = df["start_time"].apply(lambda x: int(x.timestamp() * 1000))
     df["end_time"] = df["end_time"].apply(lambda x: int(x.timestamp() * 1000))

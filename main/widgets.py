@@ -226,25 +226,17 @@ def add_passes_checkbox(
             for (const renderer of plot.renderers) {
 
                 if (renderer.name === "pass_data") {
-
                     renderer.visible = show_data;
-
 
                     if (renderer.data_source && show_data) {
                         const source = renderer.data_source;
-
-                        // Force immediate fetch
-                        const url = new URL(source.data_url, window.location.origin);
-                        fetch(url.pathname + url.search)
+                        // Manual fetch for a one-time update
+                        fetch(source.data_url)
                             .then(response => response.json())
                             .then(data => {
                                 source.data = data;
-                                source.change.emit(); // Force redraw
-                            })
-                            .catch(error => console.error("Fetch failed:", error));
-
-                    } else if (renderer.data_source && !show_data) {
-                        renderer.data_source.polling_interval = null;
+                                source.change.emit();
+                            });
                     }
                 }
             }
