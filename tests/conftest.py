@@ -19,15 +19,11 @@ def plots_config() -> dict[str, Any]:  # type: ignore[explicit-any]
 
 
 @pytest.fixture(scope="session")
-def test_db():
-    """Create a test db with the right data tables.
+def django_db_setup():
+    """Forces the use of an existing DB rather than creating a test one."""
+    from django.conf import settings
 
-    We use the 'so-db' command to create the database and then to destroy
-    it once the tests are done.
-    """
-    from pathlib import Path
-
-    path = Path(__file__).resolve().parent / "db.sqlite3"
+    path = settings.DATABASES["default"]["NAME"]
 
     env = os.environ.copy()
     env["SOLO_SQLALCHEMY_URL"] = f"sqlite:///{path}"
@@ -46,15 +42,3 @@ def test_db():
         capture_output=True,
         check=True,
     )
-
-
-@pytest.fixture(scope="session")
-def django_db_setup(test_db):
-    """Forces the use of an existing DB rather than creating a test one."""
-    from django.conf import settings
-
-    settings.DATABASES["default"] = {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": test_db,
-        "ATOMIC_REQUESTS": False,
-    }
