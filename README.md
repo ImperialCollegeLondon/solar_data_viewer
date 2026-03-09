@@ -36,6 +36,8 @@ To get started:
     bash setup_db.sh
     ```
 
+    If the script fails indicating that `so_db` is not found, restart the shell and if it still fails, it might be that the tool has not been installed in a location in your path. In that case, update the shell with `uv tool update-shell`.
+
 1. Activate the virtual environment, or just preface your commands with `uv run` to use
 the virtual environment (see [uv activate] for more info):
 
