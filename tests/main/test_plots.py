@@ -204,14 +204,12 @@ def test_update_legend_hides_invisible_renderers():
     assert item.visible is False
 
 
-@patch("main.utils.process_data_from_test_csvs")
-def test_add_pass_source(plot_context):
+def test_add_pass_source():
     """Test that add_pass_source adds an AjaxDataSource and a vstrip."""
-    plot = plot_context["plot"]
     spacecraft = "SO"
     time_range = "7d"
 
-    source = add_pass_source(plot, spacecraft, time_range)
+    source = add_pass_source(spacecraft, time_range)
 
     assert isinstance(source, AjaxDataSource)
     assert source.data_url == f"/data/passes/{spacecraft}?range={time_range}"
@@ -223,7 +221,7 @@ def test_add_pass_contact_vstrip():
     spacecraft = "SO"
     time_range = "7d"
 
-    source = add_pass_source(plot, spacecraft, time_range)
+    source = add_pass_source(spacecraft, time_range)
 
     add_pass_contact_vstrip(source, plot)
 
