@@ -7,7 +7,6 @@ from tomllib import load
 from typing import Any
 
 import pytest
-from django.core.management import call_command
 
 
 @pytest.fixture
@@ -50,16 +49,12 @@ def test_db():
 
 
 @pytest.fixture(scope="session")
-def django_db_setup(django_db_blocker, test_db):
+def django_db_setup(test_db):
     """Forces the use of an existing DB rather than creating a test one."""
     from django.conf import settings
 
     settings.DATABASES["default"] = {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": test_db,
-        "ATOMIC_REQUESTS": True,
+        "ATOMIC_REQUESTS": False,
     }
-
-    # We need to run migrations to bring the auth-related tables into the db
-    with django_db_blocker.unblock():
-        call_command("migrate")

@@ -3,14 +3,12 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
-import pytest
 from django.http import JsonResponse
 from django.urls import reverse
 
 from .view_utils import TemplateOkMixin
 
 
-@pytest.mark.django_db
 class TestIndexView(TemplateOkMixin):
     """Test suite for the Index view."""
 
@@ -31,7 +29,6 @@ class TestIndexView(TemplateOkMixin):
         assert response.context["bokeh_version"] == bokeh.__version__
 
 
-@pytest.mark.django_db
 class TestDataView:
     """Test suite for the Data view."""
 
@@ -49,7 +46,6 @@ class TestDataView:
             process_data_mock.assert_called_with(spacecraft, measurement, "3d")
 
 
-@pytest.mark.django_db
 class TestSolarOrbiterView(TemplateOkMixin):
     """Test suite for the Solar Orbiter view."""
 
@@ -87,7 +83,6 @@ class TestSolarOrbiterView(TemplateOkMixin):
         assert all(mocked_stats[k] == response.context[k] for k in mocked_stats.keys())
 
 
-@pytest.mark.django_db
 class TestTrajectoryDataView:
     """Test suite for the Trajectory Data view."""
 

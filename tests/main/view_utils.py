@@ -13,8 +13,8 @@ class TemplateOkMixin:
         - A `_template_name` variable.
     """
 
-    def test_template_used(self, admin_client):
+    def test_template_used(self, client):
         """Test the correct template is used by the GET request."""
         with assertTemplateUsed(template_name=self._template_name):
-            response = admin_client.get(self._get_url())
+            response = client.get(self._get_url())
         assert response.status_code == HTTPStatus.OK
