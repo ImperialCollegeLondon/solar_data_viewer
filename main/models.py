@@ -3,7 +3,7 @@
 from django.db import models
 
 
-class BaseMagneticField(models.Model):
+class BaseRTNMagneticField(models.Model):
     """Model describing the components of the magnetic field on a specific datetime."""
 
     time = models.DateTimeField(
@@ -18,7 +18,7 @@ class BaseMagneticField(models.Model):
         abstract = True
 
 
-class SOMagneticField(BaseMagneticField):
+class SORTNMagneticField(BaseRTNMagneticField):
     """Magnetic field model for the Solar Orbiter mission."""
 
     class Meta:  # noqa: D106

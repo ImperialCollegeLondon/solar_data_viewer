@@ -8,10 +8,10 @@ import numpy as np
 import pandas as pd
 from django.utils import timezone
 
-from main.models import SOMagneticField
+from main.models import SORTNMagneticField
 
 # First we get rid of all the objects in the DB
-SOMagneticField.objects.all().delete()
+SORTNMagneticField.objects.all().delete()
 
 # Now, we create new content
 now = timezone.now()
@@ -20,11 +20,11 @@ times = pd.date_range(
 ).to_series()
 b = np.random.rand(len(times), 4)
 mfield = [
-    SOMagneticField(
+    SORTNMagneticField(
         time=times.iloc[i], B_r=b[i, 0], B_t=b[i, 1], B_n=b[i, 2], B_mod=b[i, 3]
     )
     for i in range(len(times))
 ]
 
 # And add it to the DB in bulk
-SOMagneticField.objects.bulk_create(mfield)
+SORTNMagneticField.objects.bulk_create(mfield)

@@ -22,8 +22,8 @@ def test_get_so_magnetic_field(measurement, days, db):
     import pandas as pd
     from django.utils import timezone
 
-    from main.models import SOMagneticField
-    from main.utils import get_so_magnetic_field
+    from main.models import SORTNMagneticField
+    from main.utils import get_so_rtn_magnetic_field
 
     # Prepare the times
     num = days * 24
@@ -33,12 +33,12 @@ def test_get_so_magnetic_field(measurement, days, db):
     ).to_series()
 
     # Populate the database
-    baker.make(SOMagneticField, time=itertools.cycle(times), _quantity=len(times))
+    baker.make(SORTNMagneticField, time=itertools.cycle(times), _quantity=len(times))
 
     # Find the actual and expected values
-    actual = get_so_magnetic_field(measurement, range_param=f"{days}d")
+    actual = get_so_rtn_magnetic_field(measurement, range_param=f"{days}d")
     expected_meas = list(
-        SOMagneticField.objects.filter(time__in=times[-num:]).values_list(
+        SORTNMagneticField.objects.filter(time__in=times[-num:]).values_list(
             measurement, flat=True
         )
     )

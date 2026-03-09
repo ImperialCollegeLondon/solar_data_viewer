@@ -78,7 +78,9 @@ def process_data_from_test_csvs(
     return data
 
 
-def get_so_magnetic_field(measurement: str, range_param: str) -> dict[str, list[float]]:
+def get_so_rtn_magnetic_field(
+    measurement: str, range_param: str
+) -> dict[str, list[float]]:
     """Retrieves the chosen component of the magnetic field data for the SO mission.
 
     Args:
@@ -89,6 +91,10 @@ def get_so_magnetic_field(measurement: str, range_param: str) -> dict[str, list[
         A dictionary containing the relevant datetimes in UNIX epoch time format and
             the measurements to plot.
     """
+    if measurement not in ("B_r", "B_t", "B_n"):
+        raise ValueError(
+            "Only RTN magnetic field components can be retrieved by this function."
+        )
     # Get the time range to display
     ranges = {
         "1d": pd.Timedelta(days=1),
@@ -100,7 +106,7 @@ def get_so_magnetic_field(measurement: str, range_param: str) -> dict[str, list[
 
     # Get the relevant data from the DB
     data = pd.DataFrame(
-        models.SOMagneticField.objects.filter(time__gte=from_date)
+        models.SORTNMagneticField.objects.filter(time__gte=from_date)
         .order_by("time")
         .values("time", measurement)
     )
