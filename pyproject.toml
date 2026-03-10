@@ -64,7 +64,7 @@ module = ["sunpy.*", "astropy.*", "huey.*"]
 follow_untyped_imports = true
 
 [tool.pytest.ini_options]
-addopts = "-v -p no:warnings --cov=solar_data_viewer --cov-branch --cov-report=html --cov-report=xml --doctest-modules --ignore=solar_data_viewer/__main__.py --ignore=docs/ --ignore=solar_data_viewer/settings/"
+addopts = "-v -p no:warnings --cov=solar_data_viewer --cov-branch --cov-report=html --cov-report=xml --nomigrations --doctest-modules --ignore=solar_data_viewer/__main__.py --ignore=docs/ --ignore=solar_data_viewer/settings/"
 DJANGO_SETTINGS_MODULE = "solar_data_viewer.settings"
 FAIL_INVALID_TEMPLATE_VARS = true
 
