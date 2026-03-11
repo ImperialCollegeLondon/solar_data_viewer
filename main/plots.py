@@ -90,7 +90,7 @@ def add_pass_source(pass_spacecraft: str, time_range: str) -> AjaxDataSource:
     return pass_source
 
 
-def add_pass_contact_vstrip(pass_source: AjaxDataSource, plot: figure) -> figure:
+def add_pass_contact_vstrip(pass_source: AjaxDataSource, plot: figure) -> None:
     """Add a vstrip to the plot to show pass contact times.
 
     Args:
