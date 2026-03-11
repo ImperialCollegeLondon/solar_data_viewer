@@ -68,7 +68,7 @@ def add_callback_to_checkbox_button(
 
             //  Check if "SO" is selected
             const so_index = labels.indexOf("SO");
-            // Check if 'show pass dat' is selected
+            // Check if 'show pass data' is selected
             const is_so_active = so_index !== -1 && selection.includes(so_index);
 
             //  Hide or show 'Show Pass Data' checkbox based on whether "SO" is selected

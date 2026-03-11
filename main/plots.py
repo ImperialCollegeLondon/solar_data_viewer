@@ -109,8 +109,6 @@ def add_pass_contact_vstrip(pass_source: AjaxDataSource, plot: figure) -> figure
         legend_label="Passes",
     )
 
-    return plot
-
 
 def update_legend_on_spacecraft_selection(plot: figure) -> figure:
     """Update the legend to hide hidden spacecraft lines.
