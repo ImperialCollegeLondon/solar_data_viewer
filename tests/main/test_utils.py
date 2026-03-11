@@ -26,7 +26,8 @@ def test_load_plot_config(plots_config):
     ],
 )
 @pytest.mark.parametrize("days", [1, 3, 7])
-def test_get_gse_magnetic_field(measurement, raises, days, db):
+@pytest.mark.django_db(databases=["imap"])
+def test_get_gse_magnetic_field(measurement, raises, days):
     """Test the get_so_magnetic_field function."""
     import pandas as pd
     from django.utils import timezone
