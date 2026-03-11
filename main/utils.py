@@ -45,7 +45,10 @@ def process_data_from_test_csvs(
         A dictionary containing the relevant datetimes in UNIX epoch time format and
             the measurements to plot.
     """
-    if measurement in ("bx_gse", "by_gse", "bz_gse") and spacecraft in ("IMAP"):
+    if (
+        measurement in ("bx_gse", "by_gse", "bz_gse")
+        and spacecraft in models.MAG_MODELS
+    ):
         return get_gse_magnetic_field(spacecraft, measurement, range_param)
 
     csv_files = {
@@ -100,8 +103,10 @@ def get_gse_magnetic_field(
             "Only GSE magnetic field components can be retrieved by this function."
         )
 
-    # Tables to get the data from, mission specific
-    tables = {"IMAP": models.IMAPGSEMagneticField}
+    if spacecraft not in models.MAG_MODELS:
+        raise ValueError(
+            f"Only {list(models.MAG_MODELS.keys())} spacecrafts are supported."
+        )
 
     # Get the time range to display
     ranges = {
@@ -114,7 +119,7 @@ def get_gse_magnetic_field(
 
     # Get the relevant data from the DB
     data = pd.DataFrame(
-        tables[spacecraft]
+        models.MAG_MODELS[spacecraft]
         .objects.filter(time__gte=from_date)
         .order_by("time")
         .values("time", measurement)
