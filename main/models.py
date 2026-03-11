@@ -50,7 +50,7 @@ class SOGSEMagneticField(models.Model):
     bz_gse = models.FloatField(
         help_text="GSE 'z' component of the magnetic field.", db_column="B_GSE_z"
     )
-    B_mag = models.FloatField(
+    b_mag = models.FloatField(
         help_text="Modulus of the magnetic field.", db_column="B_mod"
     )
 

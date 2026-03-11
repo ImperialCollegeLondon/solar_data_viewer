@@ -75,7 +75,7 @@ def process_data_from_test_csvs(
     df = df[df["date"] >= latest - delta]
 
     # Format datetime as Unix epoch time
-    df["date"] = df["date"].astype("int64") // 10**6
+    df["date"] = df["date"].astype("int64") // 10**3
 
     # Create JSON response
     dates = df["date"].tolist()
@@ -131,7 +131,7 @@ def get_gse_magnetic_field(
     data["date"] = pd.to_datetime(data["date"], utc=True)
 
     # Format datetime as Unix epoch time
-    data["date"] = data["date"].astype("int64") // 10**6
+    data["date"] = data["date"].astype("int64") // 10**3
 
     # Create JSON response
     dates = data["date"].tolist()

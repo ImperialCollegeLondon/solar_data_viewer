@@ -22,14 +22,14 @@ for model in MAG_MODELS.values():
     model.objects.all().delete()  # type: ignore[attr-defined]
 
     # Now, we create new magnetic fields
-    b = np.random.rand(len(times), 4)
+    b = np.random.rand(len(times), 3)
     mfield = [
         model(
             time=times.iloc[i],
-            bx_gse=b[i, 0],
-            by_gse=b[i, 1],
+            bx_gse=b[i, 0] + 1,
+            by_gse=b[i, 1] - 1,
             bz_gse=b[i, 2],
-            b_mag=b[i, 3],
+            b_mag=(b[i, 0] + 1) ** 2 + (b[i, 1] - 1) ** 2 + (b[i, 2]) ** 2,
         )
         for i in range(len(times))
     ]
