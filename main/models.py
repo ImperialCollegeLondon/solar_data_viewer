@@ -59,5 +59,5 @@ class SOGSEMagneticField(models.Model):
         managed = False
 
 
-MAG_MODELS = {"IMAP": IMAPGSEMagneticField, "SO": SOGSEMagneticField}
+MAG_MODELS = {"IMAP": IMAPGSEMagneticField}
 """Models to handle magnetic data for the supported missions."""
