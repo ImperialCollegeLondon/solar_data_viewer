@@ -23,16 +23,19 @@ for model in MAG_MODELS.values():
 
     # Now, we create new magnetic fields
     b = np.random.rand(len(times), 3)
+    b[:, 0] += 1
+    b[:, 1] -= 1
     mfield = [
         model(
-            time=times.iloc[i],
-            bx_gse=b[i, 0] + 1,
-            by_gse=b[i, 1] - 1,
-            bz_gse=b[i, 2],
-            b_mag=(b[i, 0] + 1) ** 2 + (b[i, 1] - 1) ** 2 + (b[i, 2]) ** 2,
+            time=t,
+            bx_gse=row[0],
+            by_gse=row[1],
+            bz_gse=row[2],
+            b_mag=np.linalg.norm(row),
         )
-        for i in range(len(times))
+        for t, row in zip(times, b)
     ]
+
 
     # And add it to the DB in bulk
     model.objects.bulk_create(mfield)  # type: ignore[attr-defined]
