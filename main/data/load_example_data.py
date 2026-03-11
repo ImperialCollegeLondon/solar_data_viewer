@@ -19,7 +19,7 @@ times = pd.date_range(
 # For each of the supported spacecrafts we add some data
 for model in MAG_MODELS.values():
     # First we get rid of all the objects in the DB
-    model.objects.all().delete()
+    model.objects.all().delete()  # type: ignore[attr-defined]
 
     # Now, we create new magnetic fields
     b = np.random.rand(len(times), 4)
@@ -35,4 +35,4 @@ for model in MAG_MODELS.values():
     ]
 
     # And add it to the DB in bulk
-    model.objects.bulk_create(mfield)
+    model.objects.bulk_create(mfield)  # type: ignore[attr-defined]

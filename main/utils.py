@@ -119,7 +119,7 @@ def get_gse_magnetic_field(
 
     # Get the relevant data from the DB
     data = pd.DataFrame(
-        models.MAG_MODELS[spacecraft]
+        models.MAG_MODELS[spacecraft]  # type: ignore[attr-defined]
         .objects.filter(time__gte=from_date)
         .order_by("time")
         .values("time", measurement)
