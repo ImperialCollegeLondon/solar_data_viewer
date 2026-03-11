@@ -42,4 +42,6 @@ class Router:
         **hints: Any,
     ) -> bool | None:
         """Make sure the models appear in the right db during migrations."""
-        return db == self._select_db(model_name or "")
+        if app_label in self.route_app_labels:
+            return db == self._select_db(model_name or "")
+        return None
