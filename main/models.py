@@ -10,7 +10,7 @@ class IMAPGSEMagneticField(models.Model):
         primary_key=True,
         null=False,
         help_text="Time for the data.",
-        db_column="kernel_set_key",
+        db_column="time_utc",
     )
 
     bx_gse = models.FloatField(
@@ -38,7 +38,7 @@ class SOGSEMagneticField(models.Model):
         primary_key=True,
         null=False,
         help_text="Time for the data.",
-        db_column="kernel_set_key",
+        db_column="time",
     )
 
     bx_gse = models.FloatField(
