@@ -57,8 +57,6 @@ def process_data_from_test_csvs(
     }
 
     df = pd.read_csv(csv_files[spacecraft], parse_dates=True)
-    # Replace null values with nan to avoid Bokeh errors
-    df = df.replace({np.nan: "nan"})
 
     df = df.rename(columns={df.columns[0]: "date"})
     df["date"] = pd.to_datetime(df["date"], utc=True)
@@ -126,7 +124,6 @@ def get_gse_magnetic_field(
     )
 
     # Do some post processing to sanitize the data
-    data = data.replace({np.nan: "nan"})
     data = data.rename(columns={data.columns[0]: "date"})
     data["date"] = pd.to_datetime(data["date"], utc=True)
 
