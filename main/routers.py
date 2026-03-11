@@ -1,5 +1,7 @@
 """Routers for the database."""
 
+from typing import Any
+
 from django.db import models
 
 
@@ -8,7 +10,7 @@ class Router:
 
     route_app_labels = "main"
 
-    def _select_db(self, model_name: str):
+    def _select_db(self, model_name: str) -> str | None:
         """Internal function to select the right database."""
         if model_name.lower().startswith("imap"):
             return "imap"
@@ -16,16 +18,28 @@ class Router:
             return "so"
         return None
 
-    def db_for_read(self, model: models.Model, **hints):
+    def db_for_read(  # type: ignore[explicit-any]
+        self,
+        model: models.Model,
+        **hints: Any,
+    ) -> str | None:
         """Select the database to read."""
-        return self._select_db(model._meta.model_name)
+        return self._select_db(model._meta.model_name or "")
 
-    def db_for_write(self, model: models.Model, **hints):
+    def db_for_write(  # type: ignore[explicit-any]
+        self,
+        model: models.Model,
+        **hints: Any,
+    ) -> str | None:
         """Select the database to read."""
-        return self._select_db(model._meta.model_name)
+        return self._select_db(model._meta.model_name or "")
 
-    def allow_migrate(
-        self, db: str, app_label: str, model_name: str | None = None, **hints
-    ):
+    def allow_migrate(  # type: ignore[explicit-any]
+        self,
+        db: str,
+        app_label: str,
+        model_name: str | None = None,
+        **hints: Any,
+    ) -> bool | None:
         """Make sure the models appear in the right db during migrations."""
         return db == self._select_db(model_name or "")
