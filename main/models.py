@@ -22,7 +22,9 @@ class IMAPGSEMagneticField(models.Model):
     bz_gse = models.FloatField(
         help_text="GSE 'z' component of the magnetic field.", db_column="B_GSE_z"
     )
-    b_mag = models.FloatField(help_text="Modulus of the magnetic field.")
+    b_mag = models.FloatField(
+        help_text="Modulus of the magnetic field.", db_column="B_magnitude"
+    )
 
     class Meta:  # noqa: D106
         db_table = "ialirt_mag"
@@ -48,7 +50,9 @@ class SOGSEMagneticField(models.Model):
     bz_gse = models.FloatField(
         help_text="GSE 'z' component of the magnetic field.", db_column="B_GSE_z"
     )
-    b_mag = models.FloatField(help_text="Modulus of the magnetic field.")
+    B_mag = models.FloatField(
+        help_text="Modulus of the magnetic field.", db_column="B_mod"
+    )
 
     class Meta:  # noqa: D106
         db_table = "solo_L2_mag-gse-ll-internal"
