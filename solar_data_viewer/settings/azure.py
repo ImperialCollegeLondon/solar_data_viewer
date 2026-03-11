@@ -70,3 +70,14 @@ LOGGING = {
         },
     },
 }
+
+DATABASES = dict(
+    imap=dict(
+        ENGINE="django.db.backends.postgresql",
+        NAME=os.environ["IMAP_DB_NAME"],
+        USER=os.environ["IMAP_DB_USER"],
+        PASSWORD=os.environ["IMAP_DB_PASSWORD"],
+        HOST=os.environ["IMAP_DB_HOST"],
+        PORT=os.environ["IMAP_DB_PORT"],
+    )
+)
