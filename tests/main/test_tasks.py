@@ -9,9 +9,9 @@ from django.core.cache import cache
 @patch("main.tasks.static_solar_orbiter_data")
 @patch("main.tasks.trajectory_solar_orbiter_data")
 @patch("main.tasks.datetime")
-def test_set_trajectory_cache(datetime_mock, traj_data_mock, static_data_mock):
-    """Test the set_trajectory_cache function."""
-    from main.tasks import set_trajectory_cache
+def test_set_so_trajectory_cache(datetime_mock, traj_data_mock, static_data_mock):
+    """Test the set_so_trajectory_cache function."""
+    from main.tasks import set_so_trajectory_cache
 
     time = datetime.now()
     times = (time, time + timedelta(days=8))
@@ -25,7 +25,7 @@ def test_set_trajectory_cache(datetime_mock, traj_data_mock, static_data_mock):
     }
 
     cache.clear()
-    set_trajectory_cache()
+    set_so_trajectory_cache()
 
     for unit in ["AU", "angle"]:
         static_data_mock.assert_any_call(time, unit)

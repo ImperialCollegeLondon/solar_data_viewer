@@ -26,8 +26,8 @@ def set_l1_trajectory_cache() -> None:
     cache.set("l1_trajectory_data", data, timeout=None)
 
 
-def set_trajectory_cache() -> None:
-    """Retrieves the most recent trajectory data and adds it to the cache.
+def set_so_trajectory_cache() -> None:
+    """Retrieves the most recent SO trajectory data and adds it to the cache.
 
     Creates the trajectory data for the Solar Orbiter plots and adds this to
     Django's cache, together with the time that the data were generated.
@@ -55,4 +55,5 @@ def set_trajectory_cache() -> None:
 @db_periodic_task(crontab(hour=10, minute=0))
 def trajectory_cache_task() -> None:
     """Daily huey task to retrieve most recent trajectory data."""
-    set_trajectory_cache()
+    set_so_trajectory_cache()
+    set_l1_trajectory_cache()

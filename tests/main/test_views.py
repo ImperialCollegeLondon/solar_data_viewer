@@ -122,7 +122,7 @@ class TestTrajectoryDataView:
                     assert response.json() == mock_data[datatype][unit]
 
         with patch("main.views.cache") as empty_cache_mock:
-            with patch("main.views.set_trajectory_cache") as cache_setter_mock:
+            with patch("main.views.set_so_trajectory_cache") as cache_setter_mock:
                 empty_cache_mock.get.side_effect = [None, mock_data]
                 endpoint = reverse("main:trajectory_data", args=["AU", "static"])
                 response = client.get(endpoint)
