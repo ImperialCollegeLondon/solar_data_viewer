@@ -100,7 +100,7 @@ class TrajectoryDataView(View):
         *args: Any,
         **kwargs: Any,
     ) -> JsonResponse:
-        """Method to handle GET requests for spacecraft data.
+        """Method to handle GET requests for SO trajectory data.
 
         Args:
             request: The incoming HTTP request.
@@ -111,8 +111,7 @@ class TrajectoryDataView(View):
             **kwargs: Additional key word arguments.
 
         Returns:
-            A JSON response containing the dates and values for the specific
-                spacecraft and measurement type.
+            A JSON response containing the trajectory data for Solar Orbiter.
         """
         data = cache.get(
             "trajectory_data",
@@ -136,7 +135,7 @@ class L1DataView(View):
         *args: Any,
         **kwargs: Any,
     ) -> JsonResponse:
-        """Method to handle GET requests for spacecraft data.
+        """Method to handle GET requests for L1 trajectory data.
 
         Args:
             request: The incoming HTTP request.
@@ -145,7 +144,7 @@ class L1DataView(View):
             **kwargs: Additional key word arguments.
 
         Returns:
-            A JSON response containing
+            A JSON response containing the trajectory data for L1 spacecraft.
         """
         data = cache.get(
             "l1_trajectory_data",
