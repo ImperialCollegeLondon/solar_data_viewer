@@ -115,14 +115,6 @@ def add_time_range_callback(dropdown: Select, plots: list[figure]) -> None:
 
         for (const plot of plots) {
 
-            // Update Line
-            const lines = plot.select({name: "now_line"});
-            if (lines.length > 0) lines[0].location = now;
-
-            // Update Now Label
-            const labels = plot.select({name: "now_label"});
-            if (labels.length > 0) labels[0].x = now;
-
             for (const renderer of plot.renderers) {
 
                 // Only update renderers that have an AjaxDataSource

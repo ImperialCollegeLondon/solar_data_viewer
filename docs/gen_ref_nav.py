@@ -14,6 +14,8 @@ for path in sorted(Path("main").glob("**/*.py")):
     parts = list(module_path.parts)
     if ".array_cache" in parts:
         continue
+    elif "data" in parts:
+        continue
     elif parts[-1] == "__init__":
         parts = parts[:-1]
         doc_path = doc_path.with_name("index.md")

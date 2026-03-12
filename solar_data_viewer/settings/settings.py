@@ -75,9 +75,17 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db" / "db.sqlite3",
-    }
+    },
+    "imap": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db" / "imap.sqlite3",
+    },
+    "so": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db" / "so.sqlite3",
+    },
 }
-
+DATABASE_ROUTERS = ["main.routers.Router"]
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators

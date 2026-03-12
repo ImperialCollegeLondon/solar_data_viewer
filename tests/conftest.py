@@ -14,3 +14,14 @@ def plots_config() -> dict[str, Any]:  # type: ignore[explicit-any]
     with path.open("rb") as f:
         config = load(f)
     return config
+
+
+@pytest.fixture(autouse=True, scope="session")
+def django_test_environment(django_test_environment):
+    """Make unmanaged models, managed during tests."""
+    from django.apps import apps
+
+    get_models = apps.get_models
+
+    for m in [m for m in get_models() if not m._meta.managed]:
+        m._meta.managed = True

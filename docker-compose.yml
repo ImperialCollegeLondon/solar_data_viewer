@@ -6,6 +6,9 @@ services:
       - -c
       - |
         python manage.py migrate
+        python manage.py migrate --database=imap
+        python manage.py migrate --database=so
+        python manage.py shell < main/data/load_example_data.py
         python manage.py run_huey &
         python manage.py runserver 0:8000
     ports:
