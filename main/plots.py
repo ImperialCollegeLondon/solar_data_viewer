@@ -330,7 +330,7 @@ def create_l1_plot(
     """Create a plot for the L1 spacecraft trajectories.
 
     The plot shows blobs for the current spacecraft positions, lines showing
-    their past 7 days and a circle for the magnetosphere.
+    their past 7 days and a circle for the magnetopause.
 
     Args:
         title: The plot title.
@@ -352,7 +352,7 @@ def create_l1_plot(
         y_range=Range1d(-55, 55),
     )
 
-    # Add circle representing magnetosphere
+    # Add circle representing magnetopause
     plot.circle(
         x=16,  # GSE y
         y=0,  # GSE z
@@ -361,7 +361,7 @@ def create_l1_plot(
         line_color="gray",
         line_dash="dotted",
         line_width=1,
-        legend_label="Magnetosphere",
+        legend_label="Magnetopause",
     )
 
     # Create an AjaxDataSource for the spacecraft static position

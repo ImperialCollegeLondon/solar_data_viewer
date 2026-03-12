@@ -222,7 +222,7 @@ def test_create_l1_plot():
         plot = create_l1_plot()
         assert isinstance(plot, figure)
 
-        # renderers are the m/sphere circle, points and the trajectories
+        # renderers are the m/pause circle, points and the trajectories
         assert len(plot.renderers) == 3
 
         assert plot.renderers[1].data_source == static_source
