@@ -61,15 +61,11 @@ class PlotsConfig(BaseConfig):
         # Check the names of spacecraft provided for each trace
         for plot in self.plots:
             for measurement_id, measurement in plot.measurements.items():
-                invalid_spacecraft = [
-                    craft
-                    for craft in measurement.traces
-                    if craft not in self.spacecrafts
-                ]
-                if invalid_spacecraft:
-                    raise ValueError(
-                        f"Invalid spacecraft(s) ({', '.join(invalid_spacecraft)}) "
-                        f"provided for plot {plot.title} ({measurement_id})."
-                    )
+                for spacecraft in self.spacecrafts:
+                    if spacecraft not in measurement.traces:
+                        raise ValueError(
+                            f"Spacecraft {spacecraft} is missing from the traces "
+                            f"for plot {plot.title} ({measurement_id})."
+                        )
 
         return self
