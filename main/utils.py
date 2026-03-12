@@ -4,7 +4,6 @@ import tomllib
 from pathlib import Path
 from typing import Any
 
-import numpy as np
 import pandas as pd
 from django.utils import timezone
 
@@ -85,7 +84,7 @@ def process_data_from_test_csvs(
 def get_gse_magnetic_field(
     spacecraft: str, measurement: str, range_param: str
 ) -> dict[str, list[float]]:
-    """Retrieves the chosen component of the magnetic field data for the SO and IMAP missions.
+    """Retrieves a component of the magnetic field data for the SO and IMAP missions.
 
     Args:
         spacecraft: Name of the spacecraft to retrieve data for.
