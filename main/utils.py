@@ -31,10 +31,10 @@ def load_plot_config(source: Path | dict[str, Any]) -> PlotsConfig:  # type: ign
 
 
 def get_data_as_segments(df: pd.DataFrame, measurement: str) -> dict:  # type: ignore
-    """Find gaps in the data  and split into segments and return as dictionary.
+    """Find gaps in the data and split into segments.
 
     Args:
-        df: Dataframe containing the meadurements
+        df: Dataframe containing the measurements
         measurement: Name of the measurement to get data for.
 
     Returns:
