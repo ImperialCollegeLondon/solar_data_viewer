@@ -44,6 +44,7 @@ def get_data_as_segments(df: pd.DataFrame, measurement: str) -> dict:  # type: i
         A dictionary containing the relevant datetimes in UNIX epoch time format and
             the measurements to plot.
     """
+    df = df.set_index("date").sort_index()
     dt = df.index.to_series().diff()
     segment_ids = (dt > pd.Timedelta("1min")).cumsum()
 
@@ -106,7 +107,6 @@ def process_data_from_test_csvs(
     df = df[df["date"] >= latest - delta]
 
     df["date"] = pd.to_datetime(df["date"])
-    df = df.set_index("date").sort_index()
 
     # Split data in segments and return as dict
     data_dict = get_data_as_segments(df, measurement)

@@ -39,7 +39,7 @@ def test_get_gse_magnetic_field(measurement, raises, days):
     num = days * 24
     now = timezone.now()
     times = pd.date_range(
-        start=now - pd.Timedelta(days=10), end=now, freq="1min"
+        start=now - pd.Timedelta(days=10), end=now, freq="30s"
     ).to_series()
 
     # Populate the database
