@@ -65,13 +65,7 @@ def process_data_from_test_csvs(
 
     # Time range filtering
     latest = df["date"].max()
-    ranges = {
-        "1d": pd.Timedelta(days=1),
-        "3d": pd.Timedelta(days=3),
-        "7d": pd.Timedelta(days=7),
-    }
-
-    delta = ranges.get(range_param, pd.Timedelta(days=3))
+    delta = pd.Timedelta(range_param)
     df = df[df["date"] >= latest - delta]
 
     # Format datetime as Unix epoch time
@@ -109,12 +103,7 @@ def get_gse_magnetic_field(
         )
 
     # Get the time range to display
-    ranges = {
-        "1d": pd.Timedelta(days=1),
-        "3d": pd.Timedelta(days=3),
-        "7d": pd.Timedelta(days=7),
-    }
-    delta = ranges.get(range_param, ranges["3d"])
+    delta = pd.Timedelta(range_param)
     from_date = timezone.now() - delta
 
     # Get the relevant data from the DB
