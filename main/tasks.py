@@ -6,7 +6,24 @@ from django.core.cache import cache
 from huey import crontab
 from huey.contrib.djhuey import db_periodic_task
 
-from .trajectory import static_solar_orbiter_data, trajectory_solar_orbiter_data
+from .trajectory import (
+    l1_data,
+    static_solar_orbiter_data,
+    trajectory_solar_orbiter_data,
+)
+
+
+def set_l1_trajectory_cache() -> None:
+    """Retrieves the most recent L1 trajectory data and adds it to the cache.
+
+    Creates the trajectory data for the L1 plots and adds this to Django's cache.
+    """
+    time = datetime.now()
+    times = (time - timedelta(days=8), time)
+
+    static_data, trajectory_data = l1_data(times)
+    data = {"static": static_data, "trajectory": trajectory_data}
+    cache.set("l1_trajectory_data", data, timeout=None)
 
 
 def set_trajectory_cache() -> None:

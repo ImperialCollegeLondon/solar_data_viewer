@@ -9,8 +9,10 @@
   <script src="https://cdn.bokeh.org/bokeh/release/bokeh-mathjax-{{ bokeh_version }}.min.js"></script>
 
   <h2>Plots</h2>
+  {{ l1_script | safe }}
+  {{ l1_div | safe }}
 
-  {{ script | safe }}
-  {{ div | safe }}
+  {{ ts_script | safe }}
+  {{ ts_div | safe }}
 
 {% endblock content %}

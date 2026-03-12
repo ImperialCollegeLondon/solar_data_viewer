@@ -3,10 +3,11 @@
 from datetime import datetime
 from typing import cast
 
+import astropy.units as u
 import numpy as np
 from astropy.coordinates import SkyCoord
 from sunpy.coordinates import get_body_heliographic_stonyhurst, get_horizons_coord
-from sunpy.coordinates.frames import HeliographicStonyhurst
+from sunpy.coordinates.frames import GeocentricSolarEcliptic, HeliographicStonyhurst
 
 
 def heliographic_to_cartesian(
@@ -216,3 +217,66 @@ def generate_solar_orbiter_statistics() -> dict[str, str | float]:
         "lat_direction": lat_dir,
     }
     return data
+
+
+def coord_to_gse(coord: SkyCoord) -> tuple[float, float]:
+    """Convert a SkyCoord to GSE y and z-coordinates.
+
+    Only y and z-coordinates are required for plotting.
+
+    Returns:
+        A tuple of the y and z GSE coordinates.
+    """
+    gse_coord = coord.transform_to(GeocentricSolarEcliptic)
+    # Coords are given in Earth radii (u.R_earth)
+    y = gse_coord.cartesian.y.to(u.R_earth).value
+    z = gse_coord.cartesian.z.to(u.R_earth).value
+    return y, z
+
+
+def l1_data(
+    times: tuple[datetime, datetime],
+) -> tuple[dict[str, object], dict[str, object]]:
+    """Get the data for the L1 spacecraft glyphs in GSE coordinates.
+
+    Args:
+        times: A datetime to retrieve coordinates for.
+
+    Returns:
+        A dictionary containing y and z-coordinates, spacecraft names
+            and colours.
+    """
+    L1_IDS = [-43, -92, -8, -78, -231]
+    L1_CRAFTS = ["IMAP", "ACE", "WIND", "DSCOVR", "Solar-1"]
+    L1_COLOURS = [
+        "rgb(255,143,0)",
+        "rgb(204,0,204)",
+        "rgb(0,204,204)",
+        "rgb(0,102,204)",
+        "rgb(230,0,0)",
+    ]
+
+    y_coords, z_coords = [], []
+    for id in L1_IDS:
+        trajectory = get_JPL_spacecraft_coordinates(id, times)
+        gse_trajectory = [coord_to_gse(coord) for coord in trajectory]
+
+        # Add to trajectory data
+        y_coords.append([coord[0] for coord in gse_trajectory])
+        z_coords.append([coord[1] for coord in gse_trajectory])
+
+    static_data = {
+        "name": L1_CRAFTS,
+        "colour": L1_COLOURS,
+        "y": [coords[-1] for coords in y_coords],
+        "z": [coords[-1] for coords in z_coords],
+    }
+
+    trajectory_data = {
+        "name": L1_CRAFTS,
+        "colour": L1_COLOURS,
+        "y": y_coords,
+        "z": z_coords,
+    }
+
+    return static_data, trajectory_data

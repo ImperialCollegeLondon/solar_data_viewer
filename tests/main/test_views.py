@@ -24,8 +24,8 @@ class TestIndexView(TemplateOkMixin):
         endpoint = reverse("main:index")
         response = client.get(endpoint)
         assert response.status_code == HTTPStatus.OK
-        assert "<script" in response.context["script"]
-        assert "<div" in response.context["div"]
+        assert "<script" in response.context["ts_script"]
+        assert "<div" in response.context["ts_div"]
         assert response.context["bokeh_version"] == bokeh.__version__
 
 
