@@ -12,6 +12,10 @@
   {{ l1_script | safe }}
   {{ l1_div | safe }}
 
+  {% if time %}
+    <p>Plot last updated at {{ time }}.</p>
+  {% endif %}
+
   {{ ts_script | safe }}
   {{ ts_div | safe }}
 

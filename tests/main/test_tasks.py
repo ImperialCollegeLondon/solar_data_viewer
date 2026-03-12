@@ -34,7 +34,7 @@ def test_set_so_trajectory_cache(datetime_mock, traj_data_mock, static_data_mock
     cached_data = cache.get("trajectory_data")
     assert cached_data == expected_data
 
-    time_gen = cache.get("time_generated")
+    time_gen = cache.get("time_generated_so")
     assert time_gen == time.strftime("%Y-%m-%d %H:%M:%S")
 
     cache.clear()
@@ -60,5 +60,8 @@ def test_set_l1_trajectory_cache(datetime_mock, l1_data_mock):
 
     cached_data = cache.get("l1_trajectory_data")
     assert cached_data == expected_data
+
+    time_gen = cache.get("time_generated_l1")
+    assert time_gen == time.strftime("%Y-%m-%d %H:%M:%S")
 
     cache.clear()

@@ -25,6 +25,9 @@ def set_l1_trajectory_cache() -> None:
     data = {"static": static_data, "trajectory": trajectory_data}
     cache.set("l1_trajectory_data", data, timeout=None)
 
+    # Record the time the data was generated
+    cache.set("time_generated_l1", time.strftime("%Y-%m-%d %H:%M:%S"))
+
 
 def set_so_trajectory_cache() -> None:
     """Retrieves the most recent SO trajectory data and adds it to the cache.
@@ -49,7 +52,7 @@ def set_so_trajectory_cache() -> None:
     )
 
     # Record the time the data was generated
-    cache.set("time_generated", time.strftime("%Y-%m-%d %H:%M:%S"))
+    cache.set("time_generated_so", time.strftime("%Y-%m-%d %H:%M:%S"))
 
 
 @db_periodic_task(crontab(hour=10, minute=0))

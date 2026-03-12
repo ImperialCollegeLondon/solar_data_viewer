@@ -28,12 +28,14 @@ class IndexView(TemplateView):
         ts_script, ts_div = components(layout)
         l1_plot = create_l1_plot()
         l1_script, l1_div = components(l1_plot)
+        time = cache.get("time_generated_l1") or None
         context.update(
             {
                 "ts_script": ts_script,
                 "ts_div": ts_div,
                 "l1_script": l1_script,
                 "l1_div": l1_div,
+                "time": time,
             }
         )
         context["bokeh_version"] = bokeh.__version__
@@ -79,7 +81,7 @@ class SolarOrbiterView(TemplateView):
         context = super().get_context_data(**kwargs)
         layout = create_solar_orbiter_layout()
         script, div = components(layout)
-        time = cache.get("time_generated") or None
+        time = cache.get("time_generated_so") or None
         context.update({"script": script, "div": div, "time": time})
         stats = generate_solar_orbiter_statistics()
         context.update(stats)
