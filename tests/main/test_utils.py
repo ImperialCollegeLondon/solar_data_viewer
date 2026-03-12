@@ -36,9 +36,9 @@ def test_get_gse_magnetic_field(measurement, raises, days):
     from main.utils import get_gse_magnetic_field
 
     # Prepare the times
-    num = days * 24
+    num = days * 24 * 60 * 2
     now = timezone.now()
-    times = pd.date_range(start=now - pd.Timedelta(days=10), end=now, freq="30s")
+    times = pd.date_range(start=now - pd.Timedelta(days=days), end=now, freq="30s")
 
     # Populate the database
     baker.make(IMAPGSEMagneticField, time=itertools.cycle(times), _quantity=len(times))
