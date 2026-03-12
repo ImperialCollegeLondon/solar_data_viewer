@@ -119,6 +119,8 @@ def get_gse_magnetic_field(
         f"{(timezone.now() - start_time).total_seconds():.2f} seconds to retrieve "
         f"{len(data)} records."
     )
+    if not len(data):
+        return {"measurement": [], "date": []}
 
     # Do some post processing to sanitize the data
     data = data.rename(columns={data.columns[0]: "date"})
