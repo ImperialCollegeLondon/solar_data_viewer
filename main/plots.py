@@ -137,7 +137,7 @@ def create_timeseries_plot(
                 method="GET",
             )
 
-            plot.line(
+            plot.multi_line(
                 "date",
                 "measurement",
                 name=spacecraft,  # Enables selecting data in callback

@@ -4,7 +4,6 @@ import tomllib
 from pathlib import Path
 from typing import Any
 
-import numpy as np
 import pandas as pd
 from django.utils import timezone
 
@@ -29,6 +28,37 @@ def load_plot_config(source: Path | dict[str, Any]) -> PlotsConfig:  # type: ign
         raw_config = source
 
     return PlotsConfig.model_validate(raw_config)
+
+
+def get_data_as_segments(df: pd.DataFrame, measurement: str) -> dict:  # type: ignore
+    """Find gaps in the data  and split into segments and return as dictionary.
+
+    Args:
+        df: Dataframe containing the meadurements
+        measurement: Name of the measurement to get data for.
+
+    Returns:
+        A dictionary containing the relevant datetimes in UNIX epoch time format and
+            the measurements to plot.
+    """
+    dt = df.index.to_series().diff()
+    segment_ids = (dt > pd.Timedelta("1min")).cumsum()
+
+    dates = []
+    measurements = []
+
+    for _, segment in df.groupby(segment_ids):
+        segment = segment.dropna(subset=[measurement])
+
+        if len(segment) > 1:
+            # Convert to Unix
+            dates_epoch = (segment.index.astype("int64") // 10**3).tolist()
+            values = segment[measurement].astype(float).tolist()
+
+            dates.append(dates_epoch)
+            measurements.append(values)
+
+    return {"measurement": list(measurements), "date": list(dates)}
 
 
 def process_data_from_test_csvs(
@@ -72,20 +102,19 @@ def process_data_from_test_csvs(
     delta = ranges.get(range_param, pd.Timedelta(days=3))
     df = df[df["date"] >= latest - delta]
 
-    # Format datetime as Unix epoch time
-    df["date"] = df["date"].astype("int64") // 10**3
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.set_index("date").sort_index()
 
-    # Create JSON response
-    dates = df["date"].tolist()
-    measurements = df[measurement].tolist()
-    data = {"measurement": measurements, "date": dates}
-    return data
+    # Split data in segments and return as dict
+    data_dict = get_data_as_segments(df, measurement)
+
+    return data_dict
 
 
 def get_gse_magnetic_field(
     spacecraft: str, measurement: str, range_param: str
 ) -> dict[str, list[float]]:
-    """Retrieves the chosen component of the magnetic field data for the SO and IMAP missions.
+    """Retrieves a component of the magnetic field data for the SO and IMAP missions.
 
     Args:
         spacecraft: Name of the spacecraft to retrieve data for.
@@ -130,7 +159,6 @@ def get_gse_magnetic_field(
     # Format datetime as Unix epoch time
     data["date"] = data["date"].astype("int64") // 10**3
 
-    # Create JSON response
-    dates = data["date"].tolist()
-    measurements = data[measurement].tolist()
-    return {"measurement": measurements, "date": dates}
+    # Split data in segments and return as dict
+    data_dict = get_data_as_segments(data, measurement)
+    return data_dict
