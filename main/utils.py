@@ -1,6 +1,7 @@
 """General utilities for Solar Data Viewer."""
 
 import tomllib
+from logging import getLogger
 from pathlib import Path
 from typing import Any
 
@@ -9,6 +10,8 @@ from django.utils import timezone
 
 from . import models
 from .config import PlotsConfig
+
+logger = getLogger("django")
 
 
 def load_plot_config(source: Path | dict[str, Any]) -> PlotsConfig:  # type: ignore[explicit-any]
@@ -115,11 +118,17 @@ def get_gse_magnetic_field(
     from_date = timezone.now() - delta
 
     # Get the relevant data from the DB
+    start_time = timezone.now()
     data = pd.DataFrame(
         models.MAG_MODELS[spacecraft]  # type: ignore[attr-defined]
         .objects.filter(time__gte=from_date)
         .order_by("time")
         .values("time", measurement)
+    )
+    logger.info(
+        f"Querying {spacecraft} {measurement} data from the DB took "
+        f"{(timezone.now() - start_time).total_seconds():.2f} seconds to retrieve "
+        f"{len(data)} records."
     )
 
     # Do some post processing to sanitize the data
