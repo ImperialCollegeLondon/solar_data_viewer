@@ -26,6 +26,8 @@ class TestIndexView(TemplateOkMixin):
         assert response.status_code == HTTPStatus.OK
         assert "<script" in response.context["ts_script"]
         assert "<div" in response.context["ts_div"]
+        assert "<script" in response.context["l1_script"]
+        assert "<div" in response.context["l1_div"]
         assert response.context["bokeh_version"] == bokeh.__version__
 
 
@@ -125,5 +127,32 @@ class TestTrajectoryDataView:
             with patch("main.views.set_so_trajectory_cache") as cache_setter_mock:
                 empty_cache_mock.get.side_effect = [None, mock_data]
                 endpoint = reverse("main:trajectory_data", args=["AU", "static"])
+                response = client.get(endpoint)
+                cache_setter_mock.assert_called_once()
+
+
+class TestL1DataView:
+    """Test suite for the L1 Data View."""
+
+    def test_get(self, client):
+        """Test the get method."""
+        mock_data = {
+            "static": {"static": "data"},
+            "trajectory": {"trajectory": "data"},
+        }
+
+        with patch("main.views.cache") as cache_mock:
+            cache_mock.get.return_value = mock_data
+            for datatype in ["trajectory", "static"]:
+                endpoint = reverse("main:l1_data", args=[datatype])
+                response = client.get(endpoint)
+                cache_mock.get.assert_called_with("l1_trajectory_data")
+                assert isinstance(response, JsonResponse)
+                assert response.json() == mock_data[datatype]
+
+        with patch("main.views.cache") as empty_cache_mock:
+            with patch("main.views.set_l1_trajectory_cache") as cache_setter_mock:
+                empty_cache_mock.get.side_effect = [None, mock_data]
+                endpoint = reverse("main:l1_data", args=["static"])
                 response = client.get(endpoint)
                 cache_setter_mock.assert_called_once()

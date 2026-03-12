@@ -38,3 +38,27 @@ def test_set_so_trajectory_cache(datetime_mock, traj_data_mock, static_data_mock
     assert time_gen == time.strftime("%Y-%m-%d %H:%M:%S")
 
     cache.clear()
+
+
+@patch("main.tasks.l1_data")
+@patch("main.tasks.datetime")
+def test_set_l1_trajectory_cache(datetime_mock, l1_data_mock):
+    """Test the set_l1_trajectory_cache function."""
+    from main.tasks import set_l1_trajectory_cache
+
+    time = datetime.now()
+    times = (time - timedelta(days=8), time)
+    datetime_mock.now.return_value = time
+    l1_data_mock.return_value = ("static data", "trajectory data")
+
+    expected_data = {"static": "static data", "trajectory": "trajectory data"}
+
+    cache.clear()
+    set_l1_trajectory_cache()
+
+    l1_data_mock.assert_called_once_with(times)
+
+    cached_data = cache.get("l1_trajectory_data")
+    assert cached_data == expected_data
+
+    cache.clear()

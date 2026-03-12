@@ -1,18 +1,20 @@
 """Test suite for the trajectory plots."""
 
 from datetime import datetime, timedelta
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import numpy as np
 from astropy.coordinates import SkyCoord
 from sunpy.coordinates.frames import HeliographicStonyhurst
 
 from main.trajectory import (
+    coord_to_gse,
     generate_solar_orbiter_statistics,
     get_earth_coordinates,
     get_JPL_spacecraft_coordinates,
     heliographic_to_cartesian,
     heliographic_to_earth_separation_angles,
+    l1_data,
 )
 
 
@@ -52,6 +54,42 @@ def test_heliographic_to_cartesian():
 
     assert cart_coords[0] == rad * np.cos(theta)
     assert cart_coords[1] == rad * np.sin(theta)
+
+
+def test_coord_to_gse():
+    """Test the coord_to_gse function."""
+    mock_gse = Mock()
+    mock_gse.cartesian.y.to.return_value.value = 10
+    mock_gse.cartesian.z.to.return_value.value = 20
+
+    mock_coord = Mock()
+    mock_coord.transform_to.return_value = mock_gse
+
+    y, z = coord_to_gse(mock_coord)
+    assert y == 10
+    assert z == 20
+
+
+@patch("main.trajectory.get_JPL_spacecraft_coordinates")
+@patch("main.trajectory.coord_to_gse")
+def test_l1_data(gse_mock, trajectory_mock):
+    """Test the l1_data function."""
+    trajectory_mock.return_value = [Mock()] * 3
+    gse_mock.return_value = (10, 20)
+
+    time = datetime.now()
+    times = (time - timedelta(2), time)
+    static_data, trajectory_data = l1_data(times)
+
+    assert static_data["y"] == [10] * 5
+    assert static_data["z"] == [20] * 5
+    assert "colour" in static_data
+    assert "name" in static_data
+
+    assert trajectory_data["y"] == [[10, 10, 10]] * 5
+    assert trajectory_data["z"] == [[20, 20, 20]] * 5
+    assert "colour" in trajectory_data
+    assert "name" in trajectory_data
 
 
 def test_heliographic_earth_separation_angles():
