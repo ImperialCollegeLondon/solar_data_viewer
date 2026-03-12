@@ -31,11 +31,12 @@ def test_add_callback_to_checkbox_button(process_data_mock: Mock):
         },
     )
 
+    spacecrafts = ["A", "B"]
     default_spacecraft = "A"
 
     x_range = Range1d(start=0, end=1)
 
-    plot = create_timeseries_plot(plot_config, x_range, default_spacecraft)
+    plot = create_timeseries_plot(plot_config, spacecrafts, x_range, default_spacecraft)
 
     with patch.object(CheckboxButtonGroup, "js_on_event") as js_mock:
         add_callback_to_checkbox_button(plot, button)

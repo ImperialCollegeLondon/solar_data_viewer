@@ -100,6 +100,7 @@ def update_legend_on_spacecraft_selection(plot: figure) -> figure:
 
 def create_timeseries_plot(
     plot_config: PlotConfig,
+    spacecrafts: list[str],
     x_range: Range1d,
     time_range: str = "3d",
     default_spacecraft: str = "IMAP",
@@ -110,6 +111,7 @@ def create_timeseries_plot(
         plot_config: A Pydantic model containing fields for the title, unit and
             measurements. The measurements are Pydantic models containing their label
             and colours to be used for the traces for each spacecraft.
+        spacecrafts: A list of spacecraft names to include in the plot.
         x_range: The shared x-axis range for the plots.
         time_range: The initial time range for the data to display (default is 3 days).
         default_spacecraft: The spacecraft data to display as default.
@@ -129,7 +131,7 @@ def create_timeseries_plot(
     plot.lod_threshold = None
 
     for measurement, args in plot_config.measurements.items():
-        for spacecraft, colour in args.traces.items():
+        for spacecraft in spacecrafts:
             # Create an AjaxDataSource for each spacecraft and measurement
             source = AjaxDataSource(
                 data_url=f"/data/{measurement}/{spacecraft}?range={time_range}",
@@ -141,7 +143,7 @@ def create_timeseries_plot(
                 "date",
                 "measurement",
                 name=spacecraft,  # Enables selecting data in callback
-                color=colour,
+                color=args.traces[spacecraft],
                 source=source,
                 legend_label=f"{spacecraft}: {args.label}",
                 visible=spacecraft == default_spacecraft,
@@ -159,6 +161,7 @@ def create_timeseries_plot(
 
 def create_timeseries_plots(
     plots_config: list[PlotConfig],
+    spacecrafts: list[str],
     button: CheckboxButtonGroup,
     default_spacecraft: str = "IMAP",
     initial_time_range: str = "3d",
@@ -168,6 +171,7 @@ def create_timeseries_plots(
     Args:
         plots_config: A list of PlotConfig objects containing the config arguments for
             each plot, as defined in the config TOML file.
+        spacecrafts: A list of spacecraft names to include in the plots.
         button: A checkbox button to select the spacecraft to display data for.
         default_spacecraft: The spacecraft data to display as default.
         initial_time_range: The initial time range for the data to display.
@@ -195,7 +199,11 @@ def create_timeseries_plots(
     plots = []
     for plot_config in plots_config:
         plot = create_timeseries_plot(
-            plot_config, shared_x_range, initial_time_range, default_spacecraft
+            plot_config,
+            spacecrafts,
+            shared_x_range,
+            initial_time_range,
+            default_spacecraft,
         )
         plot.add_tools(hover, crosshair)
         add_callback_to_checkbox_button(plot=plot, button=button)
@@ -219,7 +227,7 @@ def create_timeseries_layout() -> Column:
     button = checkbox_button_group(spacecrafts, default_spacecraft)
     time_dropdown = create_time_range_dropdown()
     plots = create_timeseries_plots(
-        plots_config, button, default_spacecraft, time_dropdown.value
+        plots_config, spacecrafts, button, default_spacecraft, time_dropdown.value
     )
     add_time_range_callback(time_dropdown, plots)
 
