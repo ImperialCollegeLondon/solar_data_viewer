@@ -235,6 +235,8 @@ def create_solar_orbiter_plot(
     y_axis_label: str,
     unit: Literal["AU", "angle"],
     radii: list[float],
+    x_range: tuple[float, float] | None = None,
+    y_range: tuple[float, float] | None = None,
 ) -> figure:
     """Create a plot for the Solar Orbiter trajectory.
 
@@ -245,6 +247,8 @@ def create_solar_orbiter_plot(
         unit: Whether to plot in AU (the fixed Earth frame) or angle (the Earth-Sun-
             spacecraft angle).
         radii: A list of radii for plotting dashed circles.
+        x_range: Optional x-range for the plot.
+        y_range: Optional y-range for the plot.
 
     Returns:
         A Bokeh figure containing the trajectory of Solar Orbiter in the fixed
@@ -292,6 +296,12 @@ def create_solar_orbiter_plot(
     hover = HoverTool(tooltips=[("ID", "@name")], renderers=[objects])
     plot.add_tools(hover)
 
+    # Set axis ranges if provided
+    if y_range is not None:
+        plot.y_range = Range1d(*y_range)
+    if x_range is not None:
+        plot.x_range = Range1d(*x_range)
+
     return plot
 
 
@@ -316,6 +326,8 @@ def create_solar_orbiter_layout() -> Row:
                 y_axis_label="Latitude separation (deg)",
                 unit="angle",
                 radii=[10, 20],
+                y_range=(-22, 22),
+                x_range=(-22, 22),
             ),
         ]
     )
