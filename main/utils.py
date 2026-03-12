@@ -156,9 +156,6 @@ def get_gse_magnetic_field(
     data = data.rename(columns={data.columns[0]: "date"})
     data["date"] = pd.to_datetime(data["date"], utc=True)
 
-    # Format datetime as Unix epoch time
-    data["date"] = data["date"].astype("int64") // 10**3
-
     # Split data in segments and return as dict
     data_dict = get_data_as_segments(data, measurement)
     return data_dict
