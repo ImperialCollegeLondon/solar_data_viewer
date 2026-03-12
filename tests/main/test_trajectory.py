@@ -81,13 +81,13 @@ def test_l1_data(gse_mock, trajectory_mock):
     times = (time - timedelta(2), time)
     static_data, trajectory_data = l1_data(times)
 
-    assert static_data["y"] == [10] * 5
-    assert static_data["z"] == [20] * 5
+    assert static_data["y"] == [10] * 6
+    assert static_data["z"] == [20] * 6
     assert "colour" in static_data
     assert "name" in static_data
 
-    assert trajectory_data["y"] == [[10, 10, 10]] * 5
-    assert trajectory_data["z"] == [[20, 20, 20]] * 5
+    assert trajectory_data["y"] == [[10, 10, 10]] * 6
+    assert trajectory_data["z"] == [[20, 20, 20]] * 6
     assert "colour" in trajectory_data
     assert "name" in trajectory_data
 

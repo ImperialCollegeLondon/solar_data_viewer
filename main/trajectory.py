@@ -246,14 +246,15 @@ def l1_data(
         A dictionary containing y and z-coordinates, spacecraft names
             and colours.
     """
-    L1_IDS = [-43, -92, -8, -78, -231]
-    L1_CRAFTS = ["IMAP", "ACE", "WIND", "DSCOVR", "Solar-1"]
+    L1_IDS = [-43, -92, -8, -78, -231, -156]
+    L1_CRAFTS = ["IMAP", "ACE", "WIND", "DSCOVR", "Solar-1", "Aditya-L1"]
     L1_COLOURS = [
         "rgb(255,143,0)",
         "rgb(204,0,204)",
         "rgb(0,204,204)",
         "rgb(0,102,204)",
         "rgb(230,0,0)",
+        "rgb(19, 136, 8)",
     ]
 
     y_coords, z_coords = [], []
