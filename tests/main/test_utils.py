@@ -54,7 +54,7 @@ def test_get_gse_magnetic_field(measurement, raises, days):
         expected_dates = (times[-num:].astype("int64") // 10**3).to_list()
 
         assert list(actual.keys()) == ["measurement", "date"]
-        assert len(actual["measurement"]) == num
-        assert len(actual["date"]) == num
+        assert len(actual["measurement"][0]) == num  # no gaps in data
+        assert len(actual["date"][0]) == num  # no gaps in data
         assert expected_dates == actual["date"]
         assert expected_meas == actual["measurement"]
