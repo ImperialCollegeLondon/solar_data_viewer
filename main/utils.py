@@ -55,7 +55,7 @@ def reindex_data(df: pd.DataFrame, threshold: str = "1m") -> pd.DataFrame:
     # Find gaps above specified threshold
     gaps = np.where(dt > pd.Timedelta(threshold))[0]
 
-    new_dates = []
+    new_dates: list[pd.Timestamp] = []
     for idx in gaps:
         new_dates.extend(
             pd.date_range(
