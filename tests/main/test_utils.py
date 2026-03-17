@@ -67,12 +67,17 @@ def test_get_gse_magnetic_field(measurement, raises, days):
 def test_reindex_data():
     """Test the reindex_data function."""
     start = datetime.now()
-    all_dates = [start + timedelta(days=i) for i in range(6)]
+    all_dates = [start + timedelta(days=i) for i in range(10)]
     dates = all_dates.copy()
-    dates.pop(2)
-    values = list(range(5))
-    df = pd.DataFrame({"date": dates, "values": values})
 
-    df = reindex_data(df)
+    # Delete some data
+    dates.pop(8)
+    dates.pop(3)
+    dates.pop(2)
+
+    values = list(range(7))
+    df = pd.DataFrame({"date": dates, "values": values})
+    df = reindex_data(df, "1d")
+
     assert df.index.tolist() == all_dates
-    assert df["values"].tolist() == [0, 1, "nan", 2, 3, 4]
+    assert df["values"].tolist() == [0, 1, "nan", "nan", 2, 3, 4, 5, "nan", 6]

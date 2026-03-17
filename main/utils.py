@@ -34,23 +34,39 @@ def load_plot_config(source: Path | dict[str, Any]) -> PlotsConfig:  # type: ign
     return PlotsConfig.model_validate(raw_config)
 
 
-def reindex_data(df: pd.DataFrame) -> pd.DataFrame:
-    """This function re-indexes a dataframe to add nan values where there are gaps.
+def reindex_data(df: pd.DataFrame, threshold: str = "1m") -> pd.DataFrame:
+    """This function re-indexes a dataframe to add nans where there are large gaps.
 
-    The dataframe is re-indexed; the new index uses the smallest timestep observed
-    in the data. NaN values are converted to 'nan'.
+    At gaps of >1 minute (as default), new time points are added to the index to fill
+    the gap. The resulting NaN values are converted to 'nan'.
 
     Args:
         df: The dataframe to reindex.
+        threshold: The minimum threshold for a gap.
 
     Returns:
         A re-indexed data frame, where the dates are now the index column.
     """
-    dates = df["date"]
-    timestep = dates.diff().min()
-    new_index = pd.date_range(start=dates.iloc[0], end=dates.iloc[-1], freq=timestep)
-    df = df.set_index("date").reindex(new_index)
-    df = df.replace({np.nan: "nan"})
+    df = df.set_index("date").sort_index()
+    dates = df.index.to_series()
+    dt = dates.diff()
+    timestep = dt.min()
+
+    # Find gaps above specified threshold
+    gaps = np.where(dt > pd.Timedelta(threshold))[0]
+
+    new_dates = []
+    for idx in gaps:
+        new_dates.extend(
+            pd.date_range(
+                start=dates.iloc[idx - 1],
+                end=dates.iloc[idx],
+                freq=timestep,
+                inclusive="neither",
+            )
+        )
+    new_index = df.index.append(pd.DatetimeIndex(new_dates)).sort_values()
+    df = df.reindex(new_index).replace({np.nan: "nan"})
     return df
 
 
