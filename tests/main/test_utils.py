@@ -16,6 +16,7 @@ def test_load_plot_config(plots_config):
     assert isinstance(config, PlotsConfig)
 
 
+@pytest.mark.parametrize("spacecraft", ["IMAP", "SO"])
 @pytest.mark.parametrize(
     "measurement, raises",
     [
@@ -26,15 +27,16 @@ def test_load_plot_config(plots_config):
     ],
 )
 @pytest.mark.parametrize("days", [1, 3, 7])
-@pytest.mark.django_db(databases=["imap"])
-def test_get_gse_magnetic_field(measurement, raises, days):
-    """Test the get_so_magnetic_field function."""
+@pytest.mark.django_db(databases=["imap", "so"])
+def test_get_gse_magnetic_field(spacecraft, measurement, raises, days):
+    """Test the get_gse_magnetic_field function."""
     import pandas as pd
     from django.utils import timezone
 
-    from main.models import IMAPGSEMagneticField
+    from main.models import MAG_MODELS
     from main.utils import get_gse_magnetic_field
 
+    model = MAG_MODELS[spacecraft]
     # Prepare the times
     num = days * 24
     now = timezone.now()
@@ -43,13 +45,13 @@ def test_get_gse_magnetic_field(measurement, raises, days):
     ).to_series()
 
     # Populate the database
-    baker.make(IMAPGSEMagneticField, time=itertools.cycle(times), _quantity=len(times))
+    baker.make(model, time=itertools.cycle(times), _quantity=len(times))
 
     # Find the actual and expected values
     with raises:
-        actual = get_gse_magnetic_field("IMAP", measurement, range_param=f"{days}d")
+        actual = get_gse_magnetic_field(spacecraft, measurement, range_param=f"{days}d")
         expected_meas = list(
-            IMAPGSEMagneticField.objects.filter(time__in=times[-num:]).values_list(
+            model.objects.filter(time__in=times[-num:]).values_list(
                 measurement, flat=True
             )
         )
