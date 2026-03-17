@@ -1,7 +1,7 @@
 # Configuration file for the timeseries plots
 
-spacecrafts = ["IMAP"]      # List of all spacecrafts to plot traces for
-default_spacecraft = "IMAP" # The spacecraft to display as default
+spacecrafts = ["IMAP", "SO"] # List of all spacecrafts to plot traces for
+default_spacecraft = "IMAP"  # The spacecraft to display as default
 
 [[plots]]
 title = "Magnetic field"
