@@ -2,12 +2,14 @@
 
 import itertools
 from contextlib import nullcontext as does_not_raise
+from datetime import datetime, timedelta
 
+import pandas as pd
 import pytest
 from model_bakery import baker
 
 from main.config import PlotsConfig
-from main.utils import load_plot_config
+from main.utils import load_plot_config, reindex_data
 
 
 def test_load_plot_config(plots_config):
@@ -60,3 +62,17 @@ def test_get_gse_magnetic_field(measurement, raises, days):
         assert len(actual["date"]) == num
         assert expected_dates == actual["date"]
         assert expected_meas == actual["measurement"]
+
+
+def test_reindex_data():
+    """Test the reindex_data function."""
+    start = datetime.now()
+    all_dates = [start + timedelta(days=i) for i in range(6)]
+    dates = all_dates.copy()
+    dates.pop(2)
+    values = list(range(5))
+    df = pd.DataFrame({"date": dates, "values": values})
+
+    df = reindex_data(df)
+    assert df.index.tolist() == all_dates
+    assert df["values"].tolist() == [0, 1, "nan", 2, 3, 4]
