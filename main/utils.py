@@ -5,6 +5,7 @@ from logging import getLogger
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 from django.utils import timezone
 
@@ -31,6 +32,26 @@ def load_plot_config(source: Path | dict[str, Any]) -> PlotsConfig:  # type: ign
         raw_config = source
 
     return PlotsConfig.model_validate(raw_config)
+
+
+def reindex_data(df: pd.DataFrame) -> pd.DataFrame:
+    """This function re-indexes a dataframe to add nan values where there are gaps.
+
+    The dataframe is re-indexed; the new index uses the smallest timestep observed
+    in the data. NaN values are converted to 'nan'.
+
+    Args:
+        df: The dataframe to reindex.
+
+    Returns:
+        A re-indexed data frame, where the dates are now the index column.
+    """
+    dates = df["date"]
+    timestep = dates.diff().min()
+    new_index = pd.date_range(start=dates.iloc[0], end=dates.iloc[-1], freq=timestep)
+    df = df.set_index("date").reindex(new_index)
+    df = df.replace({np.nan: "nan"})
+    return df
 
 
 def process_data_from_test_csvs(
@@ -67,12 +88,12 @@ def process_data_from_test_csvs(
     latest = df["date"].max()
     delta = pd.Timedelta(range_param)
     df = df[df["date"] >= latest - delta]
-
+    df = reindex_data(df)
     # Format datetime as Unix epoch time
-    df["date"] = df["date"].astype("int64") // 10**3
+    df.index = df.index.astype("int64") // 10**3
 
     # Create JSON response
-    dates = df["date"].tolist()
+    dates = df.index.tolist()
     measurements = df[measurement].tolist()
     data = {"measurement": measurements, "date": dates}
     return data
@@ -125,11 +146,12 @@ def get_gse_magnetic_field(
     # Do some post processing to sanitize the data
     data = data.rename(columns={data.columns[0]: "date"})
     data["date"] = pd.to_datetime(data["date"], utc=True)
+    data = reindex_data(data)
 
     # Format datetime as Unix epoch time
-    data["date"] = data["date"].astype("int64") // 10**3
+    data.index = data.index.astype("int64") // 10**3
 
     # Create JSON response
-    dates = data["date"].tolist()
+    dates = data.index.tolist()
     measurements = data[measurement].tolist()
     return {"measurement": measurements, "date": dates}
