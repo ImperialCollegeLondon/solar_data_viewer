@@ -22,7 +22,7 @@ for model in MAG_MODELS.values():
     model.objects.all().delete()  # type: ignore[attr-defined]
 
     # Now, we create new magnetic fields
-    b = np.random.rand(len(times), 3)
+    b = np.random.rand(len(times), 4)
     b[:, 0] += 1
     b[:, 1] -= 1
     mfield = [
@@ -31,11 +31,11 @@ for model in MAG_MODELS.values():
             bx_gse=row[0],
             by_gse=row[1],
             bz_gse=row[2],
-            b_mag=np.linalg.norm(row),
+            b_mag=np.linalg.norm(row[:3]),
+            phi_gse=row[3],
         )
         for t, row in zip(times, b)
     ]
-
 
     # And add it to the DB in bulk
     model.objects.bulk_create(mfield)  # type: ignore[attr-defined]
