@@ -269,6 +269,7 @@ def create_solar_orbiter_plot(
         match_aspect=True,
         x_axis_label=x_axis_label,
         y_axis_label=y_axis_label,
+        sizing_mode="stretch_width",
     )
 
     # Create an AjaxDataSource for the spacecraft static position
@@ -370,6 +371,7 @@ def create_l1_plot(
         y_axis_label=y_axis_label,
         x_range=Range1d(-110, 110),
         y_range=Range1d(-55, 55),
+        sizing_mode="stretch_width",
     )
 
     # Add circle representing magnetopause
@@ -404,6 +406,7 @@ def create_l1_plot(
         "y", "z", color="colour", legend_field="name", source=trajectory_source
     )
 
+    plot.add_layout(plot.legend[0], "right")
     hover = HoverTool(tooltips=[("ID", "@name")], renderers=[objects])
     plot.add_tools(hover)
 
