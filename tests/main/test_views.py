@@ -1,8 +1,9 @@
 """Test suite for the main views."""
 
 from http import HTTPStatus
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
+import pytest
 from django.http import JsonResponse
 from django.urls import reverse
 
@@ -17,6 +18,7 @@ class TestIndexView(TemplateOkMixin):
     def _get_url(self):
         return reverse("main:index")
 
+    @pytest.mark.django_db(databases=["default"])
     def test_get(self, client):
         """Tests the get method and the data provided."""
         import bokeh
@@ -57,6 +59,7 @@ class TestSolarOrbiterView(TemplateOkMixin):
         return reverse("main:solar_orbiter")
 
     @patch("main.views.generate_solar_orbiter_statistics")
+    @pytest.mark.django_db(databases=["default"])
     def test_get(self, stats_mock, client):
         """Tests the get method and the data provided."""
         import bokeh
@@ -90,7 +93,8 @@ class TestTrajectoryDataView:
 
     def test_get(self, client):
         """Test the get method."""
-        mock_data = {
+        mock_data = MagicMock()
+        mock_data.data = {
             "static": {
                 "AU": {
                     "x": [0.0, 1.1, 2.2],
@@ -113,22 +117,27 @@ class TestTrajectoryDataView:
             },
         }
 
-        with patch("main.views.cache") as cache_mock:
-            cache_mock.get.return_value = mock_data
+        with patch("main.views.TrajectoryCache") as cache_mock:
+            cache_mock.objects.filter.return_value.exists.return_value = True
+            cache_mock.objects.get.return_value = mock_data
             for unit in ["AU", "angle"]:
                 for datatype in ["trajectory", "static"]:
                     endpoint = reverse("main:trajectory_data", args=[unit, datatype])
                     response = client.get(endpoint)
-                    cache_mock.get.assert_called_with("trajectory_data")
+                    cache_mock.objects.filter.assert_called_with(plot="SO")
                     assert isinstance(response, JsonResponse)
-                    assert response.json() == mock_data[datatype][unit]
+                    assert response.json() == mock_data.data[datatype][unit]
 
-        with patch("main.views.cache") as empty_cache_mock:
+        with patch("main.views.TrajectoryCache") as empty_cache_mock:
+            empty_cache_mock.objects.filter.return_value.exists.return_value = False
+            empty_cache_mock.objects.get.return_value = mock_data
             with patch("main.views.set_so_trajectory_cache") as cache_setter_mock:
-                empty_cache_mock.get.side_effect = [None, mock_data]
                 endpoint = reverse("main:trajectory_data", args=["AU", "static"])
                 response = client.get(endpoint)
                 cache_setter_mock.assert_called_once()
+                empty_cache_mock.objects.filter.assert_called_with(plot="SO")
+                assert isinstance(response, JsonResponse)
+                assert response.json() == mock_data.data["static"]["AU"]
 
 
 class TestL1DataView:
@@ -136,23 +145,29 @@ class TestL1DataView:
 
     def test_get(self, client):
         """Test the get method."""
-        mock_data = {
+        mock_data = MagicMock()
+        mock_data.data = {
             "static": {"static": "data"},
             "trajectory": {"trajectory": "data"},
         }
 
-        with patch("main.views.cache") as cache_mock:
-            cache_mock.get.return_value = mock_data
+        with patch("main.views.TrajectoryCache") as cache_mock:
+            cache_mock.objects.filter.return_value.exists.return_value = True
+            cache_mock.objects.get.return_value = mock_data
             for datatype in ["trajectory", "static"]:
                 endpoint = reverse("main:l1_data", args=[datatype])
                 response = client.get(endpoint)
-                cache_mock.get.assert_called_with("l1_trajectory_data")
+                cache_mock.objects.filter.assert_called_with(plot="L1")
                 assert isinstance(response, JsonResponse)
-                assert response.json() == mock_data[datatype]
+                assert response.json() == mock_data.data[datatype]
 
-        with patch("main.views.cache") as empty_cache_mock:
+        with patch("main.views.TrajectoryCache") as empty_cache_mock:
+            empty_cache_mock.objects.filter.return_value.exists.return_value = False
+            empty_cache_mock.objects.get.return_value = mock_data
             with patch("main.views.set_l1_trajectory_cache") as cache_setter_mock:
-                empty_cache_mock.get.side_effect = [None, mock_data]
                 endpoint = reverse("main:l1_data", args=["static"])
                 response = client.get(endpoint)
                 cache_setter_mock.assert_called_once()
+                empty_cache_mock.objects.filter.assert_called_with(plot="L1")
+                assert isinstance(response, JsonResponse)
+                assert response.json() == mock_data.data["static"]

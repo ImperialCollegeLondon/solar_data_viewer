@@ -3,12 +3,15 @@
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
-from django.core.cache import cache
+import pytest
+
+from main.models import TrajectoryCache
 
 
 @patch("main.tasks.static_solar_orbiter_data")
 @patch("main.tasks.trajectory_solar_orbiter_data")
 @patch("main.tasks.datetime")
+@pytest.mark.django_db(databases=["default"])
 def test_set_so_trajectory_cache(datetime_mock, traj_data_mock, static_data_mock):
     """Test the set_so_trajectory_cache function."""
     from main.tasks import set_so_trajectory_cache
@@ -24,24 +27,20 @@ def test_set_so_trajectory_cache(datetime_mock, traj_data_mock, static_data_mock
         "trajectory": {"AU": "trajectory data", "angle": "trajectory data"},
     }
 
-    cache.clear()
     set_so_trajectory_cache()
 
     for unit in ["AU", "angle"]:
         static_data_mock.assert_any_call(time, unit)
         traj_data_mock.assert_any_call(times, unit)
 
-    cached_data = cache.get("trajectory_data")
-    assert cached_data == expected_data
-
-    time_gen = cache.get("time_generated_so")
-    assert time_gen == time.strftime("%Y-%m-%d %H:%M:%S")
-
-    cache.clear()
+    cached_data = TrajectoryCache.objects.get(plot="SO")
+    assert cached_data.data == expected_data
+    assert cached_data.time_generated == time.strftime("%Y-%m-%d %H:%M:%S")
 
 
 @patch("main.tasks.l1_data")
 @patch("main.tasks.datetime")
+@pytest.mark.django_db(databases=["default"])
 def test_set_l1_trajectory_cache(datetime_mock, l1_data_mock):
     """Test the set_l1_trajectory_cache function."""
     from main.tasks import set_l1_trajectory_cache
@@ -53,15 +52,10 @@ def test_set_l1_trajectory_cache(datetime_mock, l1_data_mock):
 
     expected_data = {"static": "static data", "trajectory": "trajectory data"}
 
-    cache.clear()
     set_l1_trajectory_cache()
 
     l1_data_mock.assert_called_once_with(times)
 
-    cached_data = cache.get("l1_trajectory_data")
-    assert cached_data == expected_data
-
-    time_gen = cache.get("time_generated_l1")
-    assert time_gen == time.strftime("%Y-%m-%d %H:%M:%S")
-
-    cache.clear()
+    cached_data = TrajectoryCache.objects.get(plot="L1")
+    assert cached_data.data == expected_data
+    assert cached_data.time_generated == time.strftime("%Y-%m-%d %H:%M:%S")
