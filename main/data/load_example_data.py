@@ -31,7 +31,7 @@ for model in MAG_MODELS.values():
             bx_gse=row[0],
             by_gse=row[1],
             bz_gse=row[2],
-            b_mag=np.linalg.norm(row),
+            b_mag=np.linalg.norm(row[:3]),
             phi_gse=row[3],
         )
         for t, row in zip(times, b)
