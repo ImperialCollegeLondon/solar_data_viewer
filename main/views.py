@@ -4,10 +4,10 @@ from typing import Any, Literal
 
 import bokeh
 from bokeh.embed import components
-from django.core.cache import cache
 from django.http import HttpRequest, JsonResponse
 from django.views.generic import TemplateView, View
 
+from .models import TrajectoryCache
 from .plots import create_l1_plot, create_solar_orbiter_layout, create_timeseries_layout
 from .tasks import set_l1_trajectory_cache, set_so_trajectory_cache
 from .trajectory import (
@@ -28,7 +28,13 @@ class IndexView(TemplateView):
         ts_script, ts_div = components(layout)
         l1_plot = create_l1_plot()
         l1_script, l1_div = components(l1_plot)
-        time = cache.get("time_generated_l1") or None
+
+        # Get time from cache
+        if TrajectoryCache.objects.filter(plot="L1").exists():
+            time = TrajectoryCache.objects.get(plot="L1").time_generated
+        else:
+            time = None
+
         context.update(
             {
                 "ts_script": ts_script,
@@ -81,8 +87,14 @@ class SolarOrbiterView(TemplateView):
         context = super().get_context_data(**kwargs)
         layout = create_solar_orbiter_layout()
         script, div = components(layout)
-        time = cache.get("time_generated_so") or None
+
+        # Get time from cache
+        if TrajectoryCache.objects.filter(plot="SO").exists():
+            time = TrajectoryCache.objects.get(plot="SO").time_generated
+        else:
+            time = None
         context.update({"script": script, "div": div, "time": time})
+
         stats = generate_solar_orbiter_statistics()
         context.update(stats)
         context["bokeh_version"] = bokeh.__version__
@@ -113,14 +125,12 @@ class TrajectoryDataView(View):
         Returns:
             A JSON response containing the trajectory data for Solar Orbiter.
         """
-        data = cache.get(
-            "trajectory_data",
-        )
-        if not data:
+        if TrajectoryCache.objects.filter(plot="SO").exists():
+            data = TrajectoryCache.objects.get(plot="SO").data
+
+        else:
             set_so_trajectory_cache()
-            data = cache.get(
-                "trajectory_data",
-            )
+            data = TrajectoryCache.objects.get(plot="SO").data
 
         return JsonResponse(data[datatype][unit])
 
@@ -146,13 +156,11 @@ class L1DataView(View):
         Returns:
             A JSON response containing the trajectory data for L1 spacecraft.
         """
-        data = cache.get(
-            "l1_trajectory_data",
-        )
-        if not data:
+        if TrajectoryCache.objects.filter(plot="L1").exists():
+            data = TrajectoryCache.objects.get(plot="L1").data
+
+        else:
             set_l1_trajectory_cache()
-            data = cache.get(
-                "l1_trajectory_data",
-            )
+            data = TrajectoryCache.objects.get(plot="L1").data
 
         return JsonResponse(data[datatype])

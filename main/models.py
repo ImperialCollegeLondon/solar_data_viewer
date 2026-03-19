@@ -59,5 +59,27 @@ class SOGSEMagneticField(models.Model):
         managed = False
 
 
+class TrajectoryCache(models.Model):
+    """Model to hold the cached trajectory data."""
+
+    _PLOTS = (("SO", "SO"), ("L1", "L1"))
+
+    plot = models.CharField(
+        choices=_PLOTS,
+        unique=True,
+        null=False,
+        blank=False,
+        help_text="The plot the trajectory data is for.",
+    )
+    data = models.JSONField(
+        null=False, blank=False, default=dict, help_text="The trajectory data to store."
+    )
+    time_generated = models.CharField(
+        null=False,
+        blank=False,
+        help_text="The time the data was generated in string format.",
+    )
+
+
 MAG_MODELS = {"IMAP": IMAPGSEMagneticField, "SO": SOGSEMagneticField}
 """Models to handle magnetic data for the supported missions."""

@@ -2,10 +2,10 @@
 
 from datetime import datetime, timedelta
 
-from django.core.cache import cache
 from huey import crontab
 from huey.contrib.djhuey import db_periodic_task
 
+from .models import TrajectoryCache
 from .trajectory import (
     l1_data,
     static_solar_orbiter_data,
@@ -23,10 +23,13 @@ def set_l1_trajectory_cache() -> None:
 
     static_data, trajectory_data = l1_data(times)
     data = {"static": static_data, "trajectory": trajectory_data}
-    cache.set("l1_trajectory_data", data, timeout=None)
 
     # Record the time the data was generated
-    cache.set("time_generated_l1", time.strftime("%Y-%m-%d %H:%M:%S"))
+    time_generated = time.strftime("%Y-%m-%d %H:%M:%S")
+
+    TrajectoryCache.objects.update_or_create(
+        plot="L1", defaults={"data": data, "time_generated": time_generated}
+    )
 
 
 def set_so_trajectory_cache() -> None:
@@ -44,15 +47,14 @@ def set_so_trajectory_cache() -> None:
     for unit in units:
         static_data[unit] = static_solar_orbiter_data(time, unit)
         traj_data[unit] = trajectory_solar_orbiter_data(times, unit)
-
-    cache.set(
-        "trajectory_data",
-        {"static": static_data, "trajectory": traj_data},
-        timeout=None,
-    )
+    data = {"static": static_data, "trajectory": traj_data}
 
     # Record the time the data was generated
-    cache.set("time_generated_so", time.strftime("%Y-%m-%d %H:%M:%S"))
+    time_generated = time.strftime("%Y-%m-%d %H:%M:%S")
+
+    TrajectoryCache.objects.update_or_create(
+        plot="SO", defaults={"data": data, "time_generated": time_generated}
+    )
 
 
 @db_periodic_task(crontab(hour=10, minute=0))

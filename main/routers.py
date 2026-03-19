@@ -16,6 +16,8 @@ class Router:
             return "imap"
         if model_name.lower().startswith("so"):
             return "so"
+        if model_name.lower() == "trajectorycache":
+            return "default"
         return None
 
     def db_for_read(  # type: ignore[explicit-any]
