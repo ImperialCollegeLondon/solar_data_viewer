@@ -5,6 +5,7 @@ from logging import getLogger
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 from django.utils import timezone
 
@@ -31,6 +32,38 @@ def load_plot_config(source: Path | dict[str, Any]) -> PlotsConfig:  # type: ign
         raw_config = source
 
     return PlotsConfig.model_validate(raw_config)
+
+
+def reindex_data(df: pd.DataFrame, threshold: str = "1m") -> pd.DataFrame:
+    """This function re-indexes a dataframe to add nans where there are large gaps.
+
+    At gaps of >1 minute (as default), a new time point is added to the index within
+    the gap. The resulting NaN values are converted to 'nan'.
+
+    Args:
+        df: The dataframe to reindex.
+        threshold: The minimum threshold for a gap.
+
+    Returns:
+        A re-indexed data frame, where the dates are now the index column.
+    """
+    df = df.set_index("date").sort_index()
+    index = df.index.copy()
+    dt = index.to_series().diff()
+    timestep = dt.min()
+
+    # Check if min timestep is greater than threshold
+    gap_threshold = pd.Timedelta(threshold)
+    if timestep > gap_threshold:
+        return df.replace({np.nan: "nan"})
+
+    # Find gaps above specified threshold
+    gaps = np.where(dt > gap_threshold)[0]
+    # Insert new date (with NaN value) within gap
+    new_dates = index[gaps - 1] + timestep
+    new_index = df.index.append(new_dates).sort_values()
+    df = df.reindex(new_index).replace({np.nan: "nan"})
+    return df
 
 
 def process_data_from_test_csvs(
@@ -67,12 +100,12 @@ def process_data_from_test_csvs(
     latest = df["date"].max()
     delta = pd.Timedelta(range_param)
     df = df[df["date"] >= latest - delta]
-
+    df = reindex_data(df)
     # Format datetime as Unix epoch time
-    df["date"] = df["date"].astype("int64") // 10**3
+    df.index = df.index.astype("int64") // 10**3
 
     # Create JSON response
-    dates = df["date"].tolist()
+    dates = df.index.tolist()
     measurements = df[measurement].tolist()
     data = {"measurement": measurements, "date": dates}
     return data
@@ -125,11 +158,12 @@ def get_gse_magnetic_field(
     # Do some post processing to sanitize the data
     data = data.rename(columns={data.columns[0]: "date"})
     data["date"] = pd.to_datetime(data["date"], utc=True)
+    data = reindex_data(data)
 
     # Format datetime as Unix epoch time
-    data["date"] = data["date"].astype("int64") // 10**3
+    data.index = data.index.astype("int64") // 10**3
 
     # Create JSON response
-    dates = data["date"].tolist()
+    dates = data.index.tolist()
     measurements = data[measurement].tolist()
     return {"measurement": measurements, "date": dates}
