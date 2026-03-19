@@ -58,6 +58,7 @@ def test_get_gse_magnetic_field(spacecraft, measurement, raises, days):
             )
         )
         expected_dates = (times[-num:].astype("int64") // 10**3).to_list()
+        print(len(expected_dates))
 
         assert list(actual.keys()) == ["measurement", "date"]
         assert len(actual["measurement"]) == num
@@ -69,17 +70,20 @@ def test_get_gse_magnetic_field(spacecraft, measurement, raises, days):
 def test_reindex_data():
     """Test the reindex_data function."""
     start = datetime.now()
-    all_dates = [start + timedelta(days=i) for i in range(10)]
-    dates = all_dates.copy()
+    dates = [start + timedelta(days=i) for i in range(10)]
+    expected_dates = dates.copy()
 
     # Delete some data
     dates.pop(8)
     dates.pop(3)
     dates.pop(2)
 
+    # Only one date will be missing
+    expected_dates.pop(3)
+
     values = list(range(7))
     df = pd.DataFrame({"date": dates, "values": values})
     df = reindex_data(df, "1d")
 
-    assert df.index.tolist() == all_dates
-    assert df["values"].tolist() == [0, 1, "nan", "nan", 2, 3, 4, 5, "nan", 6]
+    assert df.index.tolist() == expected_dates
+    assert df["values"].tolist() == [0, 1, "nan", 2, 3, 4, 5, "nan", 6]
