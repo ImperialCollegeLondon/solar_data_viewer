@@ -120,14 +120,6 @@ def test_create_solar_orbiter_plot():
     """Test the create_solar_orbiter_plot function."""
     from main.plots import create_solar_orbiter_plot
 
-    create_solar_orbiter_plot(
-        title="Fixed Earth frame",
-        x_axis_label="AU",
-        y_axis_label="AU",
-        unit="AU",
-        radii=[0.5, 0.75, 1.0],
-    )
-
     source = AjaxDataSource(
         data={
             "name": ["Sun", "Earth", "SO"],
@@ -139,24 +131,24 @@ def test_create_solar_orbiter_plot():
         method="GET",
     )
 
-    with patch("main.views.DataView.get"):
-        with patch("main.plots.AjaxDataSource") as data_source_mock:
-            data_source_mock.return_value = source
+    with patch("main.plots.AjaxDataSource") as data_source_mock:
+        data_source_mock.return_value = source
 
-            plot = create_solar_orbiter_plot(
-                title="Test plot",
-                x_axis_label="AU",
-                y_axis_label="AU",
-                unit="AU",
-                radii=[0.5, 1.0],
-            )
-            assert isinstance(plot, figure)
+        plot = create_solar_orbiter_plot(
+            title="Test plot",
+            x_axis_label="AU",
+            y_axis_label="AU",
+            unit="AU",
+            radii=[0.5, 1.0],
+        )
+        assert isinstance(plot, figure)
 
-            # 4 renderers for the points, traj, and 2 circles
-            assert len(plot.renderers) == 4
+        # 4 renderers for the points, traj, and 2 circles
+        assert len(plot.renderers) == 4
+        assert plot.renderers[0].data_source == source
 
-            # Check hover has been added
-            assert any(isinstance(tool, HoverTool) for tool in plot.tools)
+        # Check hover has been added
+        assert any(isinstance(tool, HoverTool) for tool in plot.tools)
 
 
 def test_get_now_vertical_line():
@@ -204,3 +196,40 @@ def test_update_legend_hides_invisible_renderers():
     update_legend_on_spacecraft_selection(p)
 
     assert item.visible is False
+
+
+def test_create_l1_plot():
+    """Test the create_l1_plot function."""
+    from main.plots import create_l1_plot
+
+    static_source = AjaxDataSource(
+        data={
+            "name": ["IMAP", "ACE"],
+            "colour": ["blue", "red"],
+            "y": [1, 2],
+            "z": [3, 4],
+        }
+    )
+
+    trajectory_source = AjaxDataSource(
+        data={
+            "name": ["IMAP", "ACE"],
+            "colour": ["blue", "red"],
+            "y": [[1, 2]] * 2,
+            "z": [[3, 4]] * 2,
+        }
+    )
+
+    with patch("main.plots.AjaxDataSource") as data_source_mock:
+        data_source_mock.side_effect = [static_source, trajectory_source]
+        plot = create_l1_plot()
+        assert isinstance(plot, figure)
+
+        # renderers are the m/pause circle, points and the trajectories
+        assert len(plot.renderers) == 3
+
+        assert plot.renderers[1].data_source == static_source
+        assert plot.renderers[2].data_source == trajectory_source
+
+        # Check hover has been added
+        assert any(isinstance(tool, HoverTool) for tool in plot.tools)

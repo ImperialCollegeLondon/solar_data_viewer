@@ -17,4 +17,9 @@ urlpatterns = [
         views.TrajectoryDataView.as_view(),
         name="trajectory_data",
     ),
+    path(
+        "l1_data/<str:datatype>",
+        views.L1DataView.as_view(),
+        name="l1_data",
+    ),
 ]
