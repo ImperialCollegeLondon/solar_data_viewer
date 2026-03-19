@@ -25,6 +25,9 @@ class IMAPGSEMagneticField(models.Model):
     b_mag = models.FloatField(
         help_text="Modulus of the magnetic field.", db_column="B_magnitude"
     )
+    phi_gse = models.FloatField(
+        help_text="Phi GSE of the magnetic field.", db_column="phi_B_GSE"
+    )
 
     class Meta:  # noqa: D106
         db_table = "ialirt_mag"
@@ -52,6 +55,9 @@ class SOGSEMagneticField(models.Model):
     )
     b_mag = models.FloatField(
         help_text="Modulus of the magnetic field.", db_column="B_mod"
+    )
+    phi_gse = models.FloatField(
+        help_text="Phi GSE of the magnetic field.", db_column="phi_B_GSE"
     )
 
     class Meta:  # noqa: D106

@@ -23,7 +23,7 @@ traces = {IMAP = "lightsalmon", SO = "powderblue"}
 title = "Phi GSE"
 unit = "deg"
 
-[plots.measurements.lon_gse]
+[plots.measurements.phi_gse]
 label = "Phi GSE"
 traces = {IMAP = "red", SO = "blue"}
 

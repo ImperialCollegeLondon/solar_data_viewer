@@ -23,6 +23,7 @@ def test_load_plot_config(plots_config):
         ("bx_gse", does_not_raise()),
         ("by_gse", does_not_raise()),
         ("bz_gse", does_not_raise()),
+        ("phi_gse", does_not_raise()),
         ("temperature", pytest.raises(ValueError)),
     ],
 )
