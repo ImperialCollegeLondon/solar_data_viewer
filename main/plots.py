@@ -269,7 +269,6 @@ def create_solar_orbiter_plot(
         match_aspect=True,
         x_axis_label=x_axis_label,
         y_axis_label=y_axis_label,
-        sizing_mode="stretch_width",
     )
 
     # Create an AjaxDataSource for the spacecraft static position
