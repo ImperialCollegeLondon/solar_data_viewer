@@ -150,19 +150,6 @@ def add_time_range_callback(dropdown: Select, plots: list[figure]) -> None:
 
             for (const renderer of plot.renderers) {
 
-                // Update line
-                if (renderer.name === "now_line") {
-                    renderer.location = now;
-                }
-
-                // Update now label
-                if (renderer.name === "now_label") {
-                    renderer.x = now;
-                }
-            }
-
-            for (const renderer of plot.renderers) {
-
                 // Only update renderers that have an AjaxDataSource
                 if (renderer.data_source && renderer.data_source.data_url) {
                     const source = renderer.data_source;

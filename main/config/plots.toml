@@ -1,30 +1,30 @@
 # Configuration file for the timeseries plots
 
-spacecrafts = ["IMAP", "SO"] # List of all spacecrafts to include
+spacecrafts = ["IMAP", "SO"] # List of all spacecrafts to plot traces for
 default_spacecraft = "IMAP"  # The spacecraft to display as default
 
 [[plots]]
 title = "Magnetic field"
 unit = "nT"
 
-[plots.measurements.bx_gsm]
-label = "Bx GSM"
+[plots.measurements.bx_gse]
+label = "Bx GSE"
 traces = {IMAP = "red", SO = "blue"}
 
-[plots.measurements.by_gsm]
-label = "By GSM"
+[plots.measurements.by_gse]
+label = "By GSE"
 traces = {IMAP = "indianred", SO = "dodgerblue"}
 
-[plots.measurements.bz_gsm]
-label = "Bz GSM"
+[plots.measurements.bz_gse]
+label = "Bz GSE"
 traces = {IMAP = "lightsalmon", SO = "powderblue"}
 
 [[plots]]
-title = "Phi GSM"
+title = "Phi GSE"
 unit = "deg"
 
-[plots.measurements.lon_gsm]
-label = "Phi GSM"
+[plots.measurements.phi_gse]
+label = "Phi GSE"
 traces = {IMAP = "red", SO = "blue"}
 
 [[plots]]

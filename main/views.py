@@ -137,8 +137,6 @@ class PassView(View):
             A JSON response containing the start and end times for the specific
             spacecraft passes in milliseconds.
         """
-        range_param = request.GET.get("range", "3d")
-
-        data = process_pass_data_from_test_csvs(spacecraft, range_param)
+        data = process_pass_data_from_test_csvs(spacecraft)
 
         return JsonResponse(data)

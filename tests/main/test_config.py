@@ -10,7 +10,7 @@ def test_check_valid_spacecrafts(plots_config):
     """Test the validation for invalid spacecrafts in traces."""
     load_plot_config(plots_config)
 
-    plots_config["plots"][1]["measurements"]["lon_gsm"]["traces"] = {
+    plots_config["plots"][1]["measurements"]["phi_gse"]["traces"] = {
         "Unknown": "purple"
     }
     with pytest.raises(ValidationError):

@@ -33,9 +33,10 @@ def test_create_timeseries_plot():
         },
     )
 
+    spacecrafts = ["A", "B"]
     x_range = figure(x_axis_type="datetime").x_range
 
-    plot = create_timeseries_plot(plot_config, x_range, time_range="7d")
+    plot = create_timeseries_plot(plot_config, spacecrafts, x_range, time_range="7d")
 
     assert isinstance(plot, figure)
 
@@ -101,7 +102,9 @@ def test_create_timeseries_plots():
         with patch("main.plots.AjaxDataSource") as data_source_mock:
             data_source_mock.return_value = source
 
-            plots = create_timeseries_plots(plots_config, button, default_spacecraft)
+            plots = create_timeseries_plots(
+                plots_config, spacecrafts, button, default_spacecraft
+            )
             assert len(plots) == 2
             assert all(isinstance(plot, figure) for plot in plots)
 
