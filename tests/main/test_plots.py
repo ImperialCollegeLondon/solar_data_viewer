@@ -121,14 +121,6 @@ def test_create_solar_orbiter_plot():
     """Test the create_solar_orbiter_plot function."""
     from main.plots import create_solar_orbiter_plot
 
-    create_solar_orbiter_plot(
-        title="Fixed Earth frame",
-        x_axis_label="AU",
-        y_axis_label="AU",
-        unit="AU",
-        radii=[0.5, 0.75, 1.0],
-    )
-
     source = AjaxDataSource(
         data={
             "name": ["Sun", "Earth", "SO"],
@@ -140,24 +132,24 @@ def test_create_solar_orbiter_plot():
         method="GET",
     )
 
-    with patch("main.views.DataView.get"):
-        with patch("main.plots.AjaxDataSource") as data_source_mock:
-            data_source_mock.return_value = source
+    with patch("main.plots.AjaxDataSource") as data_source_mock:
+        data_source_mock.return_value = source
 
-            plot = create_solar_orbiter_plot(
-                title="Test plot",
-                x_axis_label="AU",
-                y_axis_label="AU",
-                unit="AU",
-                radii=[0.5, 1.0],
-            )
-            assert isinstance(plot, figure)
+        plot = create_solar_orbiter_plot(
+            title="Test plot",
+            x_axis_label="AU",
+            y_axis_label="AU",
+            unit="AU",
+            radii=[0.5, 1.0],
+        )
+        assert isinstance(plot, figure)
 
-            # 4 renderers for the points, traj, and 2 circles
-            assert len(plot.renderers) == 4
+        # 4 renderers for the points, traj, and 2 circles
+        assert len(plot.renderers) == 4
+        assert plot.renderers[0].data_source == source
 
-            # Check hover has been added
-            assert any(isinstance(tool, HoverTool) for tool in plot.tools)
+        # Check hover has been added
+        assert any(isinstance(tool, HoverTool) for tool in plot.tools)
 
 
 def test_get_now_vertical_line():

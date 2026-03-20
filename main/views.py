@@ -8,8 +8,8 @@ from django.core.cache import cache
 from django.http import HttpRequest, JsonResponse
 from django.views.generic import TemplateView, View
 
-from .plots import create_solar_orbiter_layout, create_timeseries_layout
-from .tasks import set_trajectory_cache
+from .plots import create_l1_plot, create_solar_orbiter_layout, create_timeseries_layout
+from .tasks import set_l1_trajectory_cache, set_so_trajectory_cache
 from .trajectory import (
     generate_solar_orbiter_statistics,
 )
@@ -25,8 +25,19 @@ class IndexView(TemplateView):
         """Add HTML components and Bokeh version to the context."""
         context = super().get_context_data(**kwargs)
         layout = create_timeseries_layout()
-        script, div = components(layout)
-        context.update({"script": script, "div": div})
+        ts_script, ts_div = components(layout)
+        l1_plot = create_l1_plot()
+        l1_script, l1_div = components(l1_plot)
+        time = cache.get("time_generated_l1") or None
+        context.update(
+            {
+                "ts_script": ts_script,
+                "ts_div": ts_div,
+                "l1_script": l1_script,
+                "l1_div": l1_div,
+                "time": time,
+            }
+        )
         context["bokeh_version"] = bokeh.__version__
         return context
 
@@ -70,7 +81,7 @@ class SolarOrbiterView(TemplateView):
         context = super().get_context_data(**kwargs)
         layout = create_solar_orbiter_layout()
         script, div = components(layout)
-        time = cache.get("time_generated") or None
+        time = cache.get("time_generated_so") or None
         context.update({"script": script, "div": div, "time": time})
         stats = generate_solar_orbiter_statistics()
         context.update(stats)
@@ -89,7 +100,7 @@ class TrajectoryDataView(View):
         *args: Any,
         **kwargs: Any,
     ) -> JsonResponse:
-        """Method to handle GET requests for spacecraft data.
+        """Method to handle GET requests for SO trajectory data.
 
         Args:
             request: The incoming HTTP request.
@@ -100,19 +111,51 @@ class TrajectoryDataView(View):
             **kwargs: Additional key word arguments.
 
         Returns:
-            A JSON response containing the dates and values for the specific
-                spacecraft and measurement type.
+            A JSON response containing the trajectory data for Solar Orbiter.
         """
         data = cache.get(
             "trajectory_data",
         )
         if not data:
-            set_trajectory_cache()
+            set_so_trajectory_cache()
             data = cache.get(
                 "trajectory_data",
             )
 
         return JsonResponse(data[datatype][unit])
+
+
+class L1DataView(View):
+    """View for returning L1 trajectory data to the AjaxDataSource."""
+
+    def get(  # type: ignore
+        self,
+        request: HttpRequest,
+        datatype: Literal["static", "trajectory"],
+        *args: Any,
+        **kwargs: Any,
+    ) -> JsonResponse:
+        """Method to handle GET requests for L1 trajectory data.
+
+        Args:
+            request: The incoming HTTP request.
+            datatype: Whether to retrieve static or trajectory data.
+            *args: Additional positional arguments.
+            **kwargs: Additional key word arguments.
+
+        Returns:
+            A JSON response containing the trajectory data for L1 spacecraft.
+        """
+        data = cache.get(
+            "l1_trajectory_data",
+        )
+        if not data:
+            set_l1_trajectory_cache()
+            data = cache.get(
+                "l1_trajectory_data",
+            )
+
+        return JsonResponse(data[datatype])
 
 
 class PassView(View):

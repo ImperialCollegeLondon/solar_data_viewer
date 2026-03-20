@@ -313,12 +313,13 @@ def create_solar_orbiter_plot(
         match_aspect=True,
         x_axis_label=x_axis_label,
         y_axis_label=y_axis_label,
+        sizing_mode="stretch_width",
     )
 
     # Create an AjaxDataSource for the spacecraft static position
     static_source = AjaxDataSource(
         data_url=f"/trajectory_data/{unit}/static",
-        polling_interval=30000,
+        polling_interval=3600000,
         method="GET",
     )
     objects = plot.scatter(
@@ -328,7 +329,7 @@ def create_solar_orbiter_plot(
     # Create an AjaxDataSource for the trajectory data
     trajectory_source = AjaxDataSource(
         data_url=f"/trajectory_data/{unit}/trajectory",
-        polling_interval=30000,
+        polling_interval=3600000,
         method="GET",
     )
     plot.line(
@@ -384,3 +385,73 @@ def create_solar_orbiter_layout() -> Row:
         ]
     )
     return layout
+
+
+def create_l1_plot(
+    title: str = "L1 spacecraft",
+    x_axis_label: str = "GSE y (Rᴇ)",
+    y_axis_label: str = "GSE z (Rᴇ)",
+) -> figure:
+    """Create a plot for the L1 spacecraft trajectories.
+
+    The plot shows blobs for the current spacecraft positions, lines showing
+    their past 7 days and a circle for the magnetopause.
+
+    Args:
+        title: The plot title.
+        x_axis_label: Label to display on the x-axis.
+        y_axis_label: Label to display on the y-axis.
+
+    Returns:
+        A Bokeh figure containing the trajectories of the L1 spacecraft in
+            GSE coordinates.
+    """
+    plot = figure(  # type: ignore[call-arg]
+        title=title,
+        width=1000,
+        height=500,
+        match_aspect=True,
+        x_axis_label=x_axis_label,
+        y_axis_label=y_axis_label,
+        x_range=Range1d(-110, 110),
+        y_range=Range1d(-55, 55),
+        sizing_mode="stretch_width",
+    )
+
+    # Add circle representing magnetopause
+    plot.circle(
+        x=16,  # GSE y
+        y=0,  # GSE z
+        radius=20,
+        fill_alpha=0,
+        line_color="gray",
+        line_dash="dotted",
+        line_width=1,
+        legend_label="Magnetopause",
+    )
+
+    # Create an AjaxDataSource for the spacecraft static position
+    static_source = AjaxDataSource(
+        data_url="/l1_data/static",
+        polling_interval=3600000,
+        method="GET",
+    )
+    objects = plot.scatter(
+        "y", "z", color="colour", legend_field="name", size=15, source=static_source
+    )
+
+    # Create an AjaxDataSource for the trajectory data
+    trajectory_source = AjaxDataSource(
+        data_url="/l1_data/trajectory",
+        polling_interval=30000,
+        method="GET",
+    )
+    plot.multi_line(
+        "y", "z", color="colour", legend_field="name", source=trajectory_source
+    )
+
+    plot.add_layout(plot.legend[0], "right")
+    hover = HoverTool(tooltips=[("ID", "@name")], renderers=[objects])
+    plot.add_tools(hover)
+
+    return plot
