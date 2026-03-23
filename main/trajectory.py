@@ -9,6 +9,8 @@ from astropy.coordinates import SkyCoord
 from sunpy.coordinates import get_body_heliographic_stonyhurst, get_horizons_coord
 from sunpy.coordinates.frames import GeocentricSolarEcliptic, HeliographicStonyhurst
 
+from .utils import load_l1_config
+
 
 def heliographic_to_cartesian(
     coord: HeliographicStonyhurst | SkyCoord,
@@ -150,16 +152,6 @@ def trajectory_solar_orbiter_data(
 
     data = {"x": [coord[0] for coord in coords], "y": [coord[1] for coord in coords]}
 
-    # Add coordinates for arrow head (between 3rd and 4th coords)
-    data.update(
-        {
-            "arrow_x_start": coords[3][0],
-            "arrow_x_end": coords[4][0],
-            "arrow_y_start": coords[3][1],
-            "arrow_y_end": coords[4][1],
-        }
-    )
-
     return data
 
 
@@ -248,57 +240,52 @@ def coord_to_gse(coord: SkyCoord) -> tuple[float, float]:
 
 def l1_data(
     times: tuple[datetime, datetime],
-) -> tuple[dict[str, object], dict[str, object]]:
+) -> tuple[dict[str, object], dict[str, object], dict[str, dict[str, list[float]]]]:
     """Get the data for the L1 spacecraft glyphs in GSE coordinates.
 
     Args:
         times: A datetime to retrieve coordinates for.
 
     Returns:
-        A dictionary containing y and z-coordinates, spacecraft names
-            and colours.
+        Tuple of dictionaries containing static coordinates, trajectory coordinates and
+            arrow coordinates.
     """
-    L1_IDS = [-43, -92, -8, -78, -231, -156]
-    L1_CRAFTS = ["IMAP", "ACE", "WIND", "DSCOVR", "Solar-1", "Aditya-L1"]
-    L1_COLOURS = [
-        "rgb(255,143,0)",
-        "rgb(204,0,204)",
-        "rgb(0,204,204)",
-        "rgb(0,102,204)",
-        "rgb(230,0,0)",
-        "rgb(19,136,8)",
-    ]
+    config = load_l1_config()
 
-    y_coords, z_coords = [], []
-    for id in L1_IDS:
-        trajectory = get_JPL_spacecraft_coordinates(id, times)
+    y_coords, z_coords, names, colours = [], [], [], []
+    for craft_config in config.spacecraft:
+        trajectory = get_JPL_spacecraft_coordinates(craft_config.id, times)
         gse_trajectory = [coord_to_gse(coord) for coord in trajectory]
 
         # Add to trajectory data
         y_coords.append([coord[0] for coord in gse_trajectory])
         z_coords.append([coord[1] for coord in gse_trajectory])
+        names.append(craft_config.name)
+        colours.append(craft_config.colour)
 
     static_data = {
-        "name": L1_CRAFTS,
-        "colour": L1_COLOURS,
+        "name": names,
+        "colour": colours,
         "y": [coords[-1] for coords in y_coords],
         "z": [coords[-1] for coords in z_coords],
     }
 
     trajectory_data = {
-        "name": L1_CRAFTS,
-        "colour": L1_COLOURS,
+        "name": names,
+        "colour": colours,
         "y": y_coords,
         "z": z_coords,
     }
 
-    # Get coordinates for arrow head (between 3rd and 4th coords)
+    # Get coordinates for arrow heads (between 3rd and 4th coords)
     arrow_data = {
-        "colour": L1_COLOURS,
-        "y_start": [coords[4] for coords in y_coords],
-        "y_end": [coords[3] for coords in y_coords],
-        "z_start": [coords[4] for coords in z_coords],
-        "z_end": [coords[3] for coords in z_coords],
+        name: {
+            "y_start": [ys[4]],
+            "y_end": [ys[3]],
+            "z_start": [zs[4]],
+            "z_end": [zs[3]],
+        }
+        for name, ys, zs in zip(names, y_coords, z_coords)
     }
 
     return static_data, trajectory_data, arrow_data
