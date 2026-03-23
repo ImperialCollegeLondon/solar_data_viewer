@@ -21,8 +21,8 @@ def set_l1_trajectory_cache() -> None:
     time = datetime.now()
     times = (time - timedelta(days=7), time)
 
-    static_data, trajectory_data = l1_data(times)
-    data = {"static": static_data, "trajectory": trajectory_data}
+    static_data, trajectory_data, arrow_data = l1_data(times)
+    data = {"static": static_data, "trajectory": trajectory_data, "arrow": arrow_data}
     cache.set("l1_trajectory_data", data, timeout=None)
 
     # Record the time the data was generated

@@ -8,12 +8,14 @@ from typing import Literal
 from bokeh.layouts import column, row
 from bokeh.models import (  # type: ignore
     AjaxDataSource,
+    Arrow,
     CrosshairTool,
     HoverTool,
     Label,
     LegendItem,
     Range1d,
     Span,
+    VeeHead,
 )
 from bokeh.models.layouts import Column, Row
 from bokeh.models.widgets.groups import CheckboxButtonGroup
@@ -405,6 +407,24 @@ def create_l1_plot(
     plot.multi_line(
         "y", "z", color="colour", legend_field="name", source=trajectory_source
     )
+
+    # Create an AjaxDataSource for the arrow data
+    arrow_source = AjaxDataSource(
+        data_url="/l1_data/arrow",
+        polling_interval=30000,
+        method="GET",
+    )
+    arrows = Arrow(
+        end=VeeHead(size=10, fill_alpha=0, line_alpha=0.5, line_color="grey"),
+        x_start="y_start",
+        x_end="y_end",
+        y_start="z_start",
+        y_end="z_end",
+        source=arrow_source,
+        line_color="colour",
+    )
+
+    plot.add_layout(arrows)
 
     plot.add_layout(plot.legend[0], "right")
     hover = HoverTool(tooltips=[("ID", "@name")], renderers=[objects])

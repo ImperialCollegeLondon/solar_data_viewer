@@ -148,7 +148,19 @@ def trajectory_solar_orbiter_data(
             for coord in trajectory
         ]
 
-    return {"x": [coord[0] for coord in coords], "y": [coord[1] for coord in coords]}
+    data = {"x": [coord[0] for coord in coords], "y": [coord[1] for coord in coords]}
+
+    # Add coordinates for arrow head (between 3rd and 4th coords)
+    data.update(
+        {
+            "arrow_x_start": coords[3][0],
+            "arrow_x_end": coords[4][0],
+            "arrow_y_start": coords[3][1],
+            "arrow_y_end": coords[4][1],
+        }
+    )
+
+    return data
 
 
 def get_visibility_status(angle: float) -> str:
@@ -280,4 +292,13 @@ def l1_data(
         "z": z_coords,
     }
 
-    return static_data, trajectory_data
+    # Get coordinates for arrow head (between 3rd and 4th coords)
+    arrow_data = {
+        "colour": L1_COLOURS,
+        "y_start": [coords[4] for coords in y_coords],
+        "y_end": [coords[3] for coords in y_coords],
+        "z_start": [coords[4] for coords in z_coords],
+        "z_end": [coords[3] for coords in z_coords],
+    }
+
+    return static_data, trajectory_data, arrow_data

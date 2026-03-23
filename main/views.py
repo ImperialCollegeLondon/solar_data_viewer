@@ -131,7 +131,7 @@ class L1DataView(View):
     def get(  # type: ignore
         self,
         request: HttpRequest,
-        datatype: Literal["static", "trajectory"],
+        datatype: Literal["static", "trajectory", "arrow"],
         *args: Any,
         **kwargs: Any,
     ) -> JsonResponse:
