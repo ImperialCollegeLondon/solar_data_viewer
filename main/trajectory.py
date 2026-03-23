@@ -287,10 +287,10 @@ def l1_data(
     # Get coordinates for arrow heads (between 3rd and 4th coords)
     arrow_data = {
         name: {
-            "y_start": [ys[4]],
-            "y_end": [ys[3]],
-            "z_start": [zs[4]],
-            "z_end": [zs[3]],
+            "y_start": [ys[3]],
+            "y_end": [ys[4]],
+            "z_start": [zs[3]],
+            "z_end": [zs[4]],
         }
         for name, ys, zs in zip(names, y_coords, z_coords)
     }
