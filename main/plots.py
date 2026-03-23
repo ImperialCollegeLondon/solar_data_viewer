@@ -426,9 +426,7 @@ def create_l1_plot(
         polling_interval=30000,
         method="GET",
     )
-    plot.multi_line(
-        "y", "z", color="colour", legend_field="name", source=trajectory_source
-    )
+    plot.multi_line("y", "z", color="colour", source=trajectory_source)
 
     # Create AjaxDataSources for the arrow data
     config = load_l1_config()
@@ -455,6 +453,8 @@ def create_l1_plot(
         )
         plot.add_layout(arrow)
 
+    # Add item to legend to describe line representation
+    plot.line([0], [0], color="gray", legend_label="Last 7 days", visible=False)
     plot.add_layout(plot.legend[0], "right")
     hover = HoverTool(tooltips=[("ID", "@name")], renderers=[objects])
     plot.add_tools(hover)
