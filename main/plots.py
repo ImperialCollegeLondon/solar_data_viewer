@@ -293,6 +293,28 @@ def create_solar_orbiter_plot(
         "x", "y", color="blue", source=trajectory_source, legend_label="Next 7 days"
     )
 
+    # Create the arrows to show direction
+    arrow_source = AjaxDataSource(
+        data_url=f"/trajectory_data/{unit}/arrow",
+        polling_interval=30000,
+        method="GET",
+    )
+    arrow = Arrow(
+        end=VeeHead(
+            size=10,
+            line_alpha=0.5,
+            line_color="blue",
+            fill_color="blue",
+        ),
+        x_start="x_start",
+        x_end="x_end",
+        y_start="y_start",
+        y_end="y_end",
+        source=arrow_source,
+        line_alpha=0,
+    )
+    plot.add_layout(arrow)
+
     for r in radii:
         plot.circle(
             x=0,
@@ -417,7 +439,7 @@ def create_l1_plot(
             polling_interval=30000,
             method="GET",
         )
-        arrows = Arrow(
+        arrow = Arrow(
             end=VeeHead(
                 size=10,
                 line_alpha=0.5,
@@ -431,7 +453,7 @@ def create_l1_plot(
             source=arrow_source,
             line_alpha=0,
         )
-        plot.add_layout(arrows)
+        plot.add_layout(arrow)
 
     plot.add_layout(plot.legend[0], "right")
     hover = HoverTool(tooltips=[("ID", "@name")], renderers=[objects])

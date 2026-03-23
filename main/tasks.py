@@ -35,7 +35,7 @@ def set_so_trajectory_cache() -> None:
     Creates the trajectory data for the Solar Orbiter plots and adds this to
     Django's cache, together with the time that the data were generated.
     """
-    static_data, traj_data = {}, {}
+    static_data, traj_data, arrow_data = {}, {}, {}
 
     time = datetime.now()
     times = (time, time + timedelta(days=7))
@@ -43,11 +43,11 @@ def set_so_trajectory_cache() -> None:
     units = ["AU", "angle"]
     for unit in units:
         static_data[unit] = static_solar_orbiter_data(time, unit)
-        traj_data[unit] = trajectory_solar_orbiter_data(times, unit)
+        traj_data[unit], arrow_data[unit] = trajectory_solar_orbiter_data(times, unit)
 
     cache.set(
         "trajectory_data",
-        {"static": static_data, "trajectory": traj_data},
+        {"static": static_data, "trajectory": traj_data, "arrow": arrow_data},
         timeout=None,
     )
 

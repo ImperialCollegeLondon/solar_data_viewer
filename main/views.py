@@ -96,7 +96,7 @@ class TrajectoryDataView(View):
         self,
         request: HttpRequest,
         unit: Literal["AU", "angle"],
-        datatype: Literal["static", "trajectory"],
+        datatype: Literal["static", "trajectory", "arrow"],
         *args: Any,
         **kwargs: Any,
     ) -> JsonResponse:
@@ -106,7 +106,7 @@ class TrajectoryDataView(View):
             request: The incoming HTTP request.
             unit: The units on the plot, either AU (astronomical units) or angle
                 (Earth separation angles).
-            datatype: Whether to retrieve static or trajectory data.
+            datatype: Whether to retrieve static, trajectory or arrow data.
             *args: Additional positional arguments.
             **kwargs: Additional key word arguments.
 

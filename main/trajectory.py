@@ -125,7 +125,7 @@ def static_solar_orbiter_data(
 def trajectory_solar_orbiter_data(
     times: tuple[datetime, datetime],
     unit: str,
-) -> dict[str, list[float]]:
+) -> tuple[dict[str, list[float]], dict[str, list[float]]]:
     """Get the data for the trajectory Solar Orbiter glyphs.
 
     Args:
@@ -134,7 +134,7 @@ def trajectory_solar_orbiter_data(
             (Earth separation angles).
 
     Returns:
-        A data dictionary to be used by the data source.
+        A tuple of dictionaries for trajectory coordinates and arrow coordinates.
     """
     # Get trajectory coords
     trajectory = get_JPL_spacecraft_coordinates("Solar Orbiter", times)
@@ -152,7 +152,14 @@ def trajectory_solar_orbiter_data(
 
     data = {"x": [coord[0] for coord in coords], "y": [coord[1] for coord in coords]}
 
-    return data
+    arrow_data = {
+        "x_start": [coords[3][0]],
+        "x_end": [coords[4][0]],
+        "y_start": [coords[3][1]],
+        "y_end": [coords[4][1]],
+    }
+
+    return data, arrow_data
 
 
 def get_visibility_status(angle: float) -> str:
