@@ -20,7 +20,7 @@ urlpatterns = [
     path(
         "l1_data/<str:datatype>/<str:spacecraft>/",
         views.L1DataView.as_view(),
-        name="l1_data_with_spacecraft",
+        name="l1_arrow_data",
     ),
     path(
         "l1_data/<str:datatype>/",

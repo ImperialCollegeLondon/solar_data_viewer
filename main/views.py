@@ -141,7 +141,7 @@ class L1DataView(View):
         Args:
             request: The incoming HTTP request.
             datatype: Whether to retrieve static, trajectory or arrow data.
-            spacecraft: Name of spacecraft to get arrow coordinates.
+            spacecraft: Name of spacecraft to get arrow coordinates for.
             *args: Additional positional arguments.
             **kwargs: Additional key word arguments.
 
@@ -161,7 +161,7 @@ class L1DataView(View):
                 return JsonResponse(data[datatype][spacecraft])
             else:
                 raise ValueError(
-                    "No spacecraft provided to retrieve arrow coordinates."
+                    "No spacecraft provided to retrieve arrow coordinates for."
                 )
 
         return JsonResponse(data[datatype])
