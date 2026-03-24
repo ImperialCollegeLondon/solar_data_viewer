@@ -1,6 +1,7 @@
 """General utilities for Solar Data Viewer."""
 
 import tomllib
+from datetime import date, datetime
 from logging import getLogger
 from pathlib import Path
 from typing import Any
@@ -167,3 +168,24 @@ def get_gse_magnetic_field(
     dates = data.index.tolist()
     measurements = data[measurement].tolist()
     return {"measurement": measurements, "date": dates}
+
+
+def get_solar_orbiter_dates() -> list[tuple[date, date]]:
+    """Get the dates Solar Orbiter is not in communication with Earth from file.
+
+    Returns:
+        A list of tuples of dates, representing periods where Solar Orbiter is not in
+            communication with Earth.
+    """
+    dates_file = Path(__file__).parent / "data" / "solar_orbiter_dates.txt"
+    so_dates = []
+    with open(dates_file) as f:
+        for line in f:
+            start, end = line.strip().split(",")
+            so_dates.append(
+                (
+                    datetime.strptime(start, "%Y-%m-%d").date(),
+                    datetime.strptime(end, "%Y-%m-%d").date(),
+                )
+            )
+    return so_dates

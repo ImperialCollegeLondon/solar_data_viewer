@@ -2,14 +2,14 @@
 
 import itertools
 from contextlib import nullcontext as does_not_raise
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 import pandas as pd
 import pytest
 from model_bakery import baker
 
 from main.config import PlotsConfig
-from main.utils import load_plot_config, reindex_data
+from main.utils import get_solar_orbiter_dates, load_plot_config, reindex_data
 
 
 def test_load_plot_config(plots_config):
@@ -87,3 +87,11 @@ def test_reindex_data():
 
     assert df.index.tolist() == expected_dates
     assert df["values"].tolist() == [0, 1, "nan", 2, 3, 4, 5, "nan", 6]
+
+
+def test_get_solar_orbiter_dates():
+    """Test the get_solar_orbiter_dates function."""
+    so_dates = get_solar_orbiter_dates()
+    for dates in so_dates:
+        assert len(dates) == 2
+        assert all(isinstance(d, date) for d in dates)
