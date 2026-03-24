@@ -16,12 +16,13 @@ def test_set_so_trajectory_cache(datetime_mock, traj_data_mock, static_data_mock
     time = datetime.now()
     times = (time, time + timedelta(days=7))
     datetime_mock.now.return_value = time
-    traj_data_mock.return_value = "trajectory data"
+    traj_data_mock.return_value = ("trajectory data", "arrow data")
     static_data_mock.return_value = "static data"
 
     expected_data = {
         "static": {"AU": "static data", "angle": "static data"},
         "trajectory": {"AU": "trajectory data", "angle": "trajectory data"},
+        "arrow": {"AU": "arrow data", "angle": "arrow data"},
     }
 
     cache.clear()
@@ -49,9 +50,13 @@ def test_set_l1_trajectory_cache(datetime_mock, l1_data_mock):
     time = datetime.now()
     times = (time - timedelta(days=7), time)
     datetime_mock.now.return_value = time
-    l1_data_mock.return_value = ("static data", "trajectory data")
+    l1_data_mock.return_value = ("static data", "trajectory data", "arrow data")
 
-    expected_data = {"static": "static data", "trajectory": "trajectory data"}
+    expected_data = {
+        "static": "static data",
+        "trajectory": "trajectory data",
+        "arrow": "arrow data",
+    }
 
     cache.clear()
     set_l1_trajectory_cache()
