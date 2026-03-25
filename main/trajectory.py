@@ -273,7 +273,7 @@ def l1_data(
     static_data = {
         "name": names,
         "colour": colours,
-        # 7th date represents the current date
+        # middle date represents the current date
         "y": [coords[7] for coords in y_coords],
         "z": [coords[7] for coords in z_coords],
     }
