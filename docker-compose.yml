@@ -2,7 +2,7 @@ services:
   app:
     build: .
     command:
-      - sh
+      - bash
       - -c
       - |
         python manage.py migrate
