@@ -3,8 +3,6 @@
 from datetime import datetime, timedelta
 
 from django.core.cache import cache
-from huey import crontab
-from huey.contrib.djhuey import db_periodic_task
 
 from .trajectory import (
     l1_data,
@@ -26,7 +24,7 @@ def set_l1_trajectory_cache() -> None:
     cache.set("l1_trajectory_data", data, timeout=None)
 
     # Record the time the data was generated
-    cache.set("time_generated_l1", time.strftime("%Y-%m-%d %H:%M:%S"))
+    cache.set("time_generated_l1", time, timeout=None)
 
 
 def set_so_trajectory_cache() -> None:
@@ -52,11 +50,4 @@ def set_so_trajectory_cache() -> None:
     )
 
     # Record the time the data was generated
-    cache.set("time_generated_so", time.strftime("%Y-%m-%d %H:%M:%S"))
-
-
-@db_periodic_task(crontab(hour=10, minute=0))
-def trajectory_cache_task() -> None:
-    """Daily huey task to retrieve most recent trajectory data."""
-    set_so_trajectory_cache()
-    set_l1_trajectory_cache()
+    cache.set("time_generated_so", time, timeout=None)

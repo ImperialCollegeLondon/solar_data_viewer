@@ -1,5 +1,6 @@
 """Views for the main app."""
 
+from datetime import datetime
 from typing import Any, Literal
 
 import bokeh
@@ -28,7 +29,8 @@ class IndexView(TemplateView):
         ts_script, ts_div = components(layout)
         l1_plot = create_l1_plot()
         l1_script, l1_div = components(l1_plot)
-        time = cache.get("time_generated_l1") or None
+        time = cache.get("time_generated_l1")
+        time = time.strftime("%Y-%m-%d %H:%M:%S") if time else None
         context.update(
             {
                 "ts_script": ts_script,
@@ -81,7 +83,8 @@ class SolarOrbiterView(TemplateView):
         context = super().get_context_data(**kwargs)
         layout = create_solar_orbiter_layout()
         script, div = components(layout)
-        time = cache.get("time_generated_so") or None
+        time = cache.get("time_generated_so")
+        time = time.strftime("%Y-%m-%d %H:%M:%S") if time else None
         context.update({"script": script, "div": div, "time": time})
         stats = generate_solar_orbiter_statistics()
         context.update(stats)
@@ -116,7 +119,8 @@ class TrajectoryDataView(View):
         data = cache.get(
             "trajectory_data",
         )
-        if not data:
+        time = cache.get("time_generated_so")
+        if data is None or time is None or time.date() < datetime.today().date():
             set_so_trajectory_cache()
             data = cache.get(
                 "trajectory_data",
@@ -149,7 +153,8 @@ class L1DataView(View):
         data = cache.get(
             "l1_trajectory_data",
         )
-        if not data:
+        time = cache.get("time_generated_l1")
+        if data is None or time is None or time.date() < datetime.today().date():
             set_l1_trajectory_cache()
             data = cache.get(
                 "l1_trajectory_data",
