@@ -9,7 +9,7 @@ from astropy.coordinates import SkyCoord
 from sunpy.coordinates import get_body_heliographic_stonyhurst, get_horizons_coord
 from sunpy.coordinates.frames import GeocentricSolarEcliptic, HeliographicStonyhurst
 
-from .utils import get_solar_orbiter_dates
+from .utils import get_message_template, get_solar_orbiter_dates
 
 
 def heliographic_to_cartesian(
@@ -289,14 +289,15 @@ def check_if_so_in_communication() -> str | None:
     """Check if Solar Orbiter is in communication with the Earth.
 
     Returns:
-        The end date as a string if Solar Orbiter is in superior conjuncation or None
-            if not.
+        The message to display if Solar Orbiter is in superior conjunction (and not in
+            communication) or None if not.
     """
     so_dates = get_solar_orbiter_dates()
     today = datetime.now().date()
 
     for start, end in so_dates:
         if start <= today <= end:
-            return end.strftime("%-d %B %Y")
+            date = end.strftime("%-d %B %Y")
+            return get_message_template(date)
 
     return None

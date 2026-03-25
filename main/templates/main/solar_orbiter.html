@@ -18,10 +18,8 @@
     CME warning at 1000 km/s: {{ CME1000time }} hours<br>
     Sun&ndash;spacecraft distance: {{ sun_spacecraft_distance}} AU<br>
     Latitude relative to Earth: {{ lat_relative_to_earth }}&deg;{{ lat_direction }}<br>
-    <br>
-    {% if conjunction_end_date %}
-      Until {{ conjunction_end_date }}, Solar Orbiter is going through superior conjunction and will not be transmitting MAG data.<br>
-      Real-time MAG space weather data will continue after this date.<br>
+    {% if message %}
+      {{ message|linebreaks }}
     {% endif %}
     <br>
   </p>

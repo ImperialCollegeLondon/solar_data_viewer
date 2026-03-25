@@ -1,5 +1,6 @@
 """General utilities for Solar Data Viewer."""
 
+import os
 import tomllib
 from datetime import date, datetime
 from logging import getLogger
@@ -8,6 +9,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+from django.template import Context, Template
 from django.utils import timezone
 
 from . import models
@@ -189,3 +191,29 @@ def get_solar_orbiter_dates() -> list[tuple[date, date]]:
                 )
             )
     return so_dates
+
+
+def get_message_template(end_date: str) -> str:
+    """Get the formatted Solar Orbiter message template from file or default.
+
+    Args:
+        end_date: The end date (formatted) for the window that Solar Orbiter is not in
+            communication.
+
+    Returns:
+        The rendered message template with the date added.
+    """
+    message = (
+        "Until {{ end_date }}, Solar Orbiter is going through superior conjunction "
+        "and will not be transmitting MAG data.\n"
+        "Real-time MAG space weather data will continue after this date."
+    )
+
+    message_file = Path(__file__).parent / "data" / "solar_orbiter_message.txt"
+    if os.path.exists(message_file):
+        with open(message_file) as f:
+            message = f.read()
+
+    message_template = Template(message)
+    context = Context({"end_date": end_date})
+    return message_template.render(context)

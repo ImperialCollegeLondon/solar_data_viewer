@@ -84,8 +84,7 @@ class SolarOrbiterView(TemplateView):
         stats = generate_solar_orbiter_statistics()
         context.update(stats)
         context["bokeh_version"] = bokeh.__version__
-        conjunction_end_date = check_if_so_in_communication()
-        context["conjunction_end_date"] = conjunction_end_date
+        context["message"] = check_if_so_in_communication()
         return context
 
 
