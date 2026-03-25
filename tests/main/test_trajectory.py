@@ -76,8 +76,8 @@ def test_coord_to_gse():
 @patch("main.trajectory.load_l1_config")
 def test_l1_data(load_config_mock, gse_mock, trajectory_mock):
     """Test the l1_data function."""
-    # Mock 7 days coordinates for 2 spacecraft
-    trajectory_mock.return_value = [Mock()] * 7
+    # Mock 14 days coordinates for 2 spacecraft
+    trajectory_mock.return_value = [Mock()] * 14
     gse_mock.return_value = (10, 20)
 
     mock_config = Mock(spec=L1Config)
@@ -88,7 +88,7 @@ def test_l1_data(load_config_mock, gse_mock, trajectory_mock):
     load_config_mock.return_value = mock_config
 
     time = datetime.now()
-    times = (time - timedelta(7), time)
+    times = (time - timedelta(7), time + timedelta(7))
     static_data, trajectory_data, arrow_data = l1_data(times)
 
     assert static_data["y"] == [10] * 2
@@ -96,18 +96,18 @@ def test_l1_data(load_config_mock, gse_mock, trajectory_mock):
     assert "colour" in static_data
     assert "name" in static_data
 
-    assert trajectory_data["y"] == [[10] * 7] * 2
-    assert trajectory_data["z"] == [[20] * 7] * 2
+    assert trajectory_data["y"] == [[10] * 14] * 2
+    assert trajectory_data["z"] == [[20] * 14] * 2
     assert "colour" in trajectory_data
     assert "name" in trajectory_data
 
     for i, (craft, arrow_data) in enumerate(arrow_data.items()):
         assert craft == mock_config.spacecraft[i].name
         assert arrow_data == {
-            "y_start": [10],
-            "y_end": [10],
-            "z_start": [20],
-            "z_end": [20],
+            "y_start": [10, 10],
+            "y_end": [10, 10],
+            "z_start": [20, 20],
+            "z_end": [20, 20],
         }
 
 

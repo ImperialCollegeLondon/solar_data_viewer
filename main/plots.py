@@ -290,7 +290,11 @@ def create_solar_orbiter_plot(
         method="GET",
     )
     plot.line(
-        "x", "y", color="blue", source=trajectory_source, legend_label="Next 7 days"
+        "x",
+        "y",
+        color="blue",
+        source=trajectory_source,
+        legend_label="Last and next 7 days",
     )
 
     # Create the arrows to show direction
@@ -375,7 +379,7 @@ def create_l1_plot(
     """Create a plot for the L1 spacecraft trajectories.
 
     The plot shows blobs for the current spacecraft positions, lines showing
-    their past 7 days and a circle for the magnetopause.
+    their past and next 7 days and a circle for the magnetopause.
 
     Args:
         title: The plot title.
@@ -454,7 +458,9 @@ def create_l1_plot(
         plot.add_layout(arrow)
 
     # Add item to legend to describe line representation
-    plot.line([0], [0], color="gray", legend_label="Last 7 days", visible=False)
+    plot.line(
+        [0], [0], color="gray", legend_label="Last and next 7 days", visible=False
+    )
     plot.add_layout(plot.legend[0], "right")
     hover = HoverTool(tooltips=[("ID", "@name")], renderers=[objects])
     plot.add_tools(hover)

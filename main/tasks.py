@@ -19,7 +19,7 @@ def set_l1_trajectory_cache() -> None:
     Creates the trajectory data for the L1 plots and adds this to Django's cache.
     """
     time = datetime.now()
-    times = (time - timedelta(days=7), time)
+    times = (time - timedelta(days=7), time + timedelta(days=7))
 
     static_data, trajectory_data, arrow_data = l1_data(times)
     data = {"static": static_data, "trajectory": trajectory_data, "arrow": arrow_data}
@@ -38,7 +38,7 @@ def set_so_trajectory_cache() -> None:
     static_data, traj_data, arrow_data = {}, {}, {}
 
     time = datetime.now()
-    times = (time, time + timedelta(days=7))
+    times = (time - timedelta(days=7), time + timedelta(days=7))
 
     units = ["AU", "angle"]
     for unit in units:

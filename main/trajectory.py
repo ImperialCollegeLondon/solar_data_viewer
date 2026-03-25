@@ -153,10 +153,10 @@ def trajectory_solar_orbiter_data(
     data = {"x": [coord[0] for coord in coords], "y": [coord[1] for coord in coords]}
 
     arrow_data = {
-        "x_start": [coords[3][0]],
-        "x_end": [coords[4][0]],
-        "y_start": [coords[3][1]],
-        "y_end": [coords[4][1]],
+        "x_start": [coords[3][0], coords[10][0]],
+        "x_end": [coords[4][0], coords[11][0]],
+        "y_start": [coords[3][1], coords[10][1]],
+        "y_end": [coords[4][1], coords[11][1]],
     }
 
     return data, arrow_data
@@ -273,8 +273,9 @@ def l1_data(
     static_data = {
         "name": names,
         "colour": colours,
-        "y": [coords[-1] for coords in y_coords],
-        "z": [coords[-1] for coords in z_coords],
+        # 7th date represents the current date
+        "y": [coords[7] for coords in y_coords],
+        "z": [coords[7] for coords in z_coords],
     }
 
     trajectory_data = {
@@ -287,10 +288,10 @@ def l1_data(
     # Get coordinates for arrow heads (between 3rd and 4th coords)
     arrow_data = {
         name: {
-            "y_start": [ys[3]],
-            "y_end": [ys[4]],
-            "z_start": [zs[3]],
-            "z_end": [zs[4]],
+            "y_start": [ys[3], ys[10]],
+            "y_end": [ys[4], ys[11]],
+            "z_start": [zs[3], zs[10]],
+            "z_end": [zs[4], zs[11]],
         }
         for name, ys, zs in zip(names, y_coords, z_coords)
     }
