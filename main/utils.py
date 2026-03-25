@@ -196,6 +196,10 @@ def get_solar_orbiter_dates() -> list[tuple[date, date]]:
 def get_message_template(end_date: str) -> str:
     """Get the formatted Solar Orbiter message template from file or default.
 
+    Customized messages can be provided in main/data/solar_orbiter_message.txt.
+    To include the end date for the superior conjunction window, use {{ end_date }}
+    within the file text.
+
     Args:
         end_date: The end date (formatted) for the window that Solar Orbiter is not in
             communication.
@@ -212,7 +216,9 @@ def get_message_template(end_date: str) -> str:
     message_file = Path(__file__).parent / "data" / "solar_orbiter_message.txt"
     if os.path.exists(message_file):
         with open(message_file) as f:
-            message = f.read()
+            raw_message = f.read()
+            if raw_message:
+                message = raw_message
 
     message_template = Template(message)
     context = Context({"end_date": end_date})

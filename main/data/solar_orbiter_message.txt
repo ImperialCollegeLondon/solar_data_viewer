@@ -1,2 +1,0 @@
-Until {{ end_date }}, Solar Orbiter is going through superior conjunction and will not be transmitting MAG data.
-Real-time MAG space weather data will continue after this date.
