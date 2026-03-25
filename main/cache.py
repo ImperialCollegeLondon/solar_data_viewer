@@ -1,4 +1,4 @@
-"""Task definitions for Huey."""
+"""Functions for setting data in the cache."""
 
 from datetime import datetime, timedelta
 
