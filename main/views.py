@@ -9,8 +9,8 @@ from django.core.cache import cache
 from django.http import HttpRequest, JsonResponse
 from django.views.generic import TemplateView, View
 
+from .cache import set_l1_trajectory_cache, set_so_trajectory_cache
 from .plots import create_l1_plot, create_solar_orbiter_layout, create_timeseries_layout
-from .tasks import set_l1_trajectory_cache, set_so_trajectory_cache
 from .trajectory import (
     generate_solar_orbiter_statistics,
 )

@@ -1,4 +1,4 @@
-"""Test suite for tasks."""
+"""Test suite for cache."""
 
 from datetime import datetime, timedelta
 from unittest.mock import patch
@@ -6,12 +6,12 @@ from unittest.mock import patch
 from django.core.cache import cache
 
 
-@patch("main.tasks.static_solar_orbiter_data")
-@patch("main.tasks.trajectory_solar_orbiter_data")
-@patch("main.tasks.datetime")
+@patch("main.cache.static_solar_orbiter_data")
+@patch("main.cache.trajectory_solar_orbiter_data")
+@patch("main.cache.datetime")
 def test_set_so_trajectory_cache(datetime_mock, traj_data_mock, static_data_mock):
     """Test the set_so_trajectory_cache function."""
-    from main.tasks import set_so_trajectory_cache
+    from main.cache import set_so_trajectory_cache
 
     time = datetime.now()
     times = (time, time + timedelta(days=7))
@@ -35,16 +35,16 @@ def test_set_so_trajectory_cache(datetime_mock, traj_data_mock, static_data_mock
     assert cached_data == expected_data
 
     time_gen = cache.get("time_generated_so")
-    assert time_gen == time.strftime("%Y-%m-%d %H:%M:%S")
+    assert time_gen == time
 
     cache.clear()
 
 
-@patch("main.tasks.l1_data")
-@patch("main.tasks.datetime")
+@patch("main.cache.l1_data")
+@patch("main.cache.datetime")
 def test_set_l1_trajectory_cache(datetime_mock, l1_data_mock):
     """Test the set_l1_trajectory_cache function."""
-    from main.tasks import set_l1_trajectory_cache
+    from main.cache import set_l1_trajectory_cache
 
     time = datetime.now()
     times = (time - timedelta(days=7), time)
@@ -62,6 +62,6 @@ def test_set_l1_trajectory_cache(datetime_mock, l1_data_mock):
     assert cached_data == expected_data
 
     time_gen = cache.get("time_generated_l1")
-    assert time_gen == time.strftime("%Y-%m-%d %H:%M:%S")
+    assert time_gen == time
 
     cache.clear()
