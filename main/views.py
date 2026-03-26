@@ -96,7 +96,7 @@ class TrajectoryDataView(View):
         self,
         request: HttpRequest,
         unit: Literal["AU", "angle"],
-        datatype: Literal["static", "trajectory"],
+        datatype: Literal["static", "trajectory", "arrow"],
         *args: Any,
         **kwargs: Any,
     ) -> JsonResponse:
@@ -106,7 +106,7 @@ class TrajectoryDataView(View):
             request: The incoming HTTP request.
             unit: The units on the plot, either AU (astronomical units) or angle
                 (Earth separation angles).
-            datatype: Whether to retrieve static or trajectory data.
+            datatype: Whether to retrieve static, trajectory or arrow data.
             *args: Additional positional arguments.
             **kwargs: Additional key word arguments.
 
@@ -131,7 +131,8 @@ class L1DataView(View):
     def get(  # type: ignore
         self,
         request: HttpRequest,
-        datatype: Literal["static", "trajectory"],
+        datatype: Literal["static", "trajectory", "arrow"],
+        spacecraft: str | None = None,
         *args: Any,
         **kwargs: Any,
     ) -> JsonResponse:
@@ -139,7 +140,8 @@ class L1DataView(View):
 
         Args:
             request: The incoming HTTP request.
-            datatype: Whether to retrieve static or trajectory data.
+            datatype: Whether to retrieve static, trajectory or arrow data.
+            spacecraft: Name of spacecraft to get arrow coordinates for.
             *args: Additional positional arguments.
             **kwargs: Additional key word arguments.
 
@@ -154,5 +156,12 @@ class L1DataView(View):
             data = cache.get(
                 "l1_trajectory_data",
             )
+        if datatype == "arrow":
+            if spacecraft:
+                return JsonResponse(data[datatype][spacecraft])
+            else:
+                raise ValueError(
+                    "No spacecraft provided to retrieve arrow coordinates for."
+                )
 
         return JsonResponse(data[datatype])

@@ -69,3 +69,22 @@ class PlotsConfig(BaseConfig):
                         )
 
         return self
+
+
+class L1SpacecraftConfig(BaseConfig):
+    """Configuration details for an L1 spacecraft in the trajectory plot."""
+
+    name: str
+    """The name of the spacecraft."""
+
+    colour: str
+    """The RGB colour for the spacecraft in the plot."""
+
+    id: int
+    """The ID for the spacecraft to access JPL Horizons coordinates."""
+
+
+class L1Config(BaseConfig):
+    """Configuration schema for the L1 trajectory plot."""
+
+    spacecraft: list[L1SpacecraftConfig]
