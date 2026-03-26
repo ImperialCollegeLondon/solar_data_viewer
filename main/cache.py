@@ -24,7 +24,7 @@ def set_l1_trajectory_cache() -> None:
     cache.set("l1_trajectory_data", data, timeout=None)
 
     # Record the time the data was generated
-    cache.set("time_generated_l1", time, timeout=None)
+    cache.set("time_generated_l1", time, timeout=86400)
 
 
 def set_so_trajectory_cache() -> None:
@@ -50,4 +50,4 @@ def set_so_trajectory_cache() -> None:
     )
 
     # Record the time the data was generated
-    cache.set("time_generated_so", time, timeout=None)
+    cache.set("time_generated_so", time, timeout=86400)
