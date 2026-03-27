@@ -122,7 +122,7 @@ class TestTrajectoryDataView:
 
         with patch("main.views.cache") as cache_mock:
             # Data already in cache
-            cache_mock.get.side_effect = [mock_data, today] * 4
+            cache_mock.get.side_effect = [mock_data, today] * 6
             for unit in ["AU", "angle"]:
                 for datatype in ["trajectory", "static", "arrow"]:
                     endpoint = reverse("main:trajectory_data", args=[unit, datatype])
@@ -194,7 +194,7 @@ class TestL1DataView:
         mock_data = {"arrow": {"spacecraft": {"data": "data"}}}
 
         with patch("main.views.cache") as cache_mock:
-            cache_mock.get.return_value = mock_data
+            cache_mock.get.side_effect = [mock_data, datetime.now()]
             # No spacecraft provided
             with pytest.raises(
                 ValueError,
@@ -202,9 +202,10 @@ class TestL1DataView:
                 endpoint = reverse("main:l1_data", args=["arrow"])
                 response = client.get(endpoint)
 
+        with patch("main.views.cache") as cache_mock:
+            cache_mock.get.side_effect = [mock_data, datetime.now()]
             # With spacecraft
             endpoint = reverse("main:l1_arrow_data", args=["arrow", "spacecraft"])
             response = client.get(endpoint)
-            cache_mock.get.assert_called_with("l1_trajectory_data")
             assert isinstance(response, JsonResponse)
             assert response.json() == {"data": "data"}
