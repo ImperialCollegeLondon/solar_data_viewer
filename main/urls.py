@@ -18,7 +18,12 @@ urlpatterns = [
         name="trajectory_data",
     ),
     path(
-        "l1_data/<str:datatype>",
+        "l1_data/<str:datatype>/<str:spacecraft>/",
+        views.L1DataView.as_view(),
+        name="l1_arrow_data",
+    ),
+    path(
+        "l1_data/<str:datatype>/",
         views.L1DataView.as_view(),
         name="l1_data",
     ),

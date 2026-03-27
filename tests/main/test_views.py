@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from http import HTTPStatus
 from unittest.mock import patch
 
+import pytest
 from django.http import JsonResponse
 from django.urls import reverse
 
@@ -103,13 +104,27 @@ class TestTrajectoryDataView:
                 "AU": {"trajectory": "AU"},
                 "angle": {"trajectory": "angle"},
             },
+            "arrow": {
+                "AU": {
+                    "x_start": [0],
+                    "x_end": [1],
+                    "y_start": [0],
+                    "y_end": [1],
+                },
+                "angle": {
+                    "x_start": [0],
+                    "x_end": [1],
+                    "y_start": [0],
+                    "y_end": [1],
+                },
+            },
         }
 
         with patch("main.views.cache") as cache_mock:
             # Data already in cache
             cache_mock.get.side_effect = [mock_data, today] * 4
             for unit in ["AU", "angle"]:
-                for datatype in ["trajectory", "static"]:
+                for datatype in ["trajectory", "static", "arrow"]:
                     endpoint = reverse("main:trajectory_data", args=[unit, datatype])
                     response = client.get(endpoint)
                     cache_mock.get.assert_any_call("trajectory_data")
@@ -173,3 +188,23 @@ class TestL1DataView:
                 response = client.get(endpoint)
                 cache_setter_mock.assert_called_once()
                 assert response.json() == mock_data["trajectory"]
+
+    def test_get_arrow(self, client):
+        """Test the get method to get arrow data."""
+        mock_data = {"arrow": {"spacecraft": {"data": "data"}}}
+
+        with patch("main.views.cache") as cache_mock:
+            cache_mock.get.return_value = mock_data
+            # No spacecraft provided
+            with pytest.raises(
+                ValueError,
+            ):
+                endpoint = reverse("main:l1_data", args=["arrow"])
+                response = client.get(endpoint)
+
+            # With spacecraft
+            endpoint = reverse("main:l1_arrow_data", args=["arrow", "spacecraft"])
+            response = client.get(endpoint)
+            cache_mock.get.assert_called_with("l1_trajectory_data")
+            assert isinstance(response, JsonResponse)
+            assert response.json() == {"data": "data"}
