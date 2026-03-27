@@ -152,7 +152,7 @@ def trajectory_solar_orbiter_data(
 
     data = {"x": [coord[0] for coord in coords], "y": [coord[1] for coord in coords]}
 
-    # Get idxs for past/future arrows
+    # Get idxs for past/future arrowsg\
     n = len(coords)
     past = int(n / 4)
     future = int(3 * n / 4)
@@ -202,10 +202,10 @@ def generate_solar_orbiter_statistics() -> dict[str, str | float]:
 
     # Angle from the Sun-Earth line
     angles = heliographic_to_earth_separation_angles(so, earth)
-    sun_earth_angle = round(angles[0])
+    sun_earth_angle = abs(angles[0])
 
     # Visibility
-    status = get_visibility_status(angles[0])
+    status = get_visibility_status(sun_earth_angle)
 
     # Distance upstream of Earth
     dist_upstream_earth = earth.radius.to_value("AU") - so.radius.to_value("AU")
@@ -223,7 +223,7 @@ def generate_solar_orbiter_statistics() -> dict[str, str | float]:
     lat_dir = "S" if angles[1] < 0 else "N"
 
     data = {
-        "sun_earth_angle": sun_earth_angle,
+        "sun_earth_angle": round(sun_earth_angle),
         "visibility": status,
         "dist_upstream_earth": round(dist_upstream_earth, 1),
         "CME400time": CME400time,
