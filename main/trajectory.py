@@ -152,7 +152,7 @@ def trajectory_solar_orbiter_data(
 
     data = {"x": [coord[0] for coord in coords], "y": [coord[1] for coord in coords]}
 
-    # Get idxs for past/future arrowsg\
+    # Get idxs for past/future arrows
     n = len(coords)
     past = int(n / 4)
     future = int(3 * n / 4)
