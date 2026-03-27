@@ -20,11 +20,13 @@ def set_l1_trajectory_cache() -> None:
     times = (time - timedelta(days=7), time + timedelta(days=7))
 
     static_data, trajectory_data, arrow_data = l1_data(times)
-    data = {"static": static_data, "trajectory": trajectory_data, "arrow": arrow_data}
-    cache.set("l1_trajectory_data", data, timeout=None)
-
-    # Record the time the data was generated
-    cache.set("time_generated_l1", time, timeout=86400)
+    data = {
+        "static": static_data,
+        "trajectory": trajectory_data,
+        "arrow": arrow_data,
+        "time": time,
+    }
+    cache.set(f"l1_trajectory_data-{time.strftime('%Y%m%d')}", data, timeout=86400)
 
 
 def set_so_trajectory_cache() -> None:
@@ -44,10 +46,12 @@ def set_so_trajectory_cache() -> None:
         traj_data[unit], arrow_data[unit] = trajectory_solar_orbiter_data(times, unit)
 
     cache.set(
-        "trajectory_data",
-        {"static": static_data, "trajectory": traj_data, "arrow": arrow_data},
-        timeout=None,
+        f"trajectory_data-{time.strftime('%Y%m%d')}",
+        {
+            "static": static_data,
+            "trajectory": traj_data,
+            "arrow": arrow_data,
+            "time": time,
+        },
+        timeout=86400,
     )
-
-    # Record the time the data was generated
-    cache.set("time_generated_so", time, timeout=86400)
