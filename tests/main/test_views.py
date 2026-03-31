@@ -81,6 +81,7 @@ class TestSolarOrbiterView(TemplateOkMixin):
         assert "<script" in response.context["script"]
         assert "<div" in response.context["div"]
         assert response.context["bokeh_version"] == bokeh.__version__
+        assert "message" in response.context
 
         stats_mock.assert_called_once()
         assert all(mocked_stats[k] == response.context[k] for k in mocked_stats.keys())
