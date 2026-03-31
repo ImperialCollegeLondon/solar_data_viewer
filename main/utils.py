@@ -1,6 +1,7 @@
 """General utilities for Solar Data Viewer."""
 
 import tomllib
+from datetime import datetime
 from logging import getLogger
 from pathlib import Path
 from typing import Any
@@ -88,13 +89,14 @@ def reindex_data(df: pd.DataFrame, threshold: str = "1m") -> pd.DataFrame:
 
 
 def process_data_from_test_csvs(
-    spacecraft: str, measurement: str
+    spacecraft: str, measurement: str, from_date: int
 ) -> dict[str, list[float]]:
     """This is a placeholder function for returning processed test data from csvs.
 
     Args:
         spacecraft: Name of the spacecraft to retrieve data for.
         measurement: Name of the measurement to get data for.
+        from_date: The date to use as the starting point to get data (in ms format).
 
     Returns:
         A dictionary containing the relevant datetimes in UNIX epoch time format and
@@ -104,7 +106,7 @@ def process_data_from_test_csvs(
         measurement in ("bx_gse", "by_gse", "bz_gse", "phi_gse")
         and spacecraft in models.MAG_MODELS
     ):
-        return get_gse_magnetic_field(spacecraft, measurement)
+        return get_gse_magnetic_field(spacecraft, measurement, from_date)
 
     csv_files = {
         "IMAP": Path(__file__).parent / "data" / "test_data1.csv",
@@ -117,9 +119,9 @@ def process_data_from_test_csvs(
     df["date"] = pd.to_datetime(df["date"], utc=True)
 
     # Time range filtering
-    latest = df["date"].max()
-    delta = pd.Timedelta("7d")
-    df = df[df["date"] >= latest - delta]
+    from_date = datetime.fromtimestamp(int(from_date) / 1000)
+    from_date = pd.Timestamp(from_date, tz="UTC")
+    df = df[df["date"] >= from_date]
     df = reindex_data(df)
     # Format datetime as Unix epoch time
     df.index = df.index.astype("int64") // 10**3
@@ -131,12 +133,15 @@ def process_data_from_test_csvs(
     return data
 
 
-def get_gse_magnetic_field(spacecraft: str, measurement: str) -> dict[str, list[float]]:
+def get_gse_magnetic_field(
+    spacecraft: str, measurement: str, from_date: int
+) -> dict[str, list[float]]:
     """Retrieves a component of the magnetic field data for the SO and IMAP missions.
 
     Args:
         spacecraft: Name of the spacecraft to retrieve data for.
         measurement: Name of the measurement to get data for.
+        from_date: The date to use as the starting point to get data (in ms format).
 
     Returns:
         A dictionary containing the relevant datetimes in UNIX epoch time format and
@@ -153,8 +158,7 @@ def get_gse_magnetic_field(spacecraft: str, measurement: str) -> dict[str, list[
         )
 
     # Get the time range to display
-    delta = pd.Timedelta("7d")
-    from_date = timezone.now() - delta
+    from_date = datetime.fromtimestamp(int(from_date) / 1000)
 
     # Get the relevant data from the DB
     start_time = timezone.now()

@@ -10,6 +10,7 @@ from bokeh.models import (  # type: ignore
     AjaxDataSource,
     Arrow,
     CrosshairTool,
+    CustomJS,
     HoverTool,
     Label,
     LegendItem,
@@ -100,6 +101,35 @@ def update_legend_on_spacecraft_selection(plot: figure) -> figure:
     return plot
 
 
+def add_callback_to_ajax(source: AjaxDataSource) -> None:
+    """Add a callback to the data source to update from_date for polling.
+
+    The callback sets the URL param from_date to the most recent date in the data
+    source. At the next poll, the data source will only append data since this date.
+
+    Args:
+        source: The AjaxDataSource to attach the callback to.
+    """
+    # Add callback to data source
+    source_callback = CustomJS(
+        args=dict(source=source),
+        code="""
+        const data = source.data;
+
+        // Get the most recent datetime in the datasource
+        if (data.date && data.date.length > 0){
+            const last_date = data.date[data.date.length - 1];
+
+            // Set 'from_date' to the most recent datetime to use for the next poll
+            url = new URL(source.data_url, window.location.origin);
+            url.searchParams.set("from_date", new Date(last_date).toISOString());
+            source.data_url = url.toString();
+        }
+        """,
+    )
+    source.js_on_change("data", source_callback)
+
+
 def create_timeseries_plot(
     plot_config: PlotConfig,
     spacecrafts: list[str],
@@ -129,14 +159,17 @@ def create_timeseries_plot(
     # Disable level-of-detail downsampling to ensure the lines
     # are always fully rendered and not greyed out.
     plot.lod_threshold = None
+    current_time = datetime.datetime.now()
+    from_date = int((current_time - datetime.timedelta(days=7)).timestamp()) * 1000
 
     for measurement, args in plot_config.measurements.items():
         for spacecraft in spacecrafts:
             # Create an AjaxDataSource for each spacecraft and measurement
             source = AjaxDataSource(
-                data_url=f"/data/{measurement}/{spacecraft}",
-                polling_interval=300000,
+                data_url=f"/data/{measurement}/{spacecraft}?from_date={from_date}",
+                polling_interval=20000,
                 method="GET",
+                mode="append",
             )
 
             plot.line(
@@ -148,7 +181,7 @@ def create_timeseries_plot(
                 legend_label=f"{spacecraft}: {args.label}",
                 visible=spacecraft == default_spacecraft,
             )
-    current_time = datetime.datetime.now()
+
     # Add vertical line for current time
     plot.add_layout(get_now_vertical_line(current_time))
     # Add 'Now' label next to the vertical line
