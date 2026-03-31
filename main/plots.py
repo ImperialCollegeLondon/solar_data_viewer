@@ -119,10 +119,11 @@ def add_callback_to_ajax(source: AjaxDataSource) -> None:
         // Get the most recent datetime in the datasource
         if (data.date && data.date.length > 0){
             const last_date = data.date[data.date.length - 1];
+            console.log(last_date);
 
             // Set 'from_date' to the most recent datetime to use for the next poll
-            url = new URL(source.data_url, window.location.origin);
-            url.searchParams.set("from_date", new Date(last_date).toISOString());
+            url = new URL(source.data_url);
+            url.searchParams.set("from_date", last_date);
             source.data_url = url.toString();
         }
         """,
@@ -160,7 +161,9 @@ def create_timeseries_plot(
     # are always fully rendered and not greyed out.
     plot.lod_threshold = None
     current_time = datetime.datetime.now()
-    from_date = int((current_time - datetime.timedelta(days=7)).timestamp()) * 1000
+
+    from_date = current_time - datetime.timedelta(days=7)
+    from_date = int(from_date.timestamp()) * 1000
 
     for measurement, args in plot_config.measurements.items():
         for spacecraft in spacecrafts:
@@ -171,6 +174,9 @@ def create_timeseries_plot(
                 method="GET",
                 mode="append",
             )
+
+            # Add callback for updating data upon polling
+            add_callback_to_ajax(source)
 
             plot.line(
                 "date",

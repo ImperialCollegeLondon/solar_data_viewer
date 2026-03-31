@@ -119,8 +119,7 @@ def process_data_from_test_csvs(
     df["date"] = pd.to_datetime(df["date"], utc=True)
 
     # Time range filtering
-    from_date = datetime.fromtimestamp(int(from_date) / 1000)
-    from_date = pd.Timestamp(from_date, tz="UTC")
+    from_date = datetime.fromtimestamp(int(from_date) / 1000, tz=timezone.UTC)
     df = df[df["date"] >= from_date]
     df = reindex_data(df)
     # Format datetime as Unix epoch time
@@ -158,7 +157,7 @@ def get_gse_magnetic_field(
         )
 
     # Get the time range to display
-    from_date = datetime.fromtimestamp(int(from_date) / 1000)
+    from_date = datetime.fromtimestamp(int(from_date) / 1000, tz=timezone.UTC)
 
     # Get the relevant data from the DB
     start_time = timezone.now()
