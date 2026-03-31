@@ -1,12 +1,15 @@
 """General utilities for Solar Data Viewer."""
 
+import os
 import tomllib
+from datetime import date, datetime
 from logging import getLogger
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import pandas as pd
+from django.template import Context, Template
 from django.utils import timezone
 
 from . import models
@@ -188,3 +191,56 @@ def get_gse_magnetic_field(
     dates = data.index.tolist()
     measurements = data[measurement].tolist()
     return {"measurement": measurements, "date": dates}
+
+
+def get_solar_orbiter_dates() -> list[tuple[date, date]]:
+    """Get the dates Solar Orbiter is not in communication with Earth from file.
+
+    Returns:
+        A list of tuples of dates, representing periods where Solar Orbiter is not in
+            communication with Earth.
+    """
+    dates_file = Path(__file__).parent / "data" / "solar_orbiter_dates.txt"
+    so_dates = []
+    with open(dates_file) as f:
+        for line in f:
+            start, end = line.strip().split(",")
+            so_dates.append(
+                (
+                    datetime.strptime(start, "%Y-%m-%d").date(),
+                    datetime.strptime(end, "%Y-%m-%d").date(),
+                )
+            )
+    return so_dates
+
+
+def get_message_template(end_date: str) -> str:
+    """Get the formatted Solar Orbiter message template from file or default.
+
+    Customized messages can be provided in main/data/solar_orbiter_message.txt.
+    To include the end date for the superior conjunction window, use {{ end_date }}
+    within the file text.
+
+    Args:
+        end_date: The end date (formatted) for the window that Solar Orbiter is not in
+            communication.
+
+    Returns:
+        The rendered message template with the date added.
+    """
+    message = (
+        "Until {{ end_date }}, Solar Orbiter is going through superior conjunction "
+        "and will not be transmitting MAG data.\n"
+        "Real-time MAG space weather data will continue after this date."
+    )
+
+    message_file = Path(__file__).parent / "data" / "solar_orbiter_message.txt"
+    if os.path.exists(message_file):
+        with open(message_file) as f:
+            raw_message = f.read()
+            if raw_message:
+                message = raw_message
+
+    message_template = Template(message)
+    context = Context({"end_date": end_date})
+    return message_template.render(context)

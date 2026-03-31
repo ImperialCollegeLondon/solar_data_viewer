@@ -9,7 +9,7 @@ from astropy.coordinates import SkyCoord
 from sunpy.coordinates import get_body_heliographic_stonyhurst, get_horizons_coord
 from sunpy.coordinates.frames import GeocentricSolarEcliptic, HeliographicStonyhurst
 
-from .utils import load_l1_config
+from .utils import get_message_template, get_solar_orbiter_dates, load_l1_config
 
 
 def heliographic_to_cartesian(
@@ -202,10 +202,10 @@ def generate_solar_orbiter_statistics() -> dict[str, str | float]:
 
     # Angle from the Sun-Earth line
     angles = heliographic_to_earth_separation_angles(so, earth)
-    sun_earth_angle = round(angles[0])
+    sun_earth_angle = abs(angles[0])
 
     # Visibility
-    status = get_visibility_status(angles[0])
+    status = get_visibility_status(sun_earth_angle)
 
     # Distance upstream of Earth
     dist_upstream_earth = earth.radius.to_value("AU") - so.radius.to_value("AU")
@@ -223,7 +223,7 @@ def generate_solar_orbiter_statistics() -> dict[str, str | float]:
     lat_dir = "S" if angles[1] < 0 else "N"
 
     data = {
-        "sun_earth_angle": sun_earth_angle,
+        "sun_earth_angle": round(sun_earth_angle),
         "visibility": status,
         "dist_upstream_earth": round(dist_upstream_earth, 1),
         "CME400time": CME400time,
@@ -308,3 +308,21 @@ def l1_data(
     }
 
     return static_data, trajectory_data, arrow_data
+
+
+def check_if_so_in_communication() -> str | None:
+    """Check if Solar Orbiter is in communication with the Earth.
+
+    Returns:
+        The message to display if Solar Orbiter is in superior conjunction (and not in
+            communication) or None if not.
+    """
+    so_dates = get_solar_orbiter_dates()
+    today = datetime.now().date()
+
+    for start, end in so_dates:
+        if start <= today <= end:
+            date = end.strftime("%-d %B %Y")
+            return get_message_template(date)
+
+    return None
