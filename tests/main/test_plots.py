@@ -2,10 +2,11 @@
 
 import math
 from datetime import datetime
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from bokeh.models import (  # type: ignore
     AjaxDataSource,
+    Arrow,
     CrosshairTool,
     HoverTool,
     Legend,
@@ -15,6 +16,7 @@ from bokeh.models import (  # type: ignore
 from bokeh.plotting import figure
 
 from main.config import MeasurementConfig, PlotConfig
+from main.utils import L1Config
 
 
 def test_create_timeseries_plot():
@@ -220,16 +222,41 @@ def test_create_l1_plot():
         }
     )
 
-    with patch("main.plots.AjaxDataSource") as data_source_mock:
-        data_source_mock.side_effect = [static_source, trajectory_source]
-        plot = create_l1_plot()
-        assert isinstance(plot, figure)
+    arrow_source = AjaxDataSource(
+        data={
+            "y_start": [0],
+            "y_end": [1],
+            "z_start": [0],
+            "z_end": [1],
+        }
+    )
 
-        # renderers are the m/pause circle, points and the trajectories
-        assert len(plot.renderers) == 3
+    with patch("main.plots.load_l1_config") as load_config_mock:
+        mock_config = Mock(spec=L1Config)
+        mock_config.spacecraft = [
+            Mock(name="IMAP", colour="blue", id=0),
+            Mock(name="ACE", colour="red", id=1),
+        ]
+        load_config_mock.return_value = mock_config
 
-        assert plot.renderers[1].data_source == static_source
-        assert plot.renderers[2].data_source == trajectory_source
+        with patch("main.plots.AjaxDataSource") as data_source_mock:
+            data_source_mock.side_effect = [
+                static_source,
+                trajectory_source,
+                arrow_source,
+                arrow_source,
+            ]
+            plot = create_l1_plot()
+            assert isinstance(plot, figure)
 
-        # Check hover has been added
-        assert any(isinstance(tool, HoverTool) for tool in plot.tools)
+            # Renderers are the m/pause circle, points, trajectories and hidden line
+            assert len(plot.renderers) == 4
+
+            # Check arrows added
+            assert len(plot.select(type=Arrow)) == 2
+
+            assert plot.renderers[1].data_source == static_source
+            assert plot.renderers[2].data_source == trajectory_source
+
+            # Check hover has been added
+            assert any(isinstance(tool, HoverTool) for tool in plot.tools)

@@ -1,0 +1,31 @@
+# Configuration file for L1 trajectory plot
+
+[[spacecraft]]
+name = "IMAP"
+colour = "rgb(255,143,0)"
+id = -43
+
+[[spacecraft]]
+name = "ACE"
+colour = "rgb(204,0,204)"
+id = -92
+
+[[spacecraft]]
+name = "WIND"
+colour = "rgb(0,204,204)"
+id = -8
+
+[[spacecraft]]
+name = "DSCOVR"
+colour = "rgb(0,102,204)"
+id = -78
+
+[[spacecraft]]
+name = "Solar-1"
+colour = "rgb(230,0,0)"
+id = -231
+
+[[spacecraft]]
+name = "Aditya-L1"
+colour = "rgb(19,136,8)"
+id = -156

@@ -9,7 +9,7 @@ from astropy.coordinates import SkyCoord
 from sunpy.coordinates import get_body_heliographic_stonyhurst, get_horizons_coord
 from sunpy.coordinates.frames import GeocentricSolarEcliptic, HeliographicStonyhurst
 
-from .utils import get_message_template, get_solar_orbiter_dates
+from .utils import get_message_template, get_solar_orbiter_dates, load_l1_config
 
 
 def heliographic_to_cartesian(
@@ -125,7 +125,7 @@ def static_solar_orbiter_data(
 def trajectory_solar_orbiter_data(
     times: tuple[datetime, datetime],
     unit: str,
-) -> dict[str, list[float]]:
+) -> tuple[dict[str, list[float]], dict[str, list[float]]]:
     """Get the data for the trajectory Solar Orbiter glyphs.
 
     Args:
@@ -134,7 +134,7 @@ def trajectory_solar_orbiter_data(
             (Earth separation angles).
 
     Returns:
-        A data dictionary to be used by the data source.
+        A tuple of dictionaries for trajectory coordinates and arrow coordinates.
     """
     # Get trajectory coords
     trajectory = get_JPL_spacecraft_coordinates("Solar Orbiter", times)
@@ -150,7 +150,21 @@ def trajectory_solar_orbiter_data(
             for coord in trajectory
         ]
 
-    return {"x": [coord[0] for coord in coords], "y": [coord[1] for coord in coords]}
+    data = {"x": [coord[0] for coord in coords], "y": [coord[1] for coord in coords]}
+
+    # Get idxs for past/future arrows
+    n = len(coords)
+    past = int(n / 4)
+    future = int(3 * n / 4)
+
+    arrow_data = {
+        "x_start": [coords[past][0], coords[future - 1][0]],
+        "x_end": [coords[past + 1][0], coords[future][0]],
+        "y_start": [coords[past][1], coords[future - 1][1]],
+        "y_end": [coords[past + 1][1], coords[future][1]],
+    }
+
+    return data, arrow_data
 
 
 def get_visibility_status(angle: float) -> str:
@@ -188,10 +202,10 @@ def generate_solar_orbiter_statistics() -> dict[str, str | float]:
 
     # Angle from the Sun-Earth line
     angles = heliographic_to_earth_separation_angles(so, earth)
-    sun_earth_angle = round(angles[0])
+    sun_earth_angle = abs(angles[0])
 
     # Visibility
-    status = get_visibility_status(angles[0])
+    status = get_visibility_status(sun_earth_angle)
 
     # Distance upstream of Earth
     dist_upstream_earth = earth.radius.to_value("AU") - so.radius.to_value("AU")
@@ -209,7 +223,7 @@ def generate_solar_orbiter_statistics() -> dict[str, str | float]:
     lat_dir = "S" if angles[1] < 0 else "N"
 
     data = {
-        "sun_earth_angle": sun_earth_angle,
+        "sun_earth_angle": round(sun_earth_angle),
         "visibility": status,
         "dist_upstream_earth": round(dist_upstream_earth, 1),
         "CME400time": CME400time,
@@ -238,51 +252,62 @@ def coord_to_gse(coord: SkyCoord) -> tuple[float, float]:
 
 def l1_data(
     times: tuple[datetime, datetime],
-) -> tuple[dict[str, object], dict[str, object]]:
+) -> tuple[dict[str, object], dict[str, object], dict[str, dict[str, list[float]]]]:
     """Get the data for the L1 spacecraft glyphs in GSE coordinates.
 
     Args:
         times: A datetime to retrieve coordinates for.
 
     Returns:
-        A dictionary containing y and z-coordinates, spacecraft names
-            and colours.
+        Tuple of dictionaries containing static coordinates, trajectory coordinates and
+            arrow coordinates.
     """
-    L1_IDS = [-43, -92, -8, -78, -231, -156]
-    L1_CRAFTS = ["IMAP", "ACE", "WIND", "DSCOVR", "Solar-1", "Aditya-L1"]
-    L1_COLOURS = [
-        "rgb(255,143,0)",
-        "rgb(204,0,204)",
-        "rgb(0,204,204)",
-        "rgb(0,102,204)",
-        "rgb(230,0,0)",
-        "rgb(19,136,8)",
-    ]
+    config = load_l1_config()
 
-    y_coords, z_coords = [], []
-    for id in L1_IDS:
-        trajectory = get_JPL_spacecraft_coordinates(id, times)
+    y_coords, z_coords, names, colours = [], [], [], []
+    for craft_config in config.spacecraft:
+        trajectory = get_JPL_spacecraft_coordinates(craft_config.id, times)
         gse_trajectory = [coord_to_gse(coord) for coord in trajectory]
 
         # Add to trajectory data
         y_coords.append([coord[0] for coord in gse_trajectory])
         z_coords.append([coord[1] for coord in gse_trajectory])
+        names.append(craft_config.name)
+        colours.append(craft_config.colour)
+
+    # Get idxs for current coordinate and past/future arrows
+    n = len(y_coords[0])
+    current = int(n / 2)
+    past = int(n / 4)
+    future = int(3 * n / 4)
 
     static_data = {
-        "name": L1_CRAFTS,
-        "colour": L1_COLOURS,
-        "y": [coords[-1] for coords in y_coords],
-        "z": [coords[-1] for coords in z_coords],
+        "name": names,
+        "colour": colours,
+        # middle date represents the current date
+        "y": [coords[current] for coords in y_coords],
+        "z": [coords[current] for coords in z_coords],
     }
 
     trajectory_data = {
-        "name": L1_CRAFTS,
-        "colour": L1_COLOURS,
+        "name": names,
+        "colour": colours,
         "y": y_coords,
         "z": z_coords,
     }
 
-    return static_data, trajectory_data
+    # Get coordinates for arrow heads (between 3rd and 4th coords)
+    arrow_data = {
+        name: {
+            "y_start": [ys[past], ys[future - 1]],
+            "y_end": [ys[past + 1], ys[future]],
+            "z_start": [zs[past], zs[future - 1]],
+            "z_end": [zs[past + 1], zs[future]],
+        }
+        for name, ys, zs in zip(names, y_coords, z_coords)
+    }
+
+    return static_data, trajectory_data, arrow_data
 
 
 def check_if_so_in_communication() -> str | None:

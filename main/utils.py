@@ -13,7 +13,7 @@ from django.template import Context, Template
 from django.utils import timezone
 
 from . import models
-from .config import PlotsConfig
+from .config import L1Config, PlotsConfig
 
 logger = getLogger("django")
 
@@ -35,6 +35,27 @@ def load_plot_config(source: Path | dict[str, Any]) -> PlotsConfig:  # type: ign
         raw_config = source
 
     return PlotsConfig.model_validate(raw_config)
+
+
+def load_l1_config(  # type: ignore[explicit-any]
+    source: Path | dict[str, Any] = Path(__file__).parent / "config" / "l1_plot.toml",
+) -> L1Config:
+    """Load the config details for the L1 trajectory plot from the TOML file.
+
+    Args:
+        source: The path or dictionary to load the config from.
+
+    Returns:
+        The validated config for the L1 trajectory plot.
+    """
+    if isinstance(source, Path):
+        with open(source, "rb") as f:
+            raw_config = tomllib.load(f)
+
+    else:
+        raw_config = source
+
+    return L1Config.model_validate(raw_config)
 
 
 def reindex_data(df: pd.DataFrame, threshold: str = "1m") -> pd.DataFrame:
