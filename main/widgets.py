@@ -80,7 +80,7 @@ def create_time_range_dropdown() -> Select:
 
 
 def add_time_range_callback(dropdown: Select, plots: list[figure]) -> None:
-    """Add a callback to the time range dropdown to update the data source URLs.
+    """Add a callback to the time range dropdown to update the plot x-range.
 
     Args:
         dropdown: A Select widget for choosing the time range.
@@ -112,42 +112,6 @@ def add_time_range_callback(dropdown: Select, plots: list[figure]) -> None:
         // shared x-axis
         x_range.end = now + future_buffer;
         x_range.start = now - duration;
-
-        for (const plot of plots) {
-
-            for (const renderer of plot.renderers) {
-
-                // Only update renderers that have an AjaxDataSource
-                if (renderer.data_source && renderer.data_source.data_url) {
-                    const source = renderer.data_source;
-                    const url = new URL(source.data_url, window.location.origin);
-
-                    url.searchParams.set("range", range_selection);
-                    url.searchParams.set("_ts", now);
-                    source.data_url = url.pathname + url.search;
-
-                    // Force AjaxDataSource to fetch new data immediately
-                    const original_interval = source.polling_interval;
-                    // Pause regular polling while manually fetching new data
-                    // to sync the manual fetching with the scheduled polling.
-                    // Ensures we don't have overlapping requests
-                    source.polling_interval = null;
-
-                    // Fetch the new data from the backend
-                    fetch(source.data_url)
-                        .then(response => response.json())
-                        .then(data => {
-                            source.data = data;
-                            source.change.emit();
-                            source.polling_interval = original_interval;
-                        })
-                        .catch(err => {
-                            source.polling_interval = original_interval;
-                        });
-
-                }
-            }
-        }
         """,
     )
 

@@ -66,8 +66,7 @@ class DataView(View):
             A JSON response containing the dates and values for the specific
                 spacecraft and measurement type.
         """
-        range_param = request.GET.get("range", "3d")
-        data = process_data_from_test_csvs(spacecraft, measurement, range_param)
+        data = process_data_from_test_csvs(spacecraft, measurement)
         return JsonResponse(data)
 
 

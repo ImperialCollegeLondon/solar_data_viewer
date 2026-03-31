@@ -104,7 +104,6 @@ def create_timeseries_plot(
     plot_config: PlotConfig,
     spacecrafts: list[str],
     x_range: Range1d,
-    time_range: str = "3d",
     default_spacecraft: str = "IMAP",
 ) -> figure:
     """Create a timeseries plot.
@@ -115,7 +114,6 @@ def create_timeseries_plot(
             and colours to be used for the traces for each spacecraft.
         spacecrafts: A list of spacecraft names to include in the plot.
         x_range: The shared x-axis range for the plots.
-        time_range: The initial time range for the data to display (default is 3 days).
         default_spacecraft: The spacecraft data to display as default.
 
     Returns:
@@ -136,7 +134,7 @@ def create_timeseries_plot(
         for spacecraft in spacecrafts:
             # Create an AjaxDataSource for each spacecraft and measurement
             source = AjaxDataSource(
-                data_url=f"/data/{measurement}/{spacecraft}?range={time_range}",
+                data_url=f"/data/{measurement}/{spacecraft}",
                 polling_interval=300000,
                 method="GET",
             )
@@ -166,7 +164,6 @@ def create_timeseries_plots(
     spacecrafts: list[str],
     button: CheckboxButtonGroup,
     default_spacecraft: str = "IMAP",
-    initial_time_range: str = "3d",
 ) -> list[figure]:
     """Create five plots to display solar weather data.
 
@@ -176,7 +173,6 @@ def create_timeseries_plots(
         spacecrafts: A list of spacecraft names to include in the plots.
         button: A checkbox button to select the spacecraft to display data for.
         default_spacecraft: The spacecraft data to display as default.
-        initial_time_range: The initial time range for the data to display.
 
     Returns:
         A list containing the five Bokeh plots for each measurement.
@@ -204,7 +200,6 @@ def create_timeseries_plots(
             plot_config,
             spacecrafts,
             shared_x_range,
-            initial_time_range,
             default_spacecraft,
         )
         plot.add_tools(hover, crosshair)
@@ -229,7 +224,7 @@ def create_timeseries_layout() -> Column:
     button = checkbox_button_group(spacecrafts, default_spacecraft)
     time_dropdown = create_time_range_dropdown()
     plots = create_timeseries_plots(
-        plots_config, spacecrafts, button, default_spacecraft, time_dropdown.value
+        plots_config, spacecrafts, button, default_spacecraft
     )
     add_time_range_callback(time_dropdown, plots)
 

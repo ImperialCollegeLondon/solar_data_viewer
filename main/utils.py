@@ -88,14 +88,13 @@ def reindex_data(df: pd.DataFrame, threshold: str = "1m") -> pd.DataFrame:
 
 
 def process_data_from_test_csvs(
-    spacecraft: str, measurement: str, range_param: str
+    spacecraft: str, measurement: str
 ) -> dict[str, list[float]]:
     """This is a placeholder function for returning processed test data from csvs.
 
     Args:
         spacecraft: Name of the spacecraft to retrieve data for.
         measurement: Name of the measurement to get data for.
-        range_param: The time range for which to retrieve data.
 
     Returns:
         A dictionary containing the relevant datetimes in UNIX epoch time format and
@@ -105,7 +104,7 @@ def process_data_from_test_csvs(
         measurement in ("bx_gse", "by_gse", "bz_gse", "phi_gse")
         and spacecraft in models.MAG_MODELS
     ):
-        return get_gse_magnetic_field(spacecraft, measurement, range_param)
+        return get_gse_magnetic_field(spacecraft, measurement)
 
     csv_files = {
         "IMAP": Path(__file__).parent / "data" / "test_data1.csv",
@@ -119,7 +118,7 @@ def process_data_from_test_csvs(
 
     # Time range filtering
     latest = df["date"].max()
-    delta = pd.Timedelta(range_param)
+    delta = pd.Timedelta("7d")
     df = df[df["date"] >= latest - delta]
     df = reindex_data(df)
     # Format datetime as Unix epoch time
@@ -132,15 +131,12 @@ def process_data_from_test_csvs(
     return data
 
 
-def get_gse_magnetic_field(
-    spacecraft: str, measurement: str, range_param: str
-) -> dict[str, list[float]]:
+def get_gse_magnetic_field(spacecraft: str, measurement: str) -> dict[str, list[float]]:
     """Retrieves a component of the magnetic field data for the SO and IMAP missions.
 
     Args:
         spacecraft: Name of the spacecraft to retrieve data for.
         measurement: Name of the measurement to get data for.
-        range_param: The time range for which to retrieve data.
 
     Returns:
         A dictionary containing the relevant datetimes in UNIX epoch time format and
@@ -157,7 +153,7 @@ def get_gse_magnetic_field(
         )
 
     # Get the time range to display
-    delta = pd.Timedelta(range_param)
+    delta = pd.Timedelta("7d")
     from_date = timezone.now() - delta
 
     # Get the relevant data from the DB
