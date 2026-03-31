@@ -122,7 +122,7 @@ def add_callback_to_ajax(source: AjaxDataSource) -> None:
             console.log(last_date);
 
             // Set 'from_date' to the most recent datetime to use for the next poll
-            url = new URL(source.data_url);
+            const url = new URL(source.data_url, window.location.origin);
             url.searchParams.set("from_date", last_date);
             source.data_url = url.toString();
         }
