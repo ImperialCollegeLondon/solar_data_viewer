@@ -2364,7 +2364,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "django-stubs", extras = ["compatible-mypy"], specifier = ">=5.2.8" },
+    { name = "django-stubs", extras = ["compatible-mypy"], specifier = ">=6.0.2" },
     { name = "model-bakery", specifier = ">=1.23.3" },
     { name = "mypy", specifier = ">=1.19.1" },
     { name = "pandas-stubs", specifier = ">=2.3.3.260113" },
