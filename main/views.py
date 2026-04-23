@@ -1,5 +1,6 @@
 """Views for the main app."""
 
+from datetime import datetime
 from typing import Any, Literal
 
 import bokeh
@@ -8,11 +9,9 @@ from django.core.cache import cache
 from django.http import HttpRequest, JsonResponse
 from django.views.generic import TemplateView, View
 
+from .cache import set_l1_trajectory_cache, set_so_trajectory_cache
 from .plots import create_l1_plot, create_solar_orbiter_layout, create_timeseries_layout
-from .tasks import set_l1_trajectory_cache, set_so_trajectory_cache
-from .trajectory import (
-    generate_solar_orbiter_statistics,
-)
+from .trajectory import check_if_so_in_communication, generate_solar_orbiter_statistics
 from .utils import process_data_from_test_csvs
 
 
@@ -24,11 +23,19 @@ class IndexView(TemplateView):
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:  # type: ignore
         """Add HTML components and Bokeh version to the context."""
         context = super().get_context_data(**kwargs)
+        # Get timeseries components
         layout = create_timeseries_layout()
         ts_script, ts_div = components(layout)
+
+        # Get trajectory plot components
         l1_plot = create_l1_plot()
         l1_script, l1_div = components(l1_plot)
-        time = cache.get("time_generated_l1") or None
+
+        # Get time the plot was generated
+        cache_data = cache.get(
+            f"l1_trajectory_data-{datetime.today().strftime('%Y%m%d')}"
+        )
+        time = cache_data["time"].strftime("%Y-%m-%d %H:%M:%S") if cache_data else None
         context.update(
             {
                 "ts_script": ts_script,
@@ -79,13 +86,20 @@ class SolarOrbiterView(TemplateView):
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:  # type: ignore
         """Add HTML components and Bokeh version to the context."""
         context = super().get_context_data(**kwargs)
+        # Get trajectory plot components
         layout = create_solar_orbiter_layout()
         script, div = components(layout)
-        time = cache.get("time_generated_so") or None
+
+        # Get time the plot was generated
+        cache_data = cache.get(f"trajectory_data-{datetime.today().strftime('%Y%m%d')}")
+        time = cache_data["time"].strftime("%Y-%m-%d %H:%M:%S") if cache_data else None
         context.update({"script": script, "div": div, "time": time})
+
+        # Get solar orbiter statistics
         stats = generate_solar_orbiter_statistics()
         context.update(stats)
         context["bokeh_version"] = bokeh.__version__
+        context["message"] = check_if_so_in_communication()
         return context
 
 
@@ -113,14 +127,12 @@ class TrajectoryDataView(View):
         Returns:
             A JSON response containing the trajectory data for Solar Orbiter.
         """
-        data = cache.get(
-            "trajectory_data",
-        )
-        if not data:
+        date = datetime.today()
+        cache_key = f"trajectory_data-{date.strftime('%Y%m%d')}"
+        data = cache.get(cache_key)
+        if data is None:
             set_so_trajectory_cache()
-            data = cache.get(
-                "trajectory_data",
-            )
+            data = cache.get(cache_key)
 
         return JsonResponse(data[datatype][unit])
 
@@ -148,14 +160,12 @@ class L1DataView(View):
         Returns:
             A JSON response containing the trajectory data for L1 spacecraft.
         """
-        data = cache.get(
-            "l1_trajectory_data",
-        )
-        if not data:
+        date = datetime.today()
+        cache_key = f"l1_trajectory_data-{date.strftime('%Y%m%d')}"
+        data = cache.get(cache_key)
+        if data is None:
             set_l1_trajectory_cache()
-            data = cache.get(
-                "l1_trajectory_data",
-            )
+            data = cache.get(cache_key)
         if datatype == "arrow":
             if spacecraft:
                 return JsonResponse(data[datatype][spacecraft])

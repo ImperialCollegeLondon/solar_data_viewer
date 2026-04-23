@@ -1,5 +1,6 @@
 """Test suite for the main views."""
 
+from datetime import datetime
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -81,6 +82,7 @@ class TestSolarOrbiterView(TemplateOkMixin):
         assert "<script" in response.context["script"]
         assert "<div" in response.context["div"]
         assert response.context["bokeh_version"] == bokeh.__version__
+        assert "message" in response.context
 
         stats_mock.assert_called_once()
         assert all(mocked_stats[k] == response.context[k] for k in mocked_stats.keys())
@@ -91,59 +93,43 @@ class TestTrajectoryDataView:
 
     def test_get(self, client):
         """Test the get method."""
+        today = datetime.now()
+
         mock_data = {
             "static": {
-                "AU": {
-                    "x": [0.0, 1.1, 2.2],
-                    "y": [0.0, 3.3, 4.4],
-                },
-                "angle": {
-                    "x": [5.5, 6.6, 7.7],
-                    "y": [8.8, 9.9, 10.10],
-                },
+                "AU": {"static": "AU"},
+                "angle": {"static": "angle"},
             },
             "trajectory": {
-                "AU": {
-                    "x": [5, 6],
-                    "y": [7, 8],
-                },
-                "angle": {
-                    "x": [4, 3],
-                    "y": [2, 1],
-                },
+                "AU": {"trajectory": "AU"},
+                "angle": {"trajectory": "angle"},
             },
             "arrow": {
-                "AU": {
-                    "x_start": [0],
-                    "x_end": [1],
-                    "y_start": [0],
-                    "y_end": [1],
-                },
-                "angle": {
-                    "x_start": [0],
-                    "x_end": [1],
-                    "y_start": [0],
-                    "y_end": [1],
-                },
+                "AU": {"arrow": "AU"},
+                "angle": {"arrow": "angle"},
             },
         }
 
         with patch("main.views.cache") as cache_mock:
+            # Data already in cache
             cache_mock.get.return_value = mock_data
             for unit in ["AU", "angle"]:
                 for datatype in ["trajectory", "static", "arrow"]:
                     endpoint = reverse("main:trajectory_data", args=[unit, datatype])
                     response = client.get(endpoint)
-                    cache_mock.get.assert_called_with("trajectory_data")
+                    cache_mock.get.assert_called_with(
+                        f"trajectory_data-{today.strftime('%Y%m%d')}"
+                    )
                     assert isinstance(response, JsonResponse)
                     assert response.json() == mock_data[datatype][unit]
 
-        with patch("main.views.cache") as empty_cache_mock:
+            # Empty cache for today
             with patch("main.views.set_so_trajectory_cache") as cache_setter_mock:
-                empty_cache_mock.get.side_effect = [None, mock_data]
-                endpoint = reverse("main:trajectory_data", args=["AU", "static"])
+                cache_mock.get.side_effect = [None, mock_data]
+                endpoint = reverse("main:trajectory_data", args=["AU", "trajectory"])
                 response = client.get(endpoint)
                 cache_setter_mock.assert_called_once()
+                assert response.json() == mock_data["trajectory"]["AU"]
 
 
 class TestL1DataView:
@@ -151,26 +137,32 @@ class TestL1DataView:
 
     def test_get(self, client):
         """Test the get method."""
+        today = datetime.now()
+
         mock_data = {
             "static": {"static": "data"},
             "trajectory": {"trajectory": "data"},
         }
 
         with patch("main.views.cache") as cache_mock:
+            # Data already in cache
             cache_mock.get.return_value = mock_data
             for datatype in ["trajectory", "static"]:
                 endpoint = reverse("main:l1_data", args=[datatype])
                 response = client.get(endpoint)
-                cache_mock.get.assert_called_with("l1_trajectory_data")
+                cache_mock.get.assert_called_with(
+                    f"l1_trajectory_data-{today.strftime('%Y%m%d')}"
+                )
                 assert isinstance(response, JsonResponse)
                 assert response.json() == mock_data[datatype]
 
-        with patch("main.views.cache") as empty_cache_mock:
+            # Empty cache for today
             with patch("main.views.set_l1_trajectory_cache") as cache_setter_mock:
-                empty_cache_mock.get.side_effect = [None, mock_data]
-                endpoint = reverse("main:l1_data", args=["static"])
+                cache_mock.get.side_effect = [None, mock_data]
+                endpoint = reverse("main:l1_data", args=["trajectory"])
                 response = client.get(endpoint)
                 cache_setter_mock.assert_called_once()
+                assert response.json() == mock_data["trajectory"]
 
     def test_get_arrow(self, client):
         """Test the get method to get arrow data."""
@@ -179,15 +171,14 @@ class TestL1DataView:
         with patch("main.views.cache") as cache_mock:
             cache_mock.get.return_value = mock_data
             # No spacecraft provided
-            with pytest.raises(
-                ValueError,
-            ):
+            with pytest.raises(ValueError):
                 endpoint = reverse("main:l1_data", args=["arrow"])
                 response = client.get(endpoint)
 
+        with patch("main.views.cache") as cache_mock:
+            cache_mock.get.return_value = mock_data
             # With spacecraft
             endpoint = reverse("main:l1_arrow_data", args=["arrow", "spacecraft"])
             response = client.get(endpoint)
-            cache_mock.get.assert_called_with("l1_trajectory_data")
             assert isinstance(response, JsonResponse)
             assert response.json() == {"data": "data"}

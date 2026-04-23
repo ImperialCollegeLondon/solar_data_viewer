@@ -18,6 +18,9 @@
     CME warning at 1000 km/s: {{ CME1000time }} hours<br>
     Sun&ndash;spacecraft distance: {{ sun_spacecraft_distance}} AU<br>
     Latitude relative to Earth: {{ lat_relative_to_earth }}&deg;{{ lat_direction }}<br>
+    {% if message %}
+      {{ message|linebreaks }}
+    {% endif %}
     <br>
   </p>
 
