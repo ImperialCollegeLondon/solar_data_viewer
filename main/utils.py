@@ -2,7 +2,7 @@
 
 import os
 import tomllib
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from logging import getLogger
 from pathlib import Path
 from typing import Any
@@ -16,6 +16,17 @@ from . import models
 from .config import L1Config, PlotsConfig
 
 logger = getLogger("django")
+
+BATCH_SIZE = 20000
+"""Maximum numbers of data points to return per query.
+
+This is used to avoid overloading the database and crashing the browser, as well as to
+allow for a more responsive user experience."""
+
+DB_QUERY_INTERVAL_S = 120  # 2 min
+"""Minimum interval between DB queries for the same measurement and spacecraft.
+
+This is used to avoid too many quaries and updates when we are close enough to now."""
 
 
 def load_plot_config(source: Path | dict[str, Any]) -> PlotsConfig:  # type: ignore[explicit-any]
@@ -91,7 +102,7 @@ def reindex_data(df: pd.DataFrame, threshold: str = "1m") -> pd.DataFrame:
 
 
 def process_data_from_test_csvs(
-    spacecraft: str, measurement: str, from_date: int
+    spacecraft: str, measurement: str, from_date: int | None
 ) -> dict[str, list[float]]:
     """This is a placeholder function for returning processed test data from csvs.
 
@@ -99,11 +110,19 @@ def process_data_from_test_csvs(
         spacecraft: Name of the spacecraft to retrieve data for.
         measurement: Name of the measurement to get data for.
         from_date: The date to use as the starting point to get data (in ms format).
+            If None, defaults to 7 days ago from the current time.
 
     Returns:
         A dictionary containing the relevant datetimes in UNIX epoch time format and
             the measurements to plot.
     """
+    if from_date is None:
+        from_date = int((datetime.now() - timedelta(days=7)).timestamp()) * 1000
+
+    most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=timezone.UTC)
+    if most_recent > timezone.now() - timedelta(seconds=DB_QUERY_INTERVAL_S):
+        return {"measurement": [], "date": []}
+
     if (
         measurement in ("bx_gse", "by_gse", "bz_gse", "phi_gse")
         and spacecraft in models.MAG_MODELS
@@ -121,8 +140,7 @@ def process_data_from_test_csvs(
     df["date"] = pd.to_datetime(df["date"], utc=True)
 
     # Time range filtering
-    from_date = datetime.fromtimestamp(int(from_date) / 1000, tz=timezone.UTC)
-    df = df[df["date"] >= from_date]
+    df = df[df["date"] > most_recent][:BATCH_SIZE]
     df = reindex_data(df)
     # Format datetime as Unix epoch time
     df.index = df.index.astype("int64") // 10**3
@@ -148,6 +166,10 @@ def get_gse_magnetic_field(
         A dictionary containing the relevant datetimes in UNIX epoch time format and
             the measurements to plot.
     """
+    most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=timezone.UTC)
+    if most_recent > timezone.now() - timedelta(seconds=DB_QUERY_INTERVAL_S):
+        return {"measurement": [], "date": []}
+
     if measurement not in ("bx_gse", "by_gse", "bz_gse", "phi_gse"):
         raise ValueError(
             "Only GSE magnetic field components can be retrieved by this function."
@@ -158,15 +180,12 @@ def get_gse_magnetic_field(
             f"Only {list(models.MAG_MODELS.keys())} spacecrafts are supported."
         )
 
-    # Get the time range to display
-    from_date = datetime.fromtimestamp(int(from_date) / 1000, tz=timezone.UTC)
-
     # Get the relevant data from the DB
     start_time = timezone.now()
     data = pd.DataFrame(
         models.MAG_MODELS[spacecraft]  # type: ignore[attr-defined]
-        .objects.filter(time__gte=from_date)
-        .order_by("time")
+        .objects.filter(time__gt=most_recent)
+        .order_by("time")[:BATCH_SIZE]
         .values("time", measurement)
     )
     logger.info(

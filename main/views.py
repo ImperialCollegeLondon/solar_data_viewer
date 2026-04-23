@@ -73,7 +73,14 @@ class DataView(View):
             A JSON response containing the dates and values for the specific
                 spacecraft and measurement type.
         """
-        from_date = request.GET.get("from_date")
+        from_date_ = request.GET.get("from_date")
+        if from_date_:
+            try:
+                from_date = int(from_date_)
+            except ValueError:
+                raise ValueError("from_date must be an integer representing ms time.")
+        else:
+            from_date = None
         data = process_data_from_test_csvs(spacecraft, measurement, from_date)
         return JsonResponse(data)
 

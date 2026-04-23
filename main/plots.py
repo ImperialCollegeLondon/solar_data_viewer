@@ -162,15 +162,15 @@ def create_timeseries_plot(
     plot.lod_threshold = None
     current_time = datetime.datetime.now()
 
-    from_date = current_time - datetime.timedelta(days=7)
-    from_date = int(from_date.timestamp()) * 1000
+    from_date_ = current_time - datetime.timedelta(days=7)
+    from_date = int(from_date_.timestamp()) * 1000
 
     for measurement, args in plot_config.measurements.items():
         for spacecraft in spacecrafts:
             # Create an AjaxDataSource for each spacecraft and measurement
             source = AjaxDataSource(
                 data_url=f"/data/{measurement}/{spacecraft}?from_date={from_date}",
-                polling_interval=20000,
+                polling_interval=500,
                 method="GET",
                 mode="append",
             )
