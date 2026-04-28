@@ -98,7 +98,7 @@ def add_pass_contact_vstrip(pass_source: AjaxDataSource, plot: figure) -> None:
         pass_source: An AjaxDataSource containing the pass contact times.
         plot: The Bokeh figure to add the vstrip to.
     """
-    from bokeh.models import LabelSet
+    from bokeh.models import LabelSet  # type: ignore[attr-defined]
 
     plot.vstrip(
         x0="start_time",

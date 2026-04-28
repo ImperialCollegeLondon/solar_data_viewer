@@ -157,10 +157,12 @@ def get_pass_data(spacecraft: str) -> dict[str, list[float]]:
 
     # Get the data from the DB
     data = pd.DataFrame(
-        models.SOContactSchedule.objects.using("so")
-        .filter(spacecraft=spacecraft, end_time__gte=now)  # only get future passes
-        .order_by("start_time")
-        .values("start_time", "end_time")
+        list(
+            models.SOContactSchedule.objects.using("so")
+            .filter(spacecraft=spacecraft, end_time__gte=now)  # only get future passes
+            .order_by("start_time")
+            .values("start_time", "end_time")
+        )
     )
 
     if not len(data):

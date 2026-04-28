@@ -23,7 +23,7 @@ def plots_config() -> dict[str, Any]:  # type: ignore[explicit-any]
 
 @pytest.fixture
 def plot_context(process_data_mock: Mock):
-    """Provides a standard plot environment for widget tests."""
+    """Standard plot environment for widget tests."""
     # Mock the data processing function
     process_data_mock = process_data_mock.patch(
         "main.utils.process_data_from_test_csvs"
@@ -47,7 +47,12 @@ def plot_context(process_data_mock: Mock):
     default_spacecraft = "A"
     x_range = Range1d(start=0, end=1)
 
-    plot = create_timeseries_plot(plot_config, x_range, default_spacecraft)
+    plot = create_timeseries_plot(
+        plot_config,
+        spacecrafts=["A", "B"],
+        x_range=x_range,
+        default_spacecraft=default_spacecraft,
+    )
 
     return {
         "plot": plot,
