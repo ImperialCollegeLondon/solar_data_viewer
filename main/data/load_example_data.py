@@ -12,7 +12,12 @@ from main.models import MAG_MODELS, SOContactSchedule
 
 # Define the times
 now = timezone.now()
-times = pd.date_range(
+
+########################################################################################
+# Load magnetic field data for both IMAP and SO
+########################################################################################
+
+mfield_times = pd.date_range(
     start=now - pd.Timedelta(days=10), end=now, freq="min"
 ).to_series()
 
@@ -22,7 +27,7 @@ for model in MAG_MODELS.values():
     model.objects.all().delete()  # type: ignore[attr-defined]
 
     # Now, we create new magnetic fields
-    b = np.random.rand(len(times), 4)
+    b = np.random.rand(len(mfield_times), 4)
     b[:, 0] += 1
     b[:, 1] -= 1
     mfield = [
@@ -34,23 +39,23 @@ for model in MAG_MODELS.values():
             b_mag=np.linalg.norm(row[:3]),
             phi_gse=row[3],
         )
-        for t, row in zip(times, b)
+        for t, row in zip(mfield_times, b)
     ]
 
     # And add it to the DB in bulk
     model.objects.bulk_create(mfield)  # type: ignore[attr-defined]
 
+########################################################################################
 # Load SO contact schedule (pass) data
+########################################################################################
 
-# Define the times for passes
-now = timezone.now()
-# Generate passes for the next 30 days, one every 3 days
+# Generate passes for the next 30 days, one every 2 days
 pass_times = pd.date_range(
     start=now + pd.Timedelta(days=0), end=now + pd.Timedelta(days=30), freq="2D"
 ).to_series()
 
 # Delete existing passes for SO
-SOContactSchedule.objects.using("so").filter(spacecraft="SO").delete()
+SOContactSchedule.objects.filter(spacecraft="SO").delete()
 
 # Create SOContactSchedule objects
 passes = []
@@ -64,5 +69,5 @@ for start in pass_times:
         )
     )
 
-# Bulk create
-SOContactSchedule.objects.using("so").bulk_create(passes)
+# Add the new passes to the DB in bulk
+SOContactSchedule.objects.bulk_create(passes)

@@ -71,7 +71,7 @@ def test_add_time_range_callback(plot_context):
 
 @patch("main.utils.process_data_from_test_csvs")
 def test_add_passes_checkbox(plot_context):
-    """Test the add_passes_checkbox function."""
+    """Test the add_passes_checkbox adds checkbox when SO is selected."""
     from main.widgets import add_passes_checkbox
 
     plots = plot_context["plot"]
@@ -82,7 +82,7 @@ def test_add_passes_checkbox(plot_context):
     assert checkbox_imap.visible is False
     assert checkbox_imap.labels == ["Show Contact Schedule Window (Pass)"]
 
-    # Test checkbox is hidden when SO is selected
+    # Test checkbox is shown when SO is selected
     checkbox_so = add_passes_checkbox(plots, default_spacecraft="SO")
     assert checkbox_so.visible is True
     assert "active" in str(checkbox_so.js_property_callbacks)

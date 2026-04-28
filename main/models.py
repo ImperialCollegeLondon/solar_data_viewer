@@ -31,7 +31,7 @@ class IMAPGSEMagneticField(models.Model):
 
     class Meta:  # noqa: D106
         db_table = "ialirt_mag"
-        # managed = False
+        managed = False
 
 
 class SOGSEMagneticField(models.Model):
@@ -62,7 +62,7 @@ class SOGSEMagneticField(models.Model):
 
     class Meta:  # noqa: D106
         db_table = "solo_L2_mag-gse-ll-internal"
-        # managed = False
+        managed = False
 
 
 class SOContactSchedule(models.Model):
@@ -74,7 +74,7 @@ class SOContactSchedule(models.Model):
 
     class Meta:  # noqa: D106
         db_table = "orbiter_contact_schedule"
-        # managed = False
+        managed = False
 
 
 MAG_MODELS = {"IMAP": IMAPGSEMagneticField, "SO": SOGSEMagneticField}
