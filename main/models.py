@@ -28,6 +28,9 @@ class IMAPGSEMagneticField(models.Model):
     phi_gse = models.FloatField(
         help_text="Phi GSE of the magnetic field.", db_column="phi_B_GSE"
     )
+    theta_gse = models.FloatField(
+        help_text="Theta GSE of the magnetic field.", db_column="theta_B_GSE"
+    )
 
     class Meta:  # noqa: D106
         db_table = "ialirt_mag"
@@ -59,6 +62,9 @@ class SOGSEMagneticField(models.Model):
     phi_gse = models.FloatField(
         help_text="Phi GSE of the magnetic field.", db_column="phi_B_GSE"
     )
+    theta_gse = models.FloatField(
+        help_text="Theta GSE of the magnetic field.", db_column="theta_B_GSE"
+    )
 
     class Meta:  # noqa: D106
         db_table = "solo_L2_mag-gse-ll-internal"
@@ -72,7 +78,7 @@ class SOContactSchedule(models.Model):
     end_time = models.DateTimeField(help_text="End time of the pass")
 
     class Meta:  # noqa: D106
-        db_table = "contact_schedule"
+        db_table = "public.contact_schedule"
         managed = False
 
 
