@@ -12,7 +12,7 @@ from django.views.generic import TemplateView, View
 from .cache import set_l1_trajectory_cache, set_so_trajectory_cache
 from .plots import create_l1_plot, create_solar_orbiter_layout, create_timeseries_layout
 from .trajectory import check_if_so_in_communication, generate_solar_orbiter_statistics
-from .utils import process_data_from_test_csvs
+from .utils import get_pass_data, process_data_from_test_csvs
 
 
 class IndexView(TemplateView):
@@ -175,3 +175,30 @@ class L1DataView(View):
                 )
 
         return JsonResponse(data[datatype])
+
+
+class PassView(View):
+    """View for returning pass data to the AjaxDataSource."""
+
+    def get(  # type: ignore
+        self,
+        request: HttpRequest,
+        spacecraft: str,
+        *args: Any,
+        **kwargs: Any,
+    ) -> JsonResponse:
+        """Method to handle GET requests for spacecraft pass data.
+
+        Args:
+            request: The incoming HTTP request.
+            spacecraft: Name of the spacecraft to retrieve pass data for.
+            *args: Additional positional arguments.
+            **kwargs: Additional key word arguments.
+
+        Returns:
+            A JSON response containing the start and end times for the specific
+            spacecraft passes in milliseconds.
+        """
+        data = get_pass_data(spacecraft)
+
+        return JsonResponse(data)

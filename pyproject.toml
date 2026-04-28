@@ -73,6 +73,7 @@ FAIL_INVALID_TEMPLATE_VARS = true
 
 [tool.ruff]
 target-version = "py313"
+exclude = ["main/migrations/"]
 
 [tool.ruff.lint]
 select = [
@@ -90,6 +91,7 @@ pydocstyle.convention = "google"
     "D100", # Missing docstring in public module
     "D104", # Missing docstring in public package
 ]
+
 
 [build-system]
 requires = ["setuptools>=78", "setuptools-scm"]

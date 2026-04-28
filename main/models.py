@@ -65,5 +65,16 @@ class SOGSEMagneticField(models.Model):
         managed = False
 
 
+class SOContactSchedule(models.Model):
+    """Model describing spacecraft SO contact schedule, also known as passes."""
+
+    start_time = models.DateTimeField(help_text="Start time of the pass")
+    end_time = models.DateTimeField(help_text="End time of the pass")
+
+    class Meta:  # noqa: D106
+        db_table = "contact_schedule"
+        managed = False
+
+
 MAG_MODELS = {"IMAP": IMAPGSEMagneticField, "SO": SOGSEMagneticField}
 """Models to handle magnetic data for the supported missions."""

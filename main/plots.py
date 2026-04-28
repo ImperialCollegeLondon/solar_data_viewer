@@ -25,6 +25,7 @@ from .config import PlotConfig
 from .utils import load_l1_config, load_plot_config
 from .widgets import (
     add_callback_to_checkbox_button,
+    add_passes_checkbox,
     add_time_range_callback,
     checkbox_button_group,
     create_time_range_dropdown,
@@ -74,6 +75,65 @@ def get_now_label(current_time: datetime.datetime) -> Label:
     return now_label
 
 
+def add_pass_source(pass_spacecraft: str, time_range: str) -> AjaxDataSource:
+    """Add a data source for pass data to the plot.
+
+    Args:
+        pass_spacecraft: The spacecraft to show pass data for.
+        time_range: The time range for the pass data to show.
+
+    Returns:
+        An AjaxDataSource for the pass data.
+    """
+    pass_source = AjaxDataSource(
+        data_url=f"/data/passes/{pass_spacecraft}?range={time_range}",
+        polling_interval=None,
+        method="GET",
+    )
+    return pass_source
+
+
+def add_pass_contact_vstrip(pass_source: AjaxDataSource, plot: figure) -> None:
+    """Add a vstrip to the plot to show pass contact times.
+
+    Args:
+        pass_source: An AjaxDataSource containing the pass contact times.
+        plot: The Bokeh figure to add the vstrip to.
+    """
+    from bokeh.models import LabelSet  # type: ignore[attr-defined]
+
+    plot.vstrip(
+        x0="start_time",
+        x1="end_time",
+        source=pass_source,
+        fill_color="blue",
+        fill_alpha=0.2,
+        line_color=None,
+        name="pass_data",
+        visible=False,
+        legend_label="Passes",
+    )
+
+    labels = LabelSet(
+        x="start_time",
+        y=0,
+        y_units="screen",
+        text="label_text",
+        level="annotation",
+        x_offset=0,
+        y_offset=0,
+        source=pass_source,
+        angle=0,
+        text_font_size="9pt",
+        text_color="blue",
+        text_alpha=0.8,
+        name="pass_data",
+        visible=False,
+    )
+
+    plot.add_layout(labels, "above")
+
+
 def update_legend_on_spacecraft_selection(plot: figure) -> figure:
     """Update the legend to hide hidden spacecraft lines.
 
@@ -97,6 +157,7 @@ def update_legend_on_spacecraft_selection(plot: figure) -> figure:
             and not item.renderers[0].visible
         ):
             item.visible = False
+
     return plot
 
 
@@ -140,7 +201,6 @@ def create_timeseries_plot(
                 polling_interval=300000,
                 method="GET",
             )
-
             plot.line(
                 "date",
                 "measurement",
@@ -150,6 +210,11 @@ def create_timeseries_plot(
                 legend_label=f"{spacecraft}: {args.label}",
                 visible=spacecraft == default_spacecraft,
             )
+    # Show pass data for SO only
+    pass_spacecraft = "SO"
+    pass_contact_data_source = add_pass_source(pass_spacecraft, time_range)
+    add_pass_contact_vstrip(pass_contact_data_source, plot)
+
     current_time = datetime.datetime.now()
     # Add vertical line for current time
     plot.add_layout(get_now_vertical_line(current_time))
@@ -208,7 +273,6 @@ def create_timeseries_plots(
             default_spacecraft,
         )
         plot.add_tools(hover, crosshair)
-        add_callback_to_checkbox_button(plot=plot, button=button)
         plot.yaxis.axis_label = f"{plot_config.title} ({plot_config.unit})"
         plots.append(plot)
 
@@ -232,9 +296,15 @@ def create_timeseries_layout() -> Column:
         plots_config, spacecrafts, button, default_spacecraft, time_dropdown.value
     )
     add_time_range_callback(time_dropdown, plots)
+    passes_button = add_passes_checkbox(plots)
+
+    for plot in plots:
+        add_callback_to_checkbox_button(
+            plot=plot, button=button, pass_checkbox=passes_button
+        )
 
     widgets = row(button, time_dropdown, sizing_mode="stretch_width")
-    layout = column([widgets, *plots], sizing_mode="stretch_width")
+    layout = column([widgets, passes_button, *plots], sizing_mode="stretch_width")
 
     return layout
 
