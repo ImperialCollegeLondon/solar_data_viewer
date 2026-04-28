@@ -72,7 +72,7 @@ class SOContactSchedule(models.Model):
     end_time = models.DateTimeField(help_text="End time of the pass")
 
     class Meta:  # noqa: D106
-        db_table = "public.contact_schedule"
+        db_table = "contact_schedule"
         managed = False
 
 
