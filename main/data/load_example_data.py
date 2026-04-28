@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from django.utils import timezone
 
-from main.models import MAG_MODELS
+from main.models import MAG_MODELS, SOContactSchedule
 
 # Define the times
 now = timezone.now()
@@ -39,3 +39,30 @@ for model in MAG_MODELS.values():
 
     # And add it to the DB in bulk
     model.objects.bulk_create(mfield)  # type: ignore[attr-defined]
+
+# Load SO contact schedule (pass) data
+
+# Define the times for passes
+now = timezone.now()
+# Generate passes for the next 30 days, one every 3 days
+pass_times = pd.date_range(
+    start=now + pd.Timedelta(days=0), end=now + pd.Timedelta(days=30), freq="2D"
+).to_series()
+
+# Delete existing passes for SO
+SOContactSchedule.objects.using("so").filter(spacecraft="SO").delete()
+
+# Create SOContactSchedule objects
+passes = []
+for start in pass_times:
+    end = start + pd.Timedelta(hours=1)  # 1 hour pass
+    passes.append(
+        SOContactSchedule(
+            spacecraft="SO",
+            start_time=start,
+            end_time=end,
+        )
+    )
+
+# Bulk create
+SOContactSchedule.objects.using("so").bulk_create(passes)

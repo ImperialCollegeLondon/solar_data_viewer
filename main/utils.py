@@ -135,45 +135,48 @@ def process_data_from_test_csvs(
     return data
 
 
-def process_pass_data_from_test_csvs(spacecraft: str) -> dict[str, list[float]]:
-    """Read pass data from csv files.
+def get_pass_data(spacecraft: str) -> dict[str, list[float]]:
+    """Read pass data from database.
 
     Args:
         spacecraft: Name of the spacecraft to retrieve data for.
 
     Returns:
         A dictionary containing the start and end datetimes in UNIX epoch
-        time format (milliseconds) for Bokeh to plot.
+        time format (milliseconds) and the label text for Bokeh to plot.
     """
-    # for now we only want SO passes
+    from django.utils import timezone
+
     if spacecraft != "SO":
         return {
             "start_time": [],
             "end_time": [],
         }
 
-    csv_file = Path(__file__).parent / "data" / f"passes_{spacecraft}.csv"
+    now = timezone.now()
 
-    df = pd.read_csv(csv_file)
+    # Get the data from the DB
+    data = pd.DataFrame(
+        models.SOContactSchedule.objects.using("so")
+        .filter(spacecraft=spacecraft, end_time__gte=now)  # only get future passes
+        .order_by("start_time")
+        .values("start_time", "end_time")
+    )
 
-    df = df.dropna(subset=["start_time", "end_time"])
+    if not len(data):
+        return {"start_time": [], "end_time": []}
 
-    df["start_time"] = pd.to_datetime(df["start_time"], utc=True)
-    df["end_time"] = pd.to_datetime(df["end_time"], utc=True)
+    # convert to Unix epoch milliseconds
+    data["start_time"] = data["start_time"].apply(lambda x: int(x.timestamp() * 1000))
+    data["end_time"] = data["end_time"].apply(lambda x: int(x.timestamp() * 1000))
 
-    now = pd.Timestamp.utcnow()
-
-    # Only show passes in the future
-    df = df[df["end_time"] >= now]
-
-    df["start_time"] = df["start_time"].apply(lambda x: int(x.timestamp() * 1000))
-    df["end_time"] = df["end_time"].apply(lambda x: int(x.timestamp() * 1000))
-    df["label_text"] = "Pass Start"
-    df["tick_mark"] = "|"
+    start_time_list = data["start_time"].tolist()
+    end_time_list = data["end_time"].tolist()
 
     return {
-        "start_time": df["start_time"].tolist(),
-        "end_time": df["end_time"].tolist(),
+        "start_time": start_time_list,
+        "end_time": end_time_list,
+        "label_text": [f"Pass {i + 1}" for i in range(len(start_time_list))],
     }
 
 

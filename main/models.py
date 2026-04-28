@@ -31,7 +31,7 @@ class IMAPGSEMagneticField(models.Model):
 
     class Meta:  # noqa: D106
         db_table = "ialirt_mag"
-        managed = False
+        # managed = False
 
 
 class SOGSEMagneticField(models.Model):
@@ -62,7 +62,19 @@ class SOGSEMagneticField(models.Model):
 
     class Meta:  # noqa: D106
         db_table = "solo_L2_mag-gse-ll-internal"
-        managed = False
+        # managed = False
+
+
+class SOContactSchedule(models.Model):
+    """Model describing spacecraft SO contact schedule, also known as passes."""
+
+    spacecraft = models.CharField(max_length=10, help_text="SO")
+    start_time = models.DateTimeField(help_text="Start time of the pass")
+    end_time = models.DateTimeField(help_text="End time of the pass")
+
+    class Meta:  # noqa: D106
+        db_table = "orbiter_contact_schedule"
+        # managed = False
 
 
 MAG_MODELS = {"IMAP": IMAPGSEMagneticField, "SO": SOGSEMagneticField}

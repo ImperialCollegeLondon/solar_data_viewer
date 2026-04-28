@@ -8,21 +8,19 @@ from typing import Literal
 from bokeh.layouts import column, row
 from bokeh.models import (  # type: ignore
     AjaxDataSource,
-    Arrow,
     CrosshairTool,
     HoverTool,
     Label,
     LegendItem,
     Range1d,
     Span,
-    VeeHead,
 )
 from bokeh.models.layouts import Column, Row
 from bokeh.models.widgets.groups import CheckboxButtonGroup
 from bokeh.plotting import figure
 
 from .config import PlotConfig
-from .utils import load_l1_config, load_plot_config
+from .utils import load_plot_config
 from .widgets import (
     add_callback_to_checkbox_button,
     add_passes_checkbox,
@@ -100,17 +98,38 @@ def add_pass_contact_vstrip(pass_source: AjaxDataSource, plot: figure) -> None:
         pass_source: An AjaxDataSource containing the pass contact times.
         plot: The Bokeh figure to add the vstrip to.
     """
+    from bokeh.models import LabelSet
+
     plot.vstrip(
         x0="start_time",
         x1="end_time",
         source=pass_source,
         fill_color="blue",
-        fill_alpha=0.3,
+        fill_alpha=0.2,
         line_color=None,
         name="pass_data",
         visible=False,
         legend_label="Passes",
     )
+
+    labels = LabelSet(
+        x="start_time",
+        y=0,
+        y_units="screen",
+        text="label_text",
+        level="annotation",
+        x_offset=0,
+        y_offset=0,
+        source=pass_source,
+        angle=0,
+        text_font_size="9pt",
+        text_color="blue",
+        text_alpha=0.8,
+        name="pass_data",
+        visible=False,
+    )
+
+    plot.add_layout(labels, "above")
 
 
 def update_legend_on_spacecraft_selection(plot: figure) -> figure:
@@ -315,6 +334,7 @@ def create_solar_orbiter_plot(
         match_aspect=True,
         x_axis_label=x_axis_label,
         y_axis_label=y_axis_label,
+        sizing_mode="stretch_width",
     )
 
     # Create an AjaxDataSource for the spacecraft static position
@@ -334,34 +354,8 @@ def create_solar_orbiter_plot(
         method="GET",
     )
     plot.line(
-        "x",
-        "y",
-        color="blue",
-        source=trajectory_source,
-        legend_label="Last and next 7 days",
+        "x", "y", color="blue", source=trajectory_source, legend_label="Next 7 days"
     )
-
-    # Create the arrows to show direction
-    arrow_source = AjaxDataSource(
-        data_url=f"/trajectory_data/{unit}/arrow",
-        polling_interval=30000,
-        method="GET",
-    )
-    arrow = Arrow(
-        end=VeeHead(
-            size=10,
-            line_alpha=0.5,
-            line_color="blue",
-            fill_color="blue",
-        ),
-        x_start="x_start",
-        x_end="x_end",
-        y_start="y_start",
-        y_end="y_end",
-        source=arrow_source,
-        line_alpha=0,
-    )
-    plot.add_layout(arrow)
 
     for r in radii:
         plot.circle(
@@ -409,8 +403,7 @@ def create_solar_orbiter_layout() -> Row:
                 y_range=(-22, 22),
                 x_range=(-22, 22),
             ),
-        ],
-        sizing_mode="stretch_width",
+        ]
     )
     return layout
 
@@ -423,7 +416,7 @@ def create_l1_plot(
     """Create a plot for the L1 spacecraft trajectories.
 
     The plot shows blobs for the current spacecraft positions, lines showing
-    their past and next 7 days and a circle for the magnetopause.
+    their past 7 days and a circle for the magnetopause.
 
     Args:
         title: The plot title.
@@ -474,37 +467,10 @@ def create_l1_plot(
         polling_interval=30000,
         method="GET",
     )
-    plot.multi_line("y", "z", color="colour", source=trajectory_source)
-
-    # Create AjaxDataSources for the arrow data
-    config = load_l1_config()
-
-    for craft in config.spacecraft:
-        arrow_source = AjaxDataSource(
-            data_url=f"/l1_data/arrow/{craft.name}",
-            polling_interval=30000,
-            method="GET",
-        )
-        arrow = Arrow(
-            end=VeeHead(
-                size=10,
-                line_alpha=0.5,
-                line_color=craft.colour,
-                fill_color=craft.colour,
-            ),
-            x_start="y_start",
-            x_end="y_end",
-            y_start="z_start",
-            y_end="z_end",
-            source=arrow_source,
-            line_alpha=0,
-        )
-        plot.add_layout(arrow)
-
-    # Add item to legend to describe line representation
-    plot.line(
-        [0], [0], color="gray", legend_label="Last and next 7 days", visible=False
+    plot.multi_line(
+        "y", "z", color="colour", legend_field="name", source=trajectory_source
     )
+
     plot.add_layout(plot.legend[0], "right")
     hover = HoverTool(tooltips=[("ID", "@name")], renderers=[objects])
     plot.add_tools(hover)

@@ -200,7 +200,9 @@ def add_passes_checkbox(
         A CheckboxGroup widget to show/hide pass data.
     """
     pass_data_checkbox = CheckboxGroup(
-        labels=["Show Pass Data"], active=[], visible=(default_spacecraft == "SO")
+        labels=["Show Contact Schedule Window (Pass)"],
+        active=[],
+        visible=(default_spacecraft == "SO"),
     )
 
     callback = CustomJS(
@@ -210,21 +212,17 @@ def add_passes_checkbox(
 
         for (const plot of plots) {
 
+            // Show or hide the pass data strips
             for (const renderer of plot.renderers) {
-
                 if (renderer.name === "pass_data") {
                     renderer.visible = show_data;
+                }
+            }
 
-                    if (renderer.data_source && show_data) {
-                        const source = renderer.data_source;
-                        // Manual fetch for a one-time update
-                        fetch(source.data_url)
-                            .then(response => response.json())
-                            .then(data => {
-                                source.data = data;
-                                source.change.emit();
-                            });
-                    }
+            // Show pass data label on vstrip if checkbox is active
+            for (const item of plot.above) {
+                if (item.name === "pass_data") {
+                    item.visible = show_data;
                 }
             }
         }
