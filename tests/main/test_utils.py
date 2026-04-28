@@ -48,18 +48,19 @@ def test_get_gse_magnetic_field(spacecraft, measurement, raises, days):
 
     model = MAG_MODELS[spacecraft]
     # Prepare the times
-    num = days * 24
+    num = days * 24 + 1
     now = timezone.now()
     times = pd.date_range(
         start=now - pd.Timedelta(days=10), end=now, freq="h"
     ).to_series()
+    from_date = int((now - pd.Timedelta(days=days)).timestamp()) * 1000
 
     # Populate the database
     baker.make(model, time=itertools.cycle(times), _quantity=len(times))
 
     # Find the actual and expected values
     with raises:
-        actual = get_gse_magnetic_field(spacecraft, measurement, range_param=f"{days}d")
+        actual = get_gse_magnetic_field(spacecraft, measurement, from_date=from_date)
         expected_meas = list(
             model.objects.filter(time__in=times[-num:]).values_list(
                 measurement, flat=True
