@@ -124,7 +124,7 @@ def process_data_from_test_csvs(
         return {"measurement": [], "date": []}
 
     if (
-        measurement in ("bx_gse", "by_gse", "bz_gse", "phi_gse")
+        measurement in ("bx_gse", "by_gse", "bz_gse", "phi_gse", "theta_gse")
         and spacecraft in models.MAG_MODELS
     ):
         return get_gse_magnetic_field(spacecraft, measurement, from_date)
@@ -152,6 +152,53 @@ def process_data_from_test_csvs(
     return data
 
 
+def get_pass_data(spacecraft: str) -> dict[str, list[float]]:
+    """Read pass data from database.
+
+    Args:
+        spacecraft: Name of the spacecraft to retrieve data for.
+
+    Returns:
+        A dictionary containing the start and end datetimes in UNIX epoch
+        time format (milliseconds) and the label text for Bokeh to plot.
+    """
+    from django.utils import timezone
+
+    if spacecraft != "SO":
+        return {
+            "start_time": [],
+            "end_time": [],
+        }
+
+    now = timezone.now()
+
+    # Get the data from the DB
+    data = pd.DataFrame(
+        list(
+            models.SOContactSchedule.objects.using("so")
+            .filter(end_time__gte=now)  # only get future passes
+            .order_by("start_time")
+            .values("start_time", "end_time")
+        )
+    )
+
+    if not len(data):
+        return {"start_time": [], "end_time": []}
+
+    # convert to Unix epoch milliseconds
+    data["start_time"] = data["start_time"].apply(lambda x: int(x.timestamp() * 1000))
+    data["end_time"] = data["end_time"].apply(lambda x: int(x.timestamp() * 1000))
+
+    start_time_list = data["start_time"].tolist()
+    end_time_list = data["end_time"].tolist()
+
+    return {
+        "start_time": start_time_list,
+        "end_time": end_time_list,
+        "label_text": [f"Pass {i + 1}" for i in range(len(start_time_list))],
+    }
+
+
 def get_gse_magnetic_field(
     spacecraft: str, measurement: str, from_date: int
 ) -> dict[str, list[float]]:
@@ -170,7 +217,7 @@ def get_gse_magnetic_field(
     if most_recent > timezone.now() - timedelta(seconds=DB_QUERY_INTERVAL_S):
         return {"measurement": [], "date": []}
 
-    if measurement not in ("bx_gse", "by_gse", "bz_gse", "phi_gse"):
+    if measurement not in ("bx_gse", "by_gse", "bz_gse", "phi_gse", "theta_gse"):
         raise ValueError(
             "Only GSE magnetic field components can be retrieved by this function."
         )

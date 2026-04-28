@@ -32,6 +32,7 @@ def test_load_plot_config(plots_config):
         ("by_gse", does_not_raise()),
         ("bz_gse", does_not_raise()),
         ("phi_gse", does_not_raise()),
+        ("theta_gse", does_not_raise()),
         ("temperature", pytest.raises(ValueError)),
     ],
 )

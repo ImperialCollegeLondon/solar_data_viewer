@@ -28,6 +28,14 @@ label = "Phi GSE"
 traces = {IMAP = "red", SO = "blue"}
 
 [[plots]]
+title = "Theta GSE"
+unit = "deg"
+
+[plots.measurements.theta_gse]
+label = "Theta GSE"
+traces = {IMAP = "red", SO = "blue"}
+
+[[plots]]
 title = "Density"
 unit = "1/cm³"
 
