@@ -55,7 +55,7 @@ pass_times = pd.date_range(
 ).to_series()
 
 # Delete existing passes for SO
-SOContactSchedule.objects.filter(spacecraft="SO").delete()
+SOContactSchedule.objects.all().delete()
 
 # Create SOContactSchedule objects
 passes = []
@@ -63,7 +63,6 @@ for start in pass_times:
     end = start + pd.Timedelta(hours=1)  # 1 hour pass
     passes.append(
         SOContactSchedule(
-            spacecraft="SO",
             start_time=start,
             end_time=end,
         )

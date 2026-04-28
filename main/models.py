@@ -68,7 +68,6 @@ class SOGSEMagneticField(models.Model):
 class SOContactSchedule(models.Model):
     """Model describing spacecraft SO contact schedule, also known as passes."""
 
-    spacecraft = models.CharField(max_length=10, help_text="SO")
     start_time = models.DateTimeField(help_text="Start time of the pass")
     end_time = models.DateTimeField(help_text="End time of the pass")
 
