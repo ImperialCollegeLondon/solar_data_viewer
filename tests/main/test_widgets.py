@@ -80,7 +80,7 @@ def test_add_passes_checkbox(plot_context):
     checkbox_imap = add_passes_checkbox(plots, default_spacecraft="IMAP")
     assert isinstance(checkbox_imap, CheckboxGroup)
     assert checkbox_imap.visible is False
-    assert checkbox_imap.labels == ["Show Pass Data"]
+    assert checkbox_imap.labels == ["Show Contact Schedule Window (Pass)"]
 
     # Test checkbox is hidden when SO is selected
     checkbox_so = add_passes_checkbox(plots, default_spacecraft="SO")
