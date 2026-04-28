@@ -28,6 +28,9 @@ class IMAPGSEMagneticField(models.Model):
     phi_gse = models.FloatField(
         help_text="Phi GSE of the magnetic field.", db_column="phi_B_GSE"
     )
+    theta_gse = models.FloatField(
+        help_text="Theta GSE of the magnetic field.", db_column="theta_B_GSE"
+    )
 
     class Meta:  # noqa: D106
         db_table = "ialirt_mag"
@@ -58,6 +61,9 @@ class SOGSEMagneticField(models.Model):
     )
     phi_gse = models.FloatField(
         help_text="Phi GSE of the magnetic field.", db_column="phi_B_GSE"
+    )
+    theta_gse = models.FloatField(
+        help_text="Theta GSE of the magnetic field.", db_column="theta_B_GSE"
     )
 
     class Meta:  # noqa: D106

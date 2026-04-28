@@ -105,7 +105,7 @@ def process_data_from_test_csvs(
             the measurements to plot.
     """
     if (
-        measurement in ("bx_gse", "by_gse", "bz_gse", "phi_gse")
+        measurement in ("bx_gse", "by_gse", "bz_gse", "phi_gse", "theta_gse")
         and spacecraft in models.MAG_MODELS
     ):
         return get_gse_magnetic_field(spacecraft, measurement, range_param)
@@ -196,7 +196,7 @@ def get_gse_magnetic_field(
         A dictionary containing the relevant datetimes in UNIX epoch time format and
             the measurements to plot.
     """
-    if measurement not in ("bx_gse", "by_gse", "bz_gse", "phi_gse"):
+    if measurement not in ("bx_gse", "by_gse", "bz_gse", "phi_gse", "theta_gse"):
         raise ValueError(
             "Only GSE magnetic field components can be retrieved by this function."
         )

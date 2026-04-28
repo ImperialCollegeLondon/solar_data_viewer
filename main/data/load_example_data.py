@@ -27,7 +27,7 @@ for model in MAG_MODELS.values():
     model.objects.all().delete()  # type: ignore[attr-defined]
 
     # Now, we create new magnetic fields
-    b = np.random.rand(len(mfield_times), 4)
+    b = np.random.rand(len(mfield_times), 5)
     b[:, 0] += 1
     b[:, 1] -= 1
     mfield = [
@@ -38,6 +38,7 @@ for model in MAG_MODELS.values():
             bz_gse=row[2],
             b_mag=np.linalg.norm(row[:3]),
             phi_gse=row[3],
+            theta_gse=row[4],
         )
         for t, row in zip(mfield_times, b)
     ]
