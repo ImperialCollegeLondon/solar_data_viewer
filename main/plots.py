@@ -161,34 +161,26 @@ def update_legend_on_spacecraft_selection(plot: figure) -> figure:
     return plot
 
 
-def add_callback_to_ajax(source: AjaxDataSource) -> None:
-    """Add a callback to the data source to update from_date for polling.
-
-    The callback sets the URL param from_date to the most recent date in the data
-    source. At the next poll, the data source will only append data since this date.
-
-    Args:
-        source: The AjaxDataSource to attach the callback to.
-    """
-    # Add callback to data source
-    source_callback = CustomJS(
-        args=dict(source=source),
+def ajax_adapter() -> None:
+    """Create adapter to update 'from_date' in the source URL."""
+    return CustomJS(
         code="""
-        const data = source.data;
+    // db_obj is the AjaxDataSource object that triggered the callback
+    // cb_data is the data returned from the AJAX request
 
-        // Get the most recent datetime in the datasource
-        if (data.date && data.date.length > 0){
-            const last_date = data.date[data.date.length - 1];
-            console.log(last_date);
+    console.log(`Length of new data ${cb_data.response['date'].length}.`);
+    if (cb_data.response['date'].length > 0){
+        const last_date = cb_data.response['date'][cb_data.response['date'].length - 1];
 
-            // Set 'from_date' to the most recent datetime to use for the next poll
-            const url = new URL(source.data_url, window.location.origin);
-            url.searchParams.set("from_date", last_date);
-            source.data_url = url.toString();
-        }
-        """,
+        // Set 'from_date' to the most recent datetime to use for the next poll
+        const url = new URL(cb_obj.data_url, window.location.origin);
+        url.searchParams.set("from_date", last_date);
+        cb_obj.data_url = url.toString();
+        console.log(`Updated data_url to ${cb_obj.data_url} for next poll.`);
+    }
+    return cb_data.response
+        """
     )
-    source.js_on_change("data", source_callback)
 
 
 def create_timeseries_plot(
@@ -230,13 +222,11 @@ def create_timeseries_plot(
             # Create an AjaxDataSource for each spacecraft and measurement
             source = AjaxDataSource(
                 data_url=f"/data/{measurement}/{spacecraft}?from_date={from_date}",
-                polling_interval=500,
+                polling_interval=10000,
                 method="GET",
                 mode="append",
+                adapter=ajax_adapter(),
             )
-
-            # Add callback for updating data upon polling
-            add_callback_to_ajax(source)
 
             plot.line(
                 "date",

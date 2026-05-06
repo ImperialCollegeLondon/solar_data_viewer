@@ -9,6 +9,8 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+from django.db.models import Avg
+from django.db.models.functions import TruncMinute
 from django.template import Context, Template
 from django.utils import timezone
 
@@ -229,22 +231,24 @@ def get_gse_magnetic_field(
 
     # Get the relevant data from the DB
     start_time = timezone.now()
-    data = pd.DataFrame(
+    dataquery = (
         models.MAG_MODELS[spacecraft]  # type: ignore[attr-defined]
         .objects.filter(time__gt=most_recent)
-        .order_by("time")[:BATCH_SIZE]
-        .values("time", measurement)
+        .annotate(date=TruncMinute("time"))
+        .values("date")
+        .annotate(average=Avg(measurement))
+        .order_by("date")
     )
+    data = pd.DataFrame(dataquery)
     logger.info(
         f"Querying {spacecraft} {measurement} data from the DB took "
         f"{(timezone.now() - start_time).total_seconds():.2f} seconds to retrieve "
-        f"{len(data)} records."
+        f"{len(data)} records. Start time is {most_recent}."
     )
     if not len(data):
         return {"measurement": [], "date": []}
 
     # Do some post processing to sanitize the data
-    data = data.rename(columns={data.columns[0]: "date"})
     data["date"] = pd.to_datetime(data["date"], utc=True)
     data = reindex_data(data)
 
@@ -253,7 +257,7 @@ def get_gse_magnetic_field(
 
     # Create JSON response
     dates = data.index.tolist()
-    measurements = data[measurement].tolist()
+    measurements = data["average"].tolist()
     return {"measurement": measurements, "date": dates}
 
 

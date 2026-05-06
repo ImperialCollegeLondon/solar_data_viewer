@@ -48,11 +48,13 @@ def test_get_gse_magnetic_field(spacecraft, measurement, raises, days):
 
     model = MAG_MODELS[spacecraft]
     # Prepare the times
-    num = days * 24 + 1
+    num = days * 24
     now = timezone.now()
-    times = pd.date_range(
-        start=now - pd.Timedelta(days=10), end=now, freq="h"
-    ).to_series()
+    times = (
+        pd.date_range(start=now - pd.Timedelta(days=10), end=now, freq="h")
+        .round("min")
+        .to_series()
+    )
     from_date = int((now - pd.Timedelta(days=days)).timestamp()) * 1000
 
     # Populate the database
