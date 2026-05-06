@@ -41,7 +41,6 @@ def test_load_plot_config(plots_config):
 def test_get_gse_magnetic_field(spacecraft, measurement, raises, days):
     """Test the get_gse_magnetic_field function."""
     import pandas as pd
-    from django.utils import timezone
 
     from main.models import MAG_MODELS
     from main.utils import get_gse_magnetic_field
@@ -49,7 +48,7 @@ def test_get_gse_magnetic_field(spacecraft, measurement, raises, days):
     model = MAG_MODELS[spacecraft]
     # Prepare the times
     num = days * 24
-    now = timezone.now()
+    now = datetime(2024, 6, 1, 12, 0, 0)  # Fixed current time for testing
     times = (
         pd.date_range(start=now - pd.Timedelta(days=10), end=now, freq="h")
         .round("min")

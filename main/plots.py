@@ -161,7 +161,7 @@ def update_legend_on_spacecraft_selection(plot: figure) -> figure:
     return plot
 
 
-def ajax_adapter() -> None:
+def ajax_adapter() -> CustomJS:
     """Create adapter to update 'from_date' in the source URL."""
     return CustomJS(
         code="""

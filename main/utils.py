@@ -2,7 +2,7 @@
 
 import os
 import tomllib
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from logging import getLogger
 from pathlib import Path
 from typing import Any
@@ -121,7 +121,7 @@ def process_data_from_test_csvs(
     if from_date is None:
         from_date = int((datetime.now() - timedelta(days=7)).timestamp()) * 1000
 
-    most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=timezone.UTC)
+    most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=UTC)
     if most_recent > timezone.now() - timedelta(seconds=DB_QUERY_INTERVAL_S):
         return {"measurement": [], "date": []}
 
@@ -215,7 +215,7 @@ def get_gse_magnetic_field(
         A dictionary containing the relevant datetimes in UNIX epoch time format and
             the measurements to plot.
     """
-    most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=timezone.UTC)
+    most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=UTC)
     if most_recent > timezone.now() - timedelta(seconds=DB_QUERY_INTERVAL_S):
         return {"measurement": [], "date": []}
 
