@@ -222,7 +222,7 @@ def create_timeseries_plot(
             # Create an AjaxDataSource for each spacecraft and measurement
             source = AjaxDataSource(
                 data_url=f"/data/{measurement}/{spacecraft}?from_date={from_date}",
-                polling_interval=10000,
+                polling_interval=60000,
                 method="GET",
                 mode="append",
                 adapter=ajax_adapter(),
