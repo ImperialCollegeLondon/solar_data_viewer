@@ -74,6 +74,11 @@ def add_callback_to_checkbox_button(
             //  Hide or show 'Show Pass Data' checkbox based on whether "SO" is selected
             if (typeof pass_checkbox !== 'undefined') {
                 pass_checkbox.visible = is_so_active;
+
+                // If "SO" is not selected uncheck the 'Show Pass Data' checkbox
+                if (!is_so_active) {
+                    pass_checkbox.active = [];
+                }
             }
 
             // Hide or show the pass data strips on plots
