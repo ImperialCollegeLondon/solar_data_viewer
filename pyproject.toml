@@ -17,7 +17,7 @@ dependencies = [
     "gunicorn>=24.1.1",
     "pandas>=2.3.3",
     "psycopg2-binary>=2.9.12",
-    "pydantic>=2.13.3",
+    "pydantic>=2.13.4",
     "sunpy>=7.1.2",
     "whitenoise>=6.11.0",
 ]
