@@ -9,6 +9,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -128,3 +129,6 @@ INSTALLED_APPS += [
 ]
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+PLOT_REFRESH_TIME_MS = int(os.getenv("PLOT_REFRESH_TIME_MS", default=60000))  # 5 min
+"""Refresh interval for plots."""

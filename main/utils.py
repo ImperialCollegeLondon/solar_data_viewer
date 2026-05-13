@@ -25,11 +25,6 @@ BATCH_SIZE = 20000
 This is used to avoid overloading the database and crashing the browser, as well as to
 allow for a more responsive user experience."""
 
-DB_QUERY_INTERVAL_S = 120  # 2 min
-"""Minimum interval between DB queries for the same measurement and spacecraft.
-
-This is used to avoid too many quaries and updates when we are close enough to now."""
-
 
 def load_plot_config(source: Path | dict[str, Any]) -> PlotsConfig:  # type: ignore[explicit-any]
     """Load the config details for the plots page from the TOML file.
@@ -121,10 +116,6 @@ def process_data_from_test_csvs(
     if from_date is None:
         from_date = int((datetime.now() - timedelta(days=7)).timestamp()) * 1000
 
-    most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=UTC)
-    if most_recent > timezone.now() - timedelta(seconds=DB_QUERY_INTERVAL_S):
-        return {"measurement": [], "date": []}
-
     if (
         measurement in ("bx_gse", "by_gse", "bz_gse", "phi_gse", "theta_gse")
         and spacecraft in models.MAG_MODELS
@@ -142,6 +133,7 @@ def process_data_from_test_csvs(
     df["date"] = pd.to_datetime(df["date"], utc=True)
 
     # Time range filtering
+    most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=UTC)
     df = df[df["date"] > most_recent][:BATCH_SIZE]
     df = reindex_data(df)
     # Format datetime as Unix epoch time
@@ -215,10 +207,6 @@ def get_gse_magnetic_field(
         A dictionary containing the relevant datetimes in UNIX epoch time format and
             the measurements to plot.
     """
-    most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=UTC)
-    if most_recent > timezone.now() - timedelta(seconds=DB_QUERY_INTERVAL_S):
-        return {"measurement": [], "date": []}
-
     if measurement not in ("bx_gse", "by_gse", "bz_gse", "phi_gse", "theta_gse"):
         raise ValueError(
             "Only GSE magnetic field components can be retrieved by this function."
@@ -230,6 +218,7 @@ def get_gse_magnetic_field(
         )
 
     # Get the relevant data from the DB
+    most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=UTC)
     start_time = timezone.now()
     dataquery = (
         models.MAG_MODELS[spacecraft]  # type: ignore[attr-defined]

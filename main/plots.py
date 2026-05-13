@@ -21,6 +21,7 @@ from bokeh.models import (  # type: ignore
 from bokeh.models.layouts import Column, Row
 from bokeh.models.widgets.groups import CheckboxButtonGroup
 from bokeh.plotting import figure
+from django.conf import settings
 
 from .config import PlotConfig
 from .utils import load_l1_config, load_plot_config
@@ -222,7 +223,7 @@ def create_timeseries_plot(
             # Create an AjaxDataSource for each spacecraft and measurement
             source = AjaxDataSource(
                 data_url=f"/data/{measurement}/{spacecraft}?from_date={from_date}",
-                polling_interval=60000,
+                polling_interval=settings.PLOT_REFRESH_TIME_MS,
                 method="GET",
                 mode="append",
                 adapter=ajax_adapter(),
