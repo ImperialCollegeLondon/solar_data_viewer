@@ -10,6 +10,7 @@ from bokeh.models import (  # type: ignore
     AjaxDataSource,
     Arrow,
     CrosshairTool,
+    CustomJS,
     HoverTool,
     Label,
     LegendItem,
@@ -20,6 +21,7 @@ from bokeh.models import (  # type: ignore
 from bokeh.models.layouts import Column, Row
 from bokeh.models.widgets.groups import CheckboxButtonGroup
 from bokeh.plotting import figure
+from django.conf import settings
 
 from .config import PlotConfig
 from .utils import load_l1_config, load_plot_config
@@ -75,18 +77,17 @@ def get_now_label(current_time: datetime.datetime) -> Label:
     return now_label
 
 
-def add_pass_source(pass_spacecraft: str, time_range: str) -> AjaxDataSource:
+def add_pass_source(pass_spacecraft: str) -> AjaxDataSource:
     """Add a data source for pass data to the plot.
 
     Args:
         pass_spacecraft: The spacecraft to show pass data for.
-        time_range: The time range for the pass data to show.
 
     Returns:
         An AjaxDataSource for the pass data.
     """
     pass_source = AjaxDataSource(
-        data_url=f"/data/passes/{pass_spacecraft}?range={time_range}",
+        data_url=f"/data/passes/{pass_spacecraft}",
         polling_interval=None,
         method="GET",
     )
@@ -161,11 +162,32 @@ def update_legend_on_spacecraft_selection(plot: figure) -> figure:
     return plot
 
 
+def ajax_adapter() -> CustomJS:
+    """Create adapter to update 'from_date' in the source URL."""
+    return CustomJS(
+        code="""
+    // db_obj is the AjaxDataSource object that triggered the callback
+    // cb_data is the data returned from the AJAX request
+
+    console.log(`Length of new data ${cb_data.response['date'].length}.`);
+    if (cb_data.response['date'].length > 0){
+        const last_date = cb_data.response['date'][cb_data.response['date'].length - 1];
+
+        // Set 'from_date' to the most recent datetime to use for the next poll
+        const url = new URL(cb_obj.data_url, window.location.origin);
+        url.searchParams.set("from_date", last_date);
+        cb_obj.data_url = url.toString();
+        console.log(`Updated data_url to ${cb_obj.data_url} for next poll.`);
+    }
+    return cb_data.response
+        """
+    )
+
+
 def create_timeseries_plot(
     plot_config: PlotConfig,
     spacecrafts: list[str],
     x_range: Range1d,
-    time_range: str = "3d",
     default_spacecraft: str = "IMAP",
 ) -> figure:
     """Create a timeseries plot.
@@ -176,7 +198,6 @@ def create_timeseries_plot(
             and colours to be used for the traces for each spacecraft.
         spacecrafts: A list of spacecraft names to include in the plot.
         x_range: The shared x-axis range for the plots.
-        time_range: The initial time range for the data to display (default is 3 days).
         default_spacecraft: The spacecraft data to display as default.
 
     Returns:
@@ -192,15 +213,22 @@ def create_timeseries_plot(
     # Disable level-of-detail downsampling to ensure the lines
     # are always fully rendered and not greyed out.
     plot.lod_threshold = None
+    current_time = datetime.datetime.now()
+
+    from_date_ = current_time - datetime.timedelta(days=7)
+    from_date = int(from_date_.timestamp()) * 1000
 
     for measurement, args in plot_config.measurements.items():
         for spacecraft in spacecrafts:
             # Create an AjaxDataSource for each spacecraft and measurement
             source = AjaxDataSource(
-                data_url=f"/data/{measurement}/{spacecraft}?range={time_range}",
-                polling_interval=300000,
+                data_url=f"/data/{measurement}/{spacecraft}?from_date={from_date}",
+                polling_interval=settings.PLOT_REFRESH_TIME_MS,
                 method="GET",
+                mode="append",
+                adapter=ajax_adapter(),
             )
+
             plot.line(
                 "date",
                 "measurement",
@@ -212,7 +240,7 @@ def create_timeseries_plot(
             )
     # Show pass data for SO only
     pass_spacecraft = "SO"
-    pass_contact_data_source = add_pass_source(pass_spacecraft, time_range)
+    pass_contact_data_source = add_pass_source(pass_spacecraft)
     add_pass_contact_vstrip(pass_contact_data_source, plot)
 
     current_time = datetime.datetime.now()
@@ -231,7 +259,6 @@ def create_timeseries_plots(
     spacecrafts: list[str],
     button: CheckboxButtonGroup,
     default_spacecraft: str = "IMAP",
-    initial_time_range: str = "3d",
 ) -> list[figure]:
     """Create five plots to display solar weather data.
 
@@ -241,7 +268,6 @@ def create_timeseries_plots(
         spacecrafts: A list of spacecraft names to include in the plots.
         button: A checkbox button to select the spacecraft to display data for.
         default_spacecraft: The spacecraft data to display as default.
-        initial_time_range: The initial time range for the data to display.
 
     Returns:
         A list containing the five Bokeh plots for each measurement.
@@ -269,7 +295,6 @@ def create_timeseries_plots(
             plot_config,
             spacecrafts,
             shared_x_range,
-            initial_time_range,
             default_spacecraft,
         )
         plot.add_tools(hover, crosshair)
@@ -293,7 +318,7 @@ def create_timeseries_layout() -> Column:
     button = checkbox_button_group(spacecrafts, default_spacecraft)
     time_dropdown = create_time_range_dropdown()
     plots = create_timeseries_plots(
-        plots_config, spacecrafts, button, default_spacecraft, time_dropdown.value
+        plots_config, spacecrafts, button, default_spacecraft
     )
     add_time_range_callback(time_dropdown, plots)
     passes_button = add_passes_checkbox(plots)

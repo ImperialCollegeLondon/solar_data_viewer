@@ -1,7 +1,7 @@
 """Test suite for the plots."""
 
 import math
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
 
 from bokeh.models import (  # type: ignore
@@ -38,7 +38,7 @@ def test_create_timeseries_plot():
     spacecrafts = ["A", "B"]
     x_range = figure(x_axis_type="datetime").x_range
 
-    plot = create_timeseries_plot(plot_config, spacecrafts, x_range, time_range="7d")
+    plot = create_timeseries_plot(plot_config, spacecrafts, x_range)
 
     assert isinstance(plot, figure)
 
@@ -55,7 +55,10 @@ def test_create_timeseries_plot():
     # Check that the URL includes the time range parameter
     first_source = plot.renderers[0].data_source
     assert isinstance(first_source, AjaxDataSource)
-    assert "range=7d" in first_source.data_url
+
+    from_date_ = datetime.now() - timedelta(days=7)
+    from_date = int(from_date_.timestamp()) * 1000
+    assert f"from_date={from_date}" in first_source.data_url
 
 
 def test_create_timeseries_plots():
@@ -204,21 +207,19 @@ def test_update_legend_hides_invisible_renderers():
 def test_add_pass_source():
     """Test that add_pass_source adds an AjaxDataSource and a vstrip."""
     spacecraft = "SO"
-    time_range = "7d"
 
-    source = add_pass_source(spacecraft, time_range)
+    source = add_pass_source(spacecraft)
 
     assert isinstance(source, AjaxDataSource)
-    assert source.data_url == f"/data/passes/{spacecraft}?range={time_range}"
+    assert source.data_url == f"/data/passes/{spacecraft}"
 
 
 def test_add_pass_contact_vstrip():
     """Test add_pass_contact_vstrip function."""
     plot = figure()
     spacecraft = "SO"
-    time_range = "7d"
 
-    source = add_pass_source(spacecraft, time_range)
+    source = add_pass_source(spacecraft)
 
     add_pass_contact_vstrip(source, plot)
 

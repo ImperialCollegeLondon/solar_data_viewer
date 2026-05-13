@@ -2,13 +2,15 @@
 
 import os
 import tomllib
-from datetime import date, datetime
+from datetime import UTC, date, datetime, timedelta
 from logging import getLogger
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import pandas as pd
+from django.db.models import Avg
+from django.db.models.functions import TruncMinute
 from django.template import Context, Template
 from django.utils import timezone
 
@@ -16,6 +18,12 @@ from . import models
 from .config import L1Config, PlotsConfig
 
 logger = getLogger("django")
+
+BATCH_SIZE = 20000
+"""Maximum numbers of data points to return per query.
+
+This is used to avoid overloading the database and crashing the browser, as well as to
+allow for a more responsive user experience."""
 
 
 def load_plot_config(source: Path | dict[str, Any]) -> PlotsConfig:  # type: ignore[explicit-any]
@@ -91,24 +99,28 @@ def reindex_data(df: pd.DataFrame, threshold: str = "1m") -> pd.DataFrame:
 
 
 def process_data_from_test_csvs(
-    spacecraft: str, measurement: str, range_param: str
+    spacecraft: str, measurement: str, from_date: int | None
 ) -> dict[str, list[float]]:
     """This is a placeholder function for returning processed test data from csvs.
 
     Args:
         spacecraft: Name of the spacecraft to retrieve data for.
         measurement: Name of the measurement to get data for.
-        range_param: The time range for which to retrieve data.
+        from_date: The date to use as the starting point to get data (in ms format).
+            If None, defaults to 7 days ago from the current time.
 
     Returns:
         A dictionary containing the relevant datetimes in UNIX epoch time format and
             the measurements to plot.
     """
+    if from_date is None:
+        from_date = int((datetime.now() - timedelta(days=7)).timestamp()) * 1000
+
     if (
         measurement in ("bx_gse", "by_gse", "bz_gse", "phi_gse", "theta_gse")
         and spacecraft in models.MAG_MODELS
     ):
-        return get_gse_magnetic_field(spacecraft, measurement, range_param)
+        return get_gse_magnetic_field(spacecraft, measurement, from_date)
 
     csv_files = {
         "IMAP": Path(__file__).parent / "data" / "test_data1.csv",
@@ -121,9 +133,8 @@ def process_data_from_test_csvs(
     df["date"] = pd.to_datetime(df["date"], utc=True)
 
     # Time range filtering
-    latest = df["date"].max()
-    delta = pd.Timedelta(range_param)
-    df = df[df["date"] >= latest - delta]
+    most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=UTC)
+    df = df[df["date"] > most_recent][:BATCH_SIZE]
     df = reindex_data(df)
     # Format datetime as Unix epoch time
     df.index = df.index.astype("int64") // 10**3
@@ -183,14 +194,14 @@ def get_pass_data(spacecraft: str) -> dict[str, list[float]]:
 
 
 def get_gse_magnetic_field(
-    spacecraft: str, measurement: str, range_param: str
+    spacecraft: str, measurement: str, from_date: int
 ) -> dict[str, list[float]]:
     """Retrieves a component of the magnetic field data for the SO and IMAP missions.
 
     Args:
         spacecraft: Name of the spacecraft to retrieve data for.
         measurement: Name of the measurement to get data for.
-        range_param: The time range for which to retrieve data.
+        from_date: The date to use as the starting point to get data (in ms format).
 
     Returns:
         A dictionary containing the relevant datetimes in UNIX epoch time format and
@@ -206,28 +217,27 @@ def get_gse_magnetic_field(
             f"Only {list(models.MAG_MODELS.keys())} spacecrafts are supported."
         )
 
-    # Get the time range to display
-    delta = pd.Timedelta(range_param)
-    from_date = timezone.now() - delta
-
     # Get the relevant data from the DB
+    most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=UTC)
     start_time = timezone.now()
-    data = pd.DataFrame(
+    dataquery = (
         models.MAG_MODELS[spacecraft]  # type: ignore[attr-defined]
-        .objects.filter(time__gte=from_date)
-        .order_by("time")
-        .values("time", measurement)
+        .objects.filter(time__gt=most_recent)
+        .annotate(date=TruncMinute("time"))
+        .values("date")
+        .annotate(average=Avg(measurement))
+        .order_by("date")
     )
+    data = pd.DataFrame(dataquery)
     logger.info(
         f"Querying {spacecraft} {measurement} data from the DB took "
         f"{(timezone.now() - start_time).total_seconds():.2f} seconds to retrieve "
-        f"{len(data)} records."
+        f"{len(data)} records. Start time is {most_recent}."
     )
     if not len(data):
         return {"measurement": [], "date": []}
 
     # Do some post processing to sanitize the data
-    data = data.rename(columns={data.columns[0]: "date"})
     data["date"] = pd.to_datetime(data["date"], utc=True)
     data = reindex_data(data)
 
@@ -236,7 +246,7 @@ def get_gse_magnetic_field(
 
     # Create JSON response
     dates = data.index.tolist()
-    measurements = data[measurement].tolist()
+    measurements = data["average"].tolist()
     return {"measurement": measurements, "date": dates}
 
 

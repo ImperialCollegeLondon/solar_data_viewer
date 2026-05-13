@@ -18,7 +18,7 @@ now = timezone.now()
 ########################################################################################
 
 mfield_times = pd.date_range(
-    start=now - pd.Timedelta(days=10), end=now, freq="min"
+    start=now - pd.Timedelta(days=10), end=now, freq="20s"
 ).to_series()
 
 # For each of the supported spacecrafts we add some data
