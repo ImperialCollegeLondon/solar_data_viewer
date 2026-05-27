@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from numbers import Number
 
 import numpy as np
 import pandas as pd
@@ -57,18 +56,18 @@ def _get_dataset(spacecraft: str, measurement: str) -> tuple[str, str, list[str]
     """
     options = SPACECRAFTS.get(spacecraft)
     if not options:
-        return "", "", ""
+        return "", "", []
 
     for dataset, var_map in options.items():
         if specific := var_map.get(measurement):
             return dataset, specific, list(var_map.values())
 
-    return "", "", ""
+    return "", "", []
 
 
 def get_data_from_hapi(
     spacecraft: str, measurement: str, from_date: int
-) -> dict[str, list[Number]]:
+) -> dict[str, list[float]]:
     """Return the data for the selected spacecraft, measurement and initial time.
 
     Args:
