@@ -122,11 +122,8 @@ def process_data_from_test_csvs(
     ):
         return get_gse_magnetic_field(spacecraft, measurement, from_date)
 
-    if spacecraft == "SOLAR-1":
-        return hapi.get_SOLAR_1_data(measurement, from_date, reindex_data)
-
-    if spacecraft == "DSCOVR":
-        return hapi.get_DSCOVR_data(measurement, from_date, reindex_data)
+    if spacecraft in hapi.SPACECRAFTS:
+        return hapi.get_data_from_hapi(spacecraft, measurement, from_date)
 
     csv_files = {
         "IMAP": Path(__file__).parent / "data" / "test_data1.csv",
