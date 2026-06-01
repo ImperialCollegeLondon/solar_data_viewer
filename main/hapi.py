@@ -51,8 +51,9 @@ def _get_dataset(spacecraft: str, measurement: str) -> tuple[str, str, list[str]
         measurement: The generic measurement name.
 
     Return:
-        The name of the associated dataset and the specific variable name that
-        we are asking for.
+        The name of the associated dataset, the specific variable name that
+        we are asking for and a list of all the variables in the dataset that we might
+        want, so we pull them just once.
     """
     options = SPACECRAFTS.get(spacecraft)
     if not options:
@@ -69,6 +70,9 @@ def get_data_from_hapi(
     spacecraft: str, measurement: str, from_date: int
 ) -> dict[str, list[float]]:
     """Return the data for the selected spacecraft, measurement and initial time.
+
+    If there was cached data, that one is used to pull the data from. Otherwise, the
+    data is pulled from the HAPI server and then cached for 5 min.
 
     Args:
         spacecraft: Name of the spacecraft to get the data for.
