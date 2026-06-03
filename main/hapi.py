@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import requests
 from django.core.cache import cache
+from django.utils import timezone
 
 NOAA_HAPI_URL = (
     "https://www.ncei.noaa.gov/cloud-access/space-weather-portal/api/v1/hapi/data"
@@ -96,7 +97,7 @@ def get_data_from_hapi(
             .isoformat()
             .replace("+00:00", "Z")
         )
-        stop = datetime.now().isoformat().replace("+00:00", "Z")
+        stop = timezone.now().isoformat().replace("+00:00", "Z")
         data = requests.get(
             NOAA_HAPI_URL,
             params=dict(
