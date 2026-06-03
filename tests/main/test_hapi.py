@@ -46,7 +46,7 @@ def test_get_dataset(spacecraft, measurement, dataset, specific, variables):
 
 
 @pytest.fixture
-def mock_cols():
+def mock_hapi_cols():
     """Define the columns used in the request and DataFrame."""
     return ["time", "proton_density", "proton_speed", "proton_temperature"]
 
@@ -68,7 +68,7 @@ def mock_hapi_response():
 
 
 @patch("requests.get")
-def test_get_data_from_hapi(mock_get: Mock, mock_hapi_response, mock_cols):
+def test_get_data_from_hapi(mock_get: Mock, mock_hapi_response, mock_hapi_cols):
     """Test the get_data_from_hapi function."""
     import pandas as pd
     from django.core.cache import cache
@@ -80,7 +80,7 @@ def test_get_data_from_hapi(mock_get: Mock, mock_hapi_response, mock_cols):
     mock_get.return_value = mock_response
 
     # Simulate the code under test
-    df = pd.DataFrame(mock_data, columns=mock_cols)
+    df = pd.DataFrame(mock_data, columns=mock_hapi_cols)
 
     # Initially there is no cache
     assert cache.get("f1m_dscovr") is None
