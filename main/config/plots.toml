@@ -4,6 +4,7 @@ spacecrafts = [
     "IMAP",
     "SO",
     "SOLAR-1",
+    "ACE",
     "DSCOVR",
 ] # List of all spacecrafts to plot traces for
 default_spacecraft = "IMAP" # The spacecraft to display as default
@@ -14,15 +15,15 @@ unit = "nT"
 
 [plots.measurements.bx_gse]
 label = "Bx GSE"
-traces = {IMAP = "red", SO = "blue", DSCOVR = "green", "SOLAR-1" = "black"}
+traces = {IMAP = "red", SO = "blue", DSCOVR = "green", "SOLAR-1" = "black", "ACE" = "brown"}
 
 [plots.measurements.by_gse]
 label = "By GSE"
-traces = {IMAP = "indianred", SO = "dodgerblue", "SOLAR-1" = "darkslategray", DSCOVR = "lightgreen"}
+traces = {IMAP = "indianred", SO = "dodgerblue", "SOLAR-1" = "darkslategray", DSCOVR = "lightgreen", "ACE" = "sienna"}
 
 [plots.measurements.bz_gse]
 label = "Bz GSE"
-traces = {IMAP = "lightsalmon", SO = "powderblue", "SOLAR-1" = "lightslategray", DSCOVR = "darkgreen"}
+traces = {IMAP = "lightsalmon", SO = "powderblue", "SOLAR-1" = "lightslategray", DSCOVR = "darkgreen", "ACE" = "maroon"}
 
 [[plots]]
 title = "Phi GSE"
@@ -30,7 +31,7 @@ unit = "deg"
 
 [plots.measurements.phi_gse]
 label = "Phi GSE"
-traces = {IMAP = "red", SO = "blue", "SOLAR-1" = "black", DSCOVR = "green"}
+traces = {IMAP = "red", SO = "blue", "SOLAR-1" = "black", DSCOVR = "green", "ACE" = "brown"}
 
 [[plots]]
 title = "Theta GSE"
@@ -38,7 +39,7 @@ unit = "deg"
 
 [plots.measurements.theta_gse]
 label = "Theta GSE"
-traces = {IMAP = "red", SO = "blue", "SOLAR-1" = "black", DSCOVR = "green"}
+traces = {IMAP = "red", SO = "blue", "SOLAR-1" = "black", DSCOVR = "green", "ACE" = "brown"}
 
 [[plots]]
 title = "Density"
@@ -46,7 +47,7 @@ unit = "1/cm³"
 
 [plots.measurements.density]
 label = "Density"
-traces = {IMAP = "red", SO = "blue", "SOLAR-1" = "black", DSCOVR = "green"}
+traces = {IMAP = "red", SO = "blue", "SOLAR-1" = "black", DSCOVR = "green", "ACE" = "brown"}
 
 [[plots]]
 title = "Speed"
@@ -54,7 +55,7 @@ unit = "km/s"
 
 [plots.measurements.speed]
 label = "Speed"
-traces = {IMAP = "red", SO = "blue", "SOLAR-1" = "black", DSCOVR = "green"}
+traces = {IMAP = "red", SO = "blue", "SOLAR-1" = "black", DSCOVR = "green", "ACE" = "brown"}
 
 [[plots]]
 title = "Temperature"
@@ -62,4 +63,4 @@ unit = "k"
 
 [plots.measurements.temperature]
 label = "Temperature"
-traces = {IMAP = "red", SO = "blue", "SOLAR-1" = "black", DSCOVR = "green"}
+traces = {IMAP = "red", SO = "blue", "SOLAR-1" = "black", DSCOVR = "green", "ACE" = "brown"}
