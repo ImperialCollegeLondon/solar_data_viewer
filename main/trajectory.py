@@ -1,6 +1,7 @@
 """Plots for displaying trajectory data."""
 
 from datetime import datetime
+from logging import getLogger
 from typing import cast
 
 import astropy.units as u
@@ -10,6 +11,8 @@ from sunpy.coordinates import get_body_heliographic_stonyhurst, get_horizons_coo
 from sunpy.coordinates.frames import GeocentricSolarEcliptic, HeliographicStonyhurst
 
 from .utils import get_message_template, get_solar_orbiter_dates, load_l1_config
+
+logger = getLogger(__name__)
 
 
 def heliographic_to_cartesian(
@@ -72,9 +75,15 @@ def get_JPL_spacecraft_coordinates(
         The coordinate or list of coordinates as Astropy SkyCoord(s).
     """
     if isinstance(time, tuple):
-        return get_horizons_coord(
-            spacecraft, {"start": time[0], "stop": time[-1], "step": "1d"}
-        )
+        try:
+            return get_horizons_coord(
+                spacecraft, {"start": time[0], "stop": time[-1], "step": "1d"}
+            )
+        except RuntimeError:
+            logger.error(
+                f"Error pulling coordinate range from JPL for spacecraft {spacecraft}."
+            )
+            return []
     else:
         return get_horizons_coord(spacecraft, time)
 
