@@ -11,6 +11,8 @@ import requests
 from django.core.cache import cache
 from django.utils import timezone
 
+from main.calc import calc_phi_theta
+
 log = getLogger(__name__)
 
 URL_ACE = "https://services.swpc.noaa.gov/products/solar-wind/{dataset}-{period}.json"
@@ -30,7 +32,7 @@ def _build_url(measurement: str, start: datetime) -> str:
     period = "2-hour" if (timezone.now() - start) <= timedelta(hours=2) else "7-day"
 
     options = {
-        "mag": ["bx_gsm", "by_gsm", "bz_gsm"],
+        "mag": ["bx_gsm", "by_gsm", "bz_gsm", "phi_gsm", "theta_gsm"],
         "plasma": ["density", "speed", "temperature"],
     }
     for dataset, variables in options.items():
@@ -71,6 +73,7 @@ def get_ace_data(measurement: str, from_date: int) -> dict[str, list[float]]:
     if data is None:
         response = requests.get(url).json()
         data = pd.DataFrame(data=response[1:], columns=response[0])
+        data = _populate_phi_theta(data)
         cache.set(url, data, timeout=300)  # Cache for 300 s (5 min)
 
     # Pick the right columns and normalize their names
@@ -92,3 +95,22 @@ def get_ace_data(measurement: str, from_date: int) -> dict[str, list[float]]:
     dates = data.index.tolist()
     measurements = data["measurement"].tolist()
     return {"measurement": measurements, "date": dates}
+
+
+def _populate_phi_theta(data: pd.DataFrame) -> pd.DataFrame:
+    """Populate the data dataframe with phi and theta columns.
+
+    Args:
+        data: The dataframe containnig the magnetic field columns.
+
+    Return:
+        The input dataframe with the phi and theta columns added. If there is no
+        magnetic field data, the input dataframe is returned as is.
+    """
+    # If there's no magnetic field, there's nothing to do
+    if "bx_gsm" not in data.columns:
+        return data
+
+    phi_theta = calc_phi_theta(data[["bx_gsm", "by_gsm", "bz_gsm"]].astype(float))
+    phi_theta = phi_theta.rename(columns=dict(phi="phi_gsm", theta="theta_gsm"))
+    return pd.concat([data, phi_theta], axis="columns")
