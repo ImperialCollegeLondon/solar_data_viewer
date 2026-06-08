@@ -3,17 +3,19 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from logging import getLogger
 
 import numpy as np
 import pandas as pd
 import requests
+from django.conf import settings
 from django.core.cache import cache
 from django.utils import timezone
+from requests.models import HTTPError
 
-NOAA_HAPI_URL = (
-    "https://www.ncei.noaa.gov/cloud-access/space-weather-portal/api/v1/hapi/data"
-)
-"""URL of the NOAA HAPI server."""
+log = getLogger(__name__)
+"""Module logger."""
+
 
 SPACECRAFTS = {
     "DSCOVR": {
@@ -98,18 +100,28 @@ def get_data_from_hapi(
             .replace("+00:00", "Z")
         )
         stop = timezone.now().isoformat().replace("+00:00", "Z")
-        data = requests.get(
-            NOAA_HAPI_URL,
-            params=dict(
-                dataset=dataset,
-                start=start,
-                stop=stop,
-                parameters=",".join(cols),
-                format="json",
-            ),
-        ).json()["data"]
-        data = pd.DataFrame(data, columns=cols)
-        cache.set(dataset, data, timeout=300)  # Cache for 300 s (5 min)
+        try:
+            response = requests.get(
+                settings.NOAA_HAPI_URL,
+                params=dict(
+                    dataset=dataset,
+                    start=start,
+                    stop=stop,
+                    parameters=",".join(cols),
+                    format="json",
+                ),
+            )
+            if not (200 <= response.status_code < 300):
+                raise HTTPError(response)
+
+            data = pd.DataFrame(response.json()["data"], columns=cols)
+            cache.set(dataset, data, timeout=300)  # Cache for 300 s (5 min)
+        except HTTPError as e:
+            log.error(
+                f"Error pulling data for spacecraft {spacecraft}, "
+                f"dataset {dataset}: {e}."
+            )
+            return {"measurement": [], "date": []}
 
     # Pick the right columns and normalize their names
     data = data.loc[:, ["time", variable]]

@@ -8,15 +8,13 @@ from logging import getLogger
 import numpy as np
 import pandas as pd
 import requests
+from django.conf import settings
 from django.core.cache import cache
 from django.utils import timezone
 
 from main.calc import calc_phi_theta
 
 log = getLogger(__name__)
-
-URL_ACE = "https://services.swpc.noaa.gov/products/solar-wind/{dataset}-{period}.json"
-"""URL for retrieving ACE data. Needs to be completted with dataset and period."""
 
 
 def _build_url(measurement: str, start: datetime) -> str:
@@ -37,7 +35,7 @@ def _build_url(measurement: str, start: datetime) -> str:
     }
     for dataset, variables in options.items():
         if measurement in variables:
-            return URL_ACE.format(dataset=dataset, period=period)
+            return settings.URL_ACE.format(dataset=dataset, period=period)
 
     log.warning(f"Unknown measurement name for ACE: {measurement}")
     return ""

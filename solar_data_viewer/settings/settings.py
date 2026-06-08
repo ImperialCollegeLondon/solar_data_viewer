@@ -132,3 +132,11 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 PLOT_REFRESH_TIME_MS = int(os.getenv("PLOT_REFRESH_TIME_MS", default=60000))  # 5 min
 """Refresh interval for plots."""
+
+NOAA_HAPI_URL = (
+    "https://www.ncei.noaa.gov/cloud-access/space-weather-portal/api/v1/hapi/data"
+)
+"""URL of the NOAA HAPI server."""
+
+URL_ACE = "https://services.swpc.noaa.gov/products/solar-wind/{dataset}-{period}.json"
+"""URL for retrieving ACE data. Needs to be completted with dataset and period."""

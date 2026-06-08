@@ -62,13 +62,14 @@ def mock_hapi_response():
 
     # Build the mock chain: requests.get(...).json() -> dict with "data" key
     mock_response = MagicMock()
+    mock_response.status_code = 200
     mock_response.json.return_value = {"data": mock_data}
 
     return mock_response, mock_data
 
 
 @patch("requests.get")
-def test_get_data_from_hapi(mock_get: Mock, mock_hapi_response, mock_hapi_cols):
+def test_get_data_from_hapi(mock_get: Mock, mock_hapi_response, mock_hapi_cols, caplog):
     """Test the get_data_from_hapi function."""
     import pandas as pd
     from django.core.cache import cache
@@ -97,3 +98,11 @@ def test_get_data_from_hapi(mock_get: Mock, mock_hapi_response, mock_hapi_cols):
     # The output is the expected one
     assert set(["date", "measurement"]) == set(result.keys())
     assert df["proton_speed"].to_list() == result["measurement"]
+
+    # If there is a problem pulling data, the error is handled
+    mock_response.status_code = 300
+    result = hapi.get_data_from_hapi("DSCOVR", "bx_gse", from_date)
+    assert result == {"measurement": [], "date": []}
+    assert caplog.records[-1].levelname == "ERROR"
+    assert "DSCOVR" in caplog.records[-1].message
+    assert "m1m_dscovr" in caplog.records[-1].message
