@@ -2,30 +2,42 @@
 
 [[spacecraft]]
 name = "IMAP"
+label = "I"
 colour = "rgb(255,143,0)"
+marker = "circle"
 id = -43
 
 [[spacecraft]]
 name = "ACE"
+label = "Ac"
 colour = "rgb(204,0,204)"
+marker = "diamond"
 id = -92
 
 [[spacecraft]]
 name = "WIND"
+label = "W"
 colour = "rgb(0,204,204)"
+marker = "inverted_triangle"
 id = -8
 
 [[spacecraft]]
 name = "DSCOVR"
+label = "D"
 colour = "rgb(0,102,204)"
+marker = "plus"
 id = -78
 
 [[spacecraft]]
 name = "Solar-1"
+label = "S"
 colour = "rgb(230,0,0)"
+marker = "square"
 id = -231
 
 [[spacecraft]]
 name = "Aditya-L1"
+label = "Ad"
 colour = "rgb(19,136,8)"
+marker = "triangle"
 id = -156
