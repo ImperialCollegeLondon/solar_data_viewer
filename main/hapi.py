@@ -127,7 +127,7 @@ def get_data_from_hapi(
             if not (200 <= response.status_code < 300):
                 raise HTTPError(response.text)
 
-            data = _build_dataframe(response.json()["data"], cols)
+            data = _build_dataframe(response.json()["data"], cols, spacecraft)
             cache.set(dataset, data, timeout=300)  # Cache for 300 s (5 min)
         except HTTPError as e:
             log.error(
@@ -154,7 +154,9 @@ def get_data_from_hapi(
     return {"measurement": measurements, "date": dates}
 
 
-def _build_dataframe(data: list[list[Any]], cols: list[str]) -> pd.DataFrame:
+def _build_dataframe(
+    data: list[list[Any]], cols: list[str], spacecraft: str
+) -> pd.DataFrame:
     """Parse the response and populates the dataframe.
 
     If needed, it populates the dataframe with phi and theta columns.
@@ -162,6 +164,8 @@ def _build_dataframe(data: list[list[Any]], cols: list[str]) -> pd.DataFrame:
     Args:
         data: List of data points for the requested parameters.
         cols: Column names
+        spacecraft: Spacecraft to consider. Phi and theta will be calculated only for
+        SOLAR-1
 
     Return:
         The data formatted as a DataFrame. If it contains magnetic field that,
@@ -169,8 +173,9 @@ def _build_dataframe(data: list[list[Any]], cols: list[str]) -> pd.DataFrame:
     """
     data_ = pd.DataFrame(data, columns=cols)
 
-    # If there's no magnetic field, there's nothing extra to do
-    if "b_gse_min_x" not in cols:
+    # If it's the wrong spacecraft or there's no magnetic field, there's nothing extra
+    # to do
+    if spacecraft != "SOLAR-1" or "b_gse_min_x" not in cols:
         return data_
 
     phi_theta = calc_phi_theta(

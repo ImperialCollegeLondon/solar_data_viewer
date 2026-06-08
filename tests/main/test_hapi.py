@@ -109,17 +109,22 @@ def test_get_data_from_hapi(mock_get: Mock, mock_hapi_response, mock_hapi_cols, 
 
 
 @pytest.mark.parametrize(
-    argnames=["colnames", "extracols"],
+    argnames=["colnames", "extracols", "spacecraft"],
     argvalues=[
-        [["b_gse_min_x", "b_gse_min_y", "b_gse_min_z"], ["phi_gse", "theta_gse"]],
-        [["density", "speed", "temperature"], []],
+        [
+            ["b_gse_min_x", "b_gse_min_y", "b_gse_min_z"],
+            ["phi_gse", "theta_gse"],
+            "SOLAR-1",
+        ],
+        [["b_gse_min_x", "b_gse_min_y", "b_gse_min_z"], [], "DSCOVR"],
+        [["density", "speed", "temperature"], [], "SOLAR-1"],
     ],
 )
-def test_build_dataframe(colnames, extracols):
+def test_build_dataframe(colnames, extracols, spacecraft):
     """Test the build_dataframe function."""
     from main import hapi
 
     data = [[1, 2, 3], [1, 2, 3]]
     expected_columns = colnames + extracols
-    df = hapi._build_dataframe(data, colnames)
+    df = hapi._build_dataframe(data, colnames, spacecraft)
     assert set(expected_columns) == set(df.columns)
