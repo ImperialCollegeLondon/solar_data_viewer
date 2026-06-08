@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from django.conf import settings
 from django.utils import timezone
 
 from main import ace
@@ -15,14 +16,22 @@ OLD_START = timezone.now() - timedelta(hours=3)
 @pytest.mark.parametrize(
     "measurement, start, expected",
     [
-        ("bx_gsm", RECENT_START, ace.URL_ACE.format(dataset="mag", period="2-hour")),
-        ("bx_gsm", OLD_START, ace.URL_ACE.format(dataset="mag", period="7-day")),
+        (
+            "bx_gsm",
+            RECENT_START,
+            settings.URL_ACE.format(dataset="mag", period="2-hour"),
+        ),
+        ("bx_gsm", OLD_START, settings.URL_ACE.format(dataset="mag", period="7-day")),
         (
             "density",
             RECENT_START,
-            ace.URL_ACE.format(dataset="plasma", period="2-hour"),
+            settings.URL_ACE.format(dataset="plasma", period="2-hour"),
         ),
-        ("density", OLD_START, ace.URL_ACE.format(dataset="plasma", period="7-day")),
+        (
+            "density",
+            OLD_START,
+            settings.URL_ACE.format(dataset="plasma", period="7-day"),
+        ),
         ("unknown", RECENT_START, ""),
     ],
 )
