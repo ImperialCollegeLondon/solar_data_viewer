@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, Mock, patch
 
+import pandas as pd
 import pytest
 
 
@@ -71,7 +72,6 @@ def mock_hapi_response():
 @patch("requests.get")
 def test_get_data_from_hapi(mock_get: Mock, mock_hapi_response, mock_hapi_cols, caplog):
     """Test the get_data_from_hapi function."""
-    import pandas as pd
     from django.core.cache import cache
 
     from main import hapi
@@ -106,3 +106,20 @@ def test_get_data_from_hapi(mock_get: Mock, mock_hapi_response, mock_hapi_cols, 
     assert caplog.records[-1].levelname == "ERROR"
     assert "DSCOVR" in caplog.records[-1].message
     assert "m1m_dscovr" in caplog.records[-1].message
+
+
+@pytest.mark.parametrize(
+    argnames=["colnames", "extracols"],
+    argvalues=[
+        [["b_gse_min_x", "b_gse_min_y", "b_gse_min_z"], ["phi_gse", "theta_gse"]],
+        [["density", "speed", "temperature"], []],
+    ],
+)
+def test_build_dataframe(colnames, extracols):
+    """Test the build_dataframe function."""
+    from main import hapi
+
+    data = [[1, 2, 3], [1, 2, 3]]
+    expected_columns = colnames + extracols
+    df = hapi._build_dataframe(data, colnames)
+    assert set(expected_columns) == set(df.columns)
