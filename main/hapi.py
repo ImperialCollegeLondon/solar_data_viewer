@@ -154,7 +154,7 @@ def get_data_from_hapi(
     return {"measurement": measurements, "date": dates}
 
 
-def _build_dataframe(
+def _build_dataframe(  # type: ignore [explicit-any]
     data: list[list[Any]], cols: list[str], spacecraft: str
 ) -> pd.DataFrame:
     """Parse the response and populates the dataframe.
