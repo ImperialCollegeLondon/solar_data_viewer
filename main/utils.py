@@ -14,7 +14,7 @@ from django.db.models.functions import TruncMinute
 from django.template import Context, Template
 from django.utils import timezone
 
-from . import models
+from . import hapi, models
 from .config import L1Config, PlotsConfig
 
 logger = getLogger("django")
@@ -121,6 +121,9 @@ def process_data_from_test_csvs(
         and spacecraft in models.MAG_MODELS
     ):
         return get_gse_magnetic_field(spacecraft, measurement, from_date)
+
+    if spacecraft in hapi.SPACECRAFTS:
+        return hapi.get_data_from_hapi(spacecraft, measurement, from_date)
 
     csv_files = {
         "IMAP": Path(__file__).parent / "data" / "test_data1.csv",
