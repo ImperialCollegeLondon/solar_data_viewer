@@ -8,7 +8,7 @@ from bokeh.models.widgets.groups import CheckboxButtonGroup, CheckboxGroup
 from main.config import MeasurementConfig, PlotConfig
 
 
-@patch("main.utils.process_data_from_test_csvs")
+@patch("main.utils.retrieve_data")
 def test_add_callback_to_checkbox_button(process_data_mock: Mock):
     """Test the add_callback_to_checkbox_button function."""
     from main.plots import create_timeseries_plot
@@ -48,7 +48,7 @@ def test_add_callback_to_checkbox_button(process_data_mock: Mock):
         assert called_args.args["legend"] == expected_legend
 
 
-@patch("main.utils.process_data_from_test_csvs")
+@patch("main.utils.retrieve_data")
 def test_add_time_range_callback(plot_context):
     """Test the add_time_range_callback function."""
     from main.widgets import add_time_range_callback
@@ -69,7 +69,7 @@ def test_add_time_range_callback(plot_context):
         assert callback.args["x_range"] == plots[0].x_range
 
 
-@patch("main.utils.process_data_from_test_csvs")
+@patch("main.utils.retrieve_data")
 def test_add_passes_checkbox(plot_context):
     """Test the add_passes_checkbox adds checkbox when SO is selected."""
     from main.widgets import add_passes_checkbox

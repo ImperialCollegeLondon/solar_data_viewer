@@ -10,6 +10,7 @@ import pandas as pd
 import requests
 from django.conf import settings
 from django.core.cache import cache
+from django.utils import timezone
 from requests.models import HTTPError
 
 log = getLogger(__name__)
@@ -98,7 +99,7 @@ def get_data_from_hapi(
             .isoformat()
             .replace("+00:00", "Z")
         )
-        stop = datetime.now().isoformat().replace("+00:00", "Z")
+        stop = timezone.now().isoformat().replace("+00:00", "Z")
         try:
             response = requests.get(
                 settings.NOAA_HAPI_URL,

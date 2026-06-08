@@ -12,7 +12,7 @@ from django.views.generic import TemplateView, View
 from .cache import set_l1_trajectory_cache, set_so_trajectory_cache
 from .plots import create_l1_plot, create_solar_orbiter_layout, create_timeseries_layout
 from .trajectory import check_if_so_in_communication, generate_solar_orbiter_statistics
-from .utils import get_pass_data, process_data_from_test_csvs
+from .utils import get_pass_data, retrieve_data
 
 
 class IndexView(TemplateView):
@@ -81,7 +81,8 @@ class DataView(View):
                 raise ValueError("from_date must be an integer representing ms time.")
         else:
             from_date = None
-        data = process_data_from_test_csvs(spacecraft, measurement, from_date)
+
+        data = retrieve_data(spacecraft, measurement, from_date)
         return JsonResponse(data)
 
 

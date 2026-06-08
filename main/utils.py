@@ -14,7 +14,7 @@ from django.db.models.functions import TruncMinute
 from django.template import Context, Template
 from django.utils import timezone
 
-from . import hapi, models
+from . import ace, hapi, models
 from .config import L1Config, PlotsConfig
 
 logger = getLogger("django")
@@ -98,10 +98,10 @@ def reindex_data(df: pd.DataFrame, threshold: str = "1m") -> pd.DataFrame:
     return df
 
 
-def process_data_from_test_csvs(
+def retrieve_data(
     spacecraft: str, measurement: str, from_date: int | None
 ) -> dict[str, list[float]]:
-    """This is a placeholder function for returning processed test data from csvs.
+    """Selects between different retrieval functions, calls them and returns the data.
 
     Args:
         spacecraft: Name of the spacecraft to retrieve data for.
@@ -114,7 +114,7 @@ def process_data_from_test_csvs(
             the measurements to plot.
     """
     if from_date is None:
-        from_date = int((datetime.now() - timedelta(days=7)).timestamp()) * 1000
+        from_date = int((timezone.now() - timedelta(days=7)).timestamp()) * 1000
 
     if (
         measurement in ("bx_gse", "by_gse", "bz_gse", "phi_gse", "theta_gse")
@@ -125,28 +125,10 @@ def process_data_from_test_csvs(
     if spacecraft in hapi.SPACECRAFTS:
         return hapi.get_data_from_hapi(spacecraft, measurement, from_date)
 
-    csv_files = {
-        "IMAP": Path(__file__).parent / "data" / "test_data1.csv",
-        "SO": Path(__file__).parent / "data" / "test_data2.csv",
-    }
+    if spacecraft == "ACE":
+        return ace.get_ace_data(measurement, from_date)
 
-    df = pd.read_csv(csv_files[spacecraft], parse_dates=True)
-
-    df = df.rename(columns={df.columns[0]: "date"})
-    df["date"] = pd.to_datetime(df["date"], utc=True)
-
-    # Time range filtering
-    most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=UTC)
-    df = df[df["date"] > most_recent][:BATCH_SIZE]
-    df = reindex_data(df)
-    # Format datetime as Unix epoch time
-    df.index = df.index.astype("int64") // 10**3
-
-    # Create JSON response
-    dates = df.index.tolist()
-    measurements = df[measurement].tolist()
-    data = {"measurement": measurements, "date": dates}
-    return data
+    return {"measurement": [], "date": []}
 
 
 def get_pass_data(spacecraft: str) -> dict[str, list[float]]:

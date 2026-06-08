@@ -208,6 +208,7 @@ def create_timeseries_plot(
         width=1200,
         height=300,
         x_range=x_range,
+        sizing_mode="stretch_width",
     )
 
     # Disable level-of-detail downsampling to ensure the lines

@@ -76,6 +76,7 @@ def get_JPL_spacecraft_coordinates(
     """
     if isinstance(time, tuple):
         try:
+            logger.warning(f"Getting coordinates for {spacecraft} and times: {time}")
             return get_horizons_coord(
                 spacecraft, {"start": time[0], "stop": time[-1], "step": "1d"}
             )
