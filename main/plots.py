@@ -13,6 +13,7 @@ from bokeh.models import (  # type: ignore
     CustomJS,
     HoverTool,
     Label,
+    LabelSet,
     LegendItem,
     Range1d,
     Span,
@@ -517,7 +518,13 @@ def create_l1_plot(
         method="GET",
     )
     objects = plot.scatter(
-        "y", "z", color="colour", legend_field="name", size=15, source=static_source
+        "y",
+        "z",
+        color="colour",
+        marker="marker",
+        legend_field="name",
+        size=15,
+        source=static_source,
     )
 
     # Create an AjaxDataSource for the trajectory data
@@ -552,6 +559,12 @@ def create_l1_plot(
             line_alpha=0,
         )
         plot.add_layout(arrow)
+
+    # Add the labels to the spacecraft markers
+    labels = LabelSet(
+        x="y", y="z", text="label", x_offset=5, y_offset=5, source=static_source
+    )
+    plot.add_layout(labels)
 
     # Add item to legend to describe line representation
     plot.line(

@@ -77,8 +77,14 @@ class L1SpacecraftConfig(BaseConfig):
     name: str
     """The name of the spacecraft."""
 
+    label: str
+    """The label used to identify the marker in the plot."""
+
     colour: str
     """The RGB colour for the spacecraft in the plot."""
+
+    marker: str
+    """The shape of the marker for the spacecraft in the plot."""
 
     id: int
     """The ID for the spacecraft to access JPL Horizons coordinates."""
