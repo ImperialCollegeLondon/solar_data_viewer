@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, Mock, patch
 
+import pandas as pd
 import pytest
 
 
@@ -71,7 +72,6 @@ def mock_hapi_response():
 @patch("requests.get")
 def test_get_data_from_hapi(mock_get: Mock, mock_hapi_response, mock_hapi_cols, caplog):
     """Test the get_data_from_hapi function."""
-    import pandas as pd
     from django.core.cache import cache
 
     from main import hapi
@@ -106,3 +106,25 @@ def test_get_data_from_hapi(mock_get: Mock, mock_hapi_response, mock_hapi_cols, 
     assert caplog.records[-1].levelname == "ERROR"
     assert "DSCOVR" in caplog.records[-1].message
     assert "m1m_dscovr" in caplog.records[-1].message
+
+
+@pytest.mark.parametrize(
+    argnames=["colnames", "extracols", "spacecraft"],
+    argvalues=[
+        [
+            ["b_gse_min_x", "b_gse_min_y", "b_gse_min_z"],
+            ["phi_gse", "theta_gse"],
+            "SOLAR-1",
+        ],
+        [["b_gse_min_x", "b_gse_min_y", "b_gse_min_z"], [], "DSCOVR"],
+        [["density", "speed", "temperature"], [], "SOLAR-1"],
+    ],
+)
+def test_build_dataframe(colnames, extracols, spacecraft):
+    """Test the build_dataframe function."""
+    from main import hapi
+
+    data = [[1, 2, 3], [1, 2, 3]]
+    expected_columns = colnames + extracols
+    df = hapi._build_dataframe(data, colnames, spacecraft)
+    assert set(expected_columns) == set(df.columns)

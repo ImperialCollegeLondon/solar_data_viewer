@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from logging import getLogger
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -12,6 +13,8 @@ from django.conf import settings
 from django.core.cache import cache
 from django.utils import timezone
 from requests.models import HTTPError
+
+from main.calc import calc_phi_theta
 
 log = getLogger(__name__)
 """Module logger."""
@@ -40,10 +43,17 @@ SPACECRAFTS = {
             "bx_gse": "b_gse_min_x",
             "by_gse": "b_gse_min_y",
             "bz_gse": "b_gse_min_z",
+            "phi_gse": "#phi_gse",
+            "theta_gse": "#theta_gse",
         },
     },
 }
-"""Name of the spacecrafts handled by the HAPI server."""
+"""Name of the spacecrafts handled by the HAPI server.
+
+Those variable names starting with # are not pulled from the database, but calculated
+locally. They are included in the dataset where the other data needed to calculate them
+is contained.
+"""
 
 
 def _get_dataset(spacecraft: str, measurement: str) -> tuple[str, str, list[str]]:
@@ -64,7 +74,10 @@ def _get_dataset(spacecraft: str, measurement: str) -> tuple[str, str, list[str]
 
     for dataset, var_map in options.items():
         if specific := var_map.get(measurement):
-            return dataset, specific, list(var_map.values())
+            # Account for local variables that are not to be pulled from the server
+            columns = [name for name in var_map.values() if not name.startswith("#")]
+            specific = specific[1:] if specific.startswith("#") else specific
+            return dataset, specific, columns
 
     return "", "", []
 
@@ -112,9 +125,9 @@ def get_data_from_hapi(
                 ),
             )
             if not (200 <= response.status_code < 300):
-                raise HTTPError(response)
+                raise HTTPError(response.text)
 
-            data = pd.DataFrame(response.json()["data"], columns=cols)
+            data = _build_dataframe(response.json()["data"], cols, spacecraft)
             cache.set(dataset, data, timeout=300)  # Cache for 300 s (5 min)
         except HTTPError as e:
             log.error(
@@ -139,3 +152,35 @@ def get_data_from_hapi(
     dates = data.index.tolist()
     measurements = data["measurement"].tolist()
     return {"measurement": measurements, "date": dates}
+
+
+def _build_dataframe(  # type: ignore [explicit-any]
+    data: list[list[Any]], cols: list[str], spacecraft: str
+) -> pd.DataFrame:
+    """Parse the response and populates the dataframe.
+
+    If needed, it populates the dataframe with phi and theta columns.
+
+    Args:
+        data: List of data points for the requested parameters.
+        cols: Column names
+        spacecraft: Spacecraft to consider. Phi and theta will be calculated only for
+        SOLAR-1
+
+    Return:
+        The data formatted as a DataFrame. If it contains magnetic field that,
+        phi and theta columns are also added.
+    """
+    data_ = pd.DataFrame(data, columns=cols)
+
+    # If it's the wrong spacecraft or there's no magnetic field, there's nothing extra
+    # to do
+    if spacecraft != "SOLAR-1" or "b_gse_min_x" not in cols:
+        return data_
+
+    phi_theta = calc_phi_theta(
+        data_[["b_gse_min_x", "b_gse_min_y", "b_gse_min_z"]].astype(float)
+    )
+    phi_theta = phi_theta.rename(columns=dict(phi="phi_gse", theta="theta_gse"))
+    pd.concat([data_, phi_theta], axis="columns").to_csv("solar1_mag.csv")
+    return pd.concat([data_, phi_theta], axis="columns")
