@@ -99,7 +99,7 @@ def _populate_phi_theta(data: pd.DataFrame) -> pd.DataFrame:
     """Populate the data dataframe with phi and theta columns.
 
     Args:
-        data: The dataframe containnig the magnetic field columns.
+        data: The dataframe containing the magnetic field columns.
 
     Return:
         The input dataframe with the phi and theta columns added. If there is no
