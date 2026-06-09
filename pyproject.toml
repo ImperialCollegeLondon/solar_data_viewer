@@ -13,7 +13,7 @@ requires-python = ">=3.13"
 dependencies = [
     "azure-monitor-opentelemetry>=1.8.8",
     "bokeh>=3.8.2",
-    "django>=6.0.5",
+    "django>=6.0.6",
     "gunicorn>=26.0.0",
     "pandas>=3.0.3",
     "psycopg2-binary>=2.9.12",
@@ -24,7 +24,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "ruff>=0.15.15",
+    "ruff>=0.15.16",
     "mypy>=2.1.0",
     "pip-tools>=7.5.2",
     "pre-commit>=4.6.0",
@@ -34,13 +34,13 @@ dev = [
     "pytest-django>=4.11.1",
     "pandas-stubs>=3.0.3.260530",
     "django-stubs[compatible-mypy]>=6.0.5",
-    "model-bakery>=1.23.3",
+    "model-bakery>=1.23.5",
     "types-requests>=2.33.0.20260518",
 ]
 doc = [
     "mkdocs>=1.6.1",
     "mkdocstrings>=1.0.4",
-    "mkdocstrings-python>=2.0.1",
+    "mkdocstrings-python>=2.0.4",
     "mkdocs-material>=9.7.6",
     "mkdocs-gen-files>=0.6.0",
     "mkdocs-literate-nav>=0.6.2",
