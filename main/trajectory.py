@@ -274,7 +274,7 @@ def l1_data(
     """
     config = load_l1_config()
 
-    y_coords, z_coords, names, colours = [], [], [], []
+    y_coords, z_coords, names, labels, colours, markers = [], [], [], [], [], []
     for craft_config in config.spacecraft:
         trajectory = get_JPL_spacecraft_coordinates(craft_config.id, times)
         gse_trajectory = [coord_to_gse(coord) for coord in trajectory]
@@ -283,7 +283,9 @@ def l1_data(
         y_coords.append([coord[0] for coord in gse_trajectory])
         z_coords.append([coord[1] for coord in gse_trajectory])
         names.append(craft_config.name)
+        labels.append(craft_config.label)
         colours.append(craft_config.colour)
+        markers.append(craft_config.marker)
 
     # Get idxs for current coordinate and past/future arrows
     n = len(y_coords[0])
@@ -293,7 +295,9 @@ def l1_data(
 
     static_data = {
         "name": names,
+        "label": labels,
         "colour": colours,
+        "marker": markers,
         # middle date represents the current date
         "y": [coords[current] for coords in y_coords],
         "z": [coords[current] for coords in z_coords],
