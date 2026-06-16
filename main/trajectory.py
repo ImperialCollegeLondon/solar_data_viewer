@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from logging import getLogger
+from time import sleep
 from typing import cast
 
 import astropy.units as u
@@ -66,6 +67,11 @@ def get_JPL_spacecraft_coordinates(
 ) -> SkyCoord | list[SkyCoord]:
     """Get the coordinate(s) of a spacecraft by querying JPL horizons.
 
+    Getting the coordinates normally requires several attempts, for some reason.
+    Initial attempts always fail with an "unknown error". Retrying with the same
+    parameters ends up working. To address that, we retry 5 times with 100 ms of wait
+    before finally giving up and reporting the error.
+
     Args:
         spacecraft: The name or numerical identifier for the spacecraft.
         time: A datetime or tuple of start and end datetimes to retrieve
@@ -75,16 +81,18 @@ def get_JPL_spacecraft_coordinates(
         The coordinate or list of coordinates as Astropy SkyCoord(s).
     """
     if isinstance(time, tuple):
-        try:
-            logger.warning(f"Getting coordinates for {spacecraft} and times: {time}")
-            return get_horizons_coord(
-                spacecraft, {"start": time[0], "stop": time[-1], "step": "1d"}
-            )
-        except RuntimeError:
-            logger.error(
-                f"Error pulling coordinate range from JPL for spacecraft {spacecraft}."
-            )
-            return []
+        retries = 5
+        msg = f"Error pulling coordinate range from JPL for spacecraft {spacecraft}."
+        logger.warning(f"Getting coordinates for {spacecraft} and times: {time}")
+        for i in range(retries):
+            try:
+                return get_horizons_coord(
+                    spacecraft, {"start": time[0], "stop": time[-1], "step": "1d"}
+                )
+            except RuntimeError:
+                logger.error(f"{msg}. Retrying... ({i + 1}/{retries}).")
+                sleep(0.1)
+        raise RuntimeError(msg)
     else:
         return get_horizons_coord(spacecraft, time)
 
