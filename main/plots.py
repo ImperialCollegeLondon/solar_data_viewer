@@ -207,7 +207,7 @@ def create_timeseries_plot(
     plot = figure(  # type: ignore[call-arg]
         x_axis_type="datetime",
         width=1200,
-        height=300,
+        height=150,
         x_range=x_range,
         sizing_mode="stretch_width",
     )
@@ -292,7 +292,7 @@ def create_timeseries_plots(
     shared_x_range = Range1d(start=start_time, end=end_time)
 
     plots = []
-    for plot_config in plots_config:
+    for i, plot_config in enumerate(plots_config):
         plot = create_timeseries_plot(
             plot_config,
             spacecrafts,
@@ -301,6 +301,17 @@ def create_timeseries_plots(
         )
         plot.add_tools(hover, crosshair)
         plot.yaxis.axis_label = f"{plot_config.title} ({plot_config.unit})"
+
+        # --- Remove internal border padding to eliminate the visual gap ---
+        plot.min_border_top = 0
+        plot.min_border_bottom = 0
+
+        # --- Hide x-axis on all plots except the last ---
+        if i < len(plots_config) - 1:
+            plot.xaxis.major_label_text_font_size = "0pt"  # Hide tick labels
+            plot.xaxis.major_tick_line_color = None  # Hide tick marks
+            plot.xaxis.minor_tick_line_color = None  # Hide minor ticks
+
         plots.append(plot)
 
     return plots
@@ -331,7 +342,9 @@ def create_timeseries_layout() -> Column:
         )
 
     widgets = row(button, time_dropdown, sizing_mode="stretch_width")
-    layout = column([widgets, passes_button, *plots], sizing_mode="stretch_width")
+    layout = column(
+        [widgets, passes_button, *plots], sizing_mode="stretch_width", spacing=0
+    )
 
     return layout
 
