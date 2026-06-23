@@ -182,5 +182,4 @@ def _build_dataframe(  # type: ignore [explicit-any]
         data_[["b_gse_min_x", "b_gse_min_y", "b_gse_min_z"]].astype(float)
     )
     phi_theta = phi_theta.rename(columns=dict(phi="phi_gse", theta="theta_gse"))
-    pd.concat([data_, phi_theta], axis="columns").to_csv("solar1_mag.csv")
     return pd.concat([data_, phi_theta], axis="columns")
