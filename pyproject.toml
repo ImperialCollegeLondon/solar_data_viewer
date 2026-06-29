@@ -34,7 +34,7 @@ dev = [
     "pytest-django>=4.11.1",
     "pandas-stubs>=3.0.3.260530",
     "django-stubs[compatible-mypy]>=6.0.6",
-    "model-bakery>=1.23.5",
+    "model-bakery>=1.24.0",
     "types-requests>=2.33.0.20260518",
 ]
 doc = [
