@@ -18,7 +18,7 @@ dependencies = [
     "pandas>=3.0.3",
     "psycopg2-binary>=2.9.12",
     "pydantic>=2.13.4",
-    "sunpy>=7.1.2",
+    "sunpy>=8.0.0",
     "whitenoise>=6.11.0",
 ]
 
