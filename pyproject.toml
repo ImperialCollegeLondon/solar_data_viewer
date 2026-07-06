@@ -12,7 +12,7 @@ requires-python = ">=3.13"
 
 dependencies = [
     "azure-monitor-opentelemetry>=1.8.9",
-    "bokeh>=3.8.2",
+    "bokeh>=3.9.1",
     "django>=6.0.6",
     "gunicorn>=26.0.0",
     "pandas>=3.0.3",
