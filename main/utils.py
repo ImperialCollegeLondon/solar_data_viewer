@@ -19,6 +19,13 @@ from .config import L1Config, PlotsConfig
 
 logger = getLogger("django")
 
+IMAP_SWAPI_MEASUREMENTS = {
+    "density": "proton_density",
+    "speed": "proton_speed",
+    "temperature": "proton_temperature",
+}
+"""Map generic measurement names to IMAP SWAPI model field names."""
+
 BATCH_SIZE = 20000
 """Maximum numbers of data points to return per query.
 
@@ -122,6 +129,9 @@ def retrieve_data(
     ):
         return get_gse_magnetic_field(spacecraft, measurement, from_date)
 
+    if spacecraft == "IMAP" and measurement in IMAP_SWAPI_MEASUREMENTS:
+        return get_imap_swapi_data(measurement, from_date)
+
     if spacecraft in hapi.SPACECRAFTS:
         return hapi.get_data_from_hapi(spacecraft, measurement, from_date)
 
@@ -223,6 +233,57 @@ def get_gse_magnetic_field(
         return {"measurement": [], "date": []}
 
     # Do some post processing to sanitize the data
+    data["date"] = pd.to_datetime(data["date"], utc=True)
+    data = reindex_data(data)
+
+    # Format datetime as Unix epoch time
+    data.index = data.index.astype("int64") // 10**3
+
+    # Create JSON response
+    dates = data.index.tolist()
+    measurements = data["average"].tolist()
+    return {"measurement": measurements, "date": dates}
+
+
+def get_imap_swapi_data(measurement: str, from_date: int) -> dict[str, list[float]]:
+    """Retrieves a component of the SWAPI data for the IMAP mission.
+
+    Args:
+        measurement: Name of the measurement to get data for - density, speed or
+        temperature.
+        from_date: The date to use as the starting point to get data (in ms format).
+
+    Returns:
+        A dictionary containing the relevant datetimes in UNIX epoch time format and
+            the measurements to plot.
+    """
+    if measurement not in IMAP_SWAPI_MEASUREMENTS:
+        raise ValueError(
+            "Only IMAP SWAPI density, speed and temperature can be retrieved by "
+            "this function."
+        )
+
+    measurement_field = IMAP_SWAPI_MEASUREMENTS[measurement]
+
+    # Get the relevant data from the DB
+    most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=UTC)
+    start_time = timezone.now()
+    dataquery = (
+        models.IMAPSWAPI.objects.filter(time__gt=most_recent)  # type: ignore[attr-defined]
+        .annotate(date=TruncMinute("time"))
+        .values("date")
+        .annotate(average=Avg(measurement_field))
+        .order_by("date")
+    )
+    data = pd.DataFrame(dataquery)
+    logger.info(
+        f"Querying IMAP SWAPI {measurement} data from the DB took "
+        f"{(timezone.now() - start_time).total_seconds():.2f} seconds to retrieve "
+        f"{len(data)} records. Start time is {most_recent}."
+    )
+    if not len(data):
+        return {"measurement": [], "date": []}
+
     data["date"] = pd.to_datetime(data["date"], utc=True)
     data = reindex_data(data)
 

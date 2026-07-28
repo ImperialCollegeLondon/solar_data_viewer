@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from django.utils import timezone
 
-from main.models import MAG_MODELS, SOContactSchedule
+from main.models import IMAPSWAPI, MAG_MODELS, SOContactSchedule
 
 # Define the times
 now = timezone.now()
@@ -45,6 +45,37 @@ for model in MAG_MODELS.values():
 
     # And add it to the DB in bulk
     model.objects.bulk_create(mfield)  # type: ignore[attr-defined]
+
+########################################################################################
+# Load IMAP SWAPI data
+########################################################################################
+
+swapi_times = pd.date_range(
+    start=now - pd.Timedelta(days=10), end=now, freq="20s"
+).to_series()
+
+# Remove existing SWAPI rows and replace with fresh examples.
+IMAPSWAPI.objects.all().delete()
+
+# Add data
+density = np.random.normal(loc=3.95, scale=0.22, size=len(swapi_times))
+speed = np.random.normal(loc=388.5, scale=0.6, size=len(swapi_times))
+temperature = np.random.normal(loc=27400, scale=380, size=len(swapi_times))
+
+swapi_data = [
+    IMAPSWAPI(
+        time=t,
+        proton_density=round(min(max(float(density_i), 3.55), 4.35), 2),
+        proton_speed=float(round(min(max(float(speed_i), 387), 390))),
+        proton_temperature=float(round(min(max(float(temperature_i), 26600), 28200))),
+    )
+    for t, density_i, speed_i, temperature_i in zip(
+        swapi_times, density, speed, temperature
+    )
+]
+
+# Add the data to the DB in bulk
+IMAPSWAPI.objects.bulk_create(swapi_data)
 
 ########################################################################################
 # Load SO contact schedule (pass) data
