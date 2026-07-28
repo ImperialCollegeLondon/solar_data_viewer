@@ -269,13 +269,13 @@ def get_imap_swapi_data(measurement: str, from_date: int) -> dict[str, list[floa
     most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=UTC)
     start_time = timezone.now()
     dataquery = (
-        models.IMAPSWAPI.objects.filter(time__gt=most_recent)  # type: ignore[attr-defined]
+        models.IMAPSWAPI.objects.filter(time__gt=most_recent)
         .annotate(date=TruncMinute("time"))
         .values("date")
         .annotate(average=Avg(measurement_field))
         .order_by("date")
     )
-    data = pd.DataFrame(dataquery)
+    data = pd.DataFrame(list(dataquery))
     logger.info(
         f"Querying IMAP SWAPI {measurement} data from the DB took "
         f"{(timezone.now() - start_time).total_seconds():.2f} seconds to retrieve "
@@ -291,8 +291,11 @@ def get_imap_swapi_data(measurement: str, from_date: int) -> dict[str, list[floa
     data.index = data.index.astype("int64") // 10**3
 
     # Create JSON response
-    dates = data.index.tolist()
-    measurements = data["average"].tolist()
+    dates = [float(timestamp) for timestamp in data.index.tolist()]
+    measurements = [
+        float(value)
+        for value in pd.to_numeric(data["average"], errors="coerce").tolist()
+    ]
     return {"measurement": measurements, "date": dates}
 
 
