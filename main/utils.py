@@ -250,7 +250,7 @@ def get_imap_swapi_data(measurement: str, from_date: int) -> dict[str, list[floa
 
     Args:
         measurement: Name of the measurement to get data for - density, speed or
-        temperature.
+            temperature.
         from_date: The date to use as the starting point to get data (in ms format).
 
     Returns:
