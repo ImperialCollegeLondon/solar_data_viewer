@@ -62,12 +62,16 @@ density = np.random.normal(loc=3.95, scale=0.22, size=len(swapi_times))
 speed = np.random.normal(loc=388.5, scale=0.6, size=len(swapi_times))
 temperature = np.random.normal(loc=27400, scale=380, size=len(swapi_times))
 
+density = density.clip(3.55, 4.35).round(2)
+speed = speed.clip(387, 390).round(2)
+temperature = temperature.clip(26600, 28200).round(2)
+
 swapi_data = [
     IMAPSWAPI(
         time=t,
-        proton_density=round(min(max(float(density_i), 3.55), 4.35), 2),
-        proton_speed=float(round(min(max(float(speed_i), 387), 390))),
-        proton_temperature=float(round(min(max(float(temperature_i), 26600), 28200))),
+        density=density_i,
+        speed=speed_i,
+        temperature=temperature_i,
     )
     for t, density_i, speed_i, temperature_i in zip(
         swapi_times, density, speed, temperature

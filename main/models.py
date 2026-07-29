@@ -92,13 +92,13 @@ class IMAPSWAPI(models.Model):
         db_column="id",
     )
 
-    proton_density = models.FloatField(
+    density = models.FloatField(
         help_text="Proton density in cm^-3.", db_column="swapi_pseudo_proton_density"
     )
-    proton_speed = models.FloatField(
+    speed = models.FloatField(
         help_text="Proton speed in km/s.", db_column="swapi_pseudo_proton_speed"
     )
-    proton_temperature = models.FloatField(
+    temperature = models.FloatField(
         help_text="Proton temperature in K.",
         db_column="swapi_pseudo_proton_temperature",
     )

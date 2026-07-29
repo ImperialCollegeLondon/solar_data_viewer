@@ -160,7 +160,7 @@ def test_get_imap_swapi_data_density(days, measurement_type):
     actual = get_imap_swapi_data(measurement_type, from_date=from_date)
     expected_meas = list(
         IMAPSWAPI.objects.filter(time__in=times[-num:]).values_list(
-            f"proton_{measurement_type}", flat=True
+            measurement_type, flat=True
         )
     )
     expected_dates = (times[-num:].astype("int64") // 10**3).to_list()

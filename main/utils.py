@@ -19,12 +19,6 @@ from .config import L1Config, PlotsConfig
 
 logger = getLogger("django")
 
-IMAP_SWAPI_MEASUREMENTS = {
-    "density": "proton_density",
-    "speed": "proton_speed",
-    "temperature": "proton_temperature",
-}
-"""Map generic measurement names to IMAP SWAPI model field names."""
 
 BATCH_SIZE = 20000
 """Maximum numbers of data points to return per query.
@@ -129,7 +123,7 @@ def retrieve_data(
     ):
         return get_gse_magnetic_field(spacecraft, measurement, from_date)
 
-    if spacecraft == "IMAP" and measurement in IMAP_SWAPI_MEASUREMENTS:
+    if spacecraft == "IMAP" and measurement in ("density", "speed", "temperature"):
         return get_imap_swapi_data(measurement, from_date)
 
     if spacecraft in hapi.SPACECRAFTS:
@@ -257,14 +251,6 @@ def get_imap_swapi_data(measurement: str, from_date: int) -> dict[str, list[floa
         A dictionary containing the relevant datetimes in UNIX epoch time format and
             the measurements to plot.
     """
-    if measurement not in IMAP_SWAPI_MEASUREMENTS:
-        raise ValueError(
-            "Only IMAP SWAPI density, speed and temperature can be retrieved by "
-            "this function."
-        )
-
-    measurement_field = IMAP_SWAPI_MEASUREMENTS[measurement]
-
     # Get the relevant data from the DB
     most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=UTC)
     start_time = timezone.now()
@@ -272,7 +258,7 @@ def get_imap_swapi_data(measurement: str, from_date: int) -> dict[str, list[floa
         models.IMAPSWAPI.objects.filter(time__gt=most_recent)
         .annotate(date=TruncMinute("time"))
         .values("date")
-        .annotate(average=Avg(measurement_field))
+        .annotate(average=Avg(measurement))
         .order_by("date")
     )
     data = pd.DataFrame(list(dataquery))
