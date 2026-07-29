@@ -277,11 +277,9 @@ def get_imap_swapi_data(measurement: str, from_date: int) -> dict[str, list[floa
     data.index = data.index.astype("int64") // 10**3
 
     # Create JSON response
-    dates = [float(timestamp) for timestamp in data.index.tolist()]
-    measurements = [
-        float(value)
-        for value in pd.to_numeric(data["average"], errors="coerce").tolist()
-    ]
+    dates = data.index.tolist()
+    measurements = data["average"].tolist()
+
     return {"measurement": measurements, "date": dates}
 
 
