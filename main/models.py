@@ -104,7 +104,7 @@ class IMAPSWAPI(models.Model):
     )
 
     class Meta:  # noqa: D106
-        db_table = "imap_swapi"
+        db_table = "ialirt_swapi"
         managed = False
 
 
