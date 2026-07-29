@@ -135,3 +135,38 @@ def test_get_message_template():
         ):
             message = get_message_template(date)
             assert message == "SO is not in communication until 1 January 2026."
+
+
+@pytest.mark.parametrize("days", [1, 3, 7])
+@pytest.mark.parametrize("measurement_type", ["density", "speed", "temperature"])
+@pytest.mark.django_db(databases=["imap"])
+def test_get_imap_swapi_data_density(days, measurement_type):
+    """Test the get_imap_swapi_data function."""
+    from main.models import IMAPSWAPI
+    from main.utils import get_imap_swapi_data
+
+    num = days * 24
+    now = datetime(2024, 6, 1, 12, 0, 0)  # Fixed current time for testing
+    times = (
+        pd.date_range(start=now - pd.Timedelta(days=10), end=now, freq="h")
+        .round("min")
+        .to_series()
+    )
+    from_date = int((now - pd.Timedelta(days=days)).timestamp()) * 1000
+
+    baker.make(IMAPSWAPI, time=itertools.cycle(times), _quantity=len(times))
+
+    # Find the actual and expected values
+    actual = get_imap_swapi_data(measurement_type, from_date=from_date)
+    expected_meas = list(
+        IMAPSWAPI.objects.filter(time__in=times[-num:]).values_list(
+            measurement_type, flat=True
+        )
+    )
+    expected_dates = (times[-num:].astype("int64") // 10**3).to_list()
+
+    assert list(actual.keys()) == ["measurement", "date"]
+    assert len(actual["measurement"]) == num
+    assert len(actual["date"]) == num
+    assert expected_dates == actual["date"]
+    assert expected_meas == actual["measurement"]

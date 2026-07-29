@@ -82,5 +82,31 @@ class SOContactSchedule(models.Model):
         managed = False
 
 
+class IMAPSWAPI(models.Model):
+    """Model describing the SWAPI data for IMAP."""
+
+    time = models.DateTimeField(
+        primary_key=True,
+        null=False,
+        help_text="Time for the data.",
+        db_column="id",
+    )
+
+    density = models.FloatField(
+        help_text="Proton density in cm^-3.", db_column="swapi_pseudo_proton_density"
+    )
+    speed = models.FloatField(
+        help_text="Proton speed in km/s.", db_column="swapi_pseudo_proton_speed"
+    )
+    temperature = models.FloatField(
+        help_text="Proton temperature in K.",
+        db_column="swapi_pseudo_proton_temperature",
+    )
+
+    class Meta:  # noqa: D106
+        db_table = "imap_swapi"
+        managed = False
+
+
 MAG_MODELS = {"IMAP": IMAPGSEMagneticField, "SO": SOGSEMagneticField}
 """Models to handle magnetic data for the supported missions."""
