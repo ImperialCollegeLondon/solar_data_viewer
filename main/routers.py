@@ -12,7 +12,9 @@ class Router:
 
     def _select_db(self, model_name: str) -> str | None:
         """Internal function to select the right database."""
-        if model_name.lower().startswith("imap"):
+        if model_name.lower().startswith("imap") or model_name.lower().startswith(
+            "noaa"
+        ):
             return "imap"
         if model_name.lower().startswith("so"):
             return "so"
