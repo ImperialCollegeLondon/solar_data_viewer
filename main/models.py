@@ -126,7 +126,7 @@ class NOAAWindBase(models.Model):
         managed = False
 
 
-class SOLAR1Mag(NOAAMagBase):
+class NOAASOLAR1Mag(NOAAMagBase):
     """Model describing the GSM components of the mag field for SOLAR1 spacecraft."""
 
     class Meta:  # noqa: D106
@@ -134,7 +134,7 @@ class SOLAR1Mag(NOAAMagBase):
         managed = False
 
 
-class ACEMag(NOAAMagBase):
+class NOAAACEMag(NOAAMagBase):
     """Model describing the GSM components of the mag field for ACE spacecraft."""
 
     class Meta:  # noqa: D106
@@ -142,7 +142,7 @@ class ACEMag(NOAAMagBase):
         managed = False
 
 
-class SOLAR1Wind(NOAAWindBase):
+class NOAASOLAR1Wind(NOAAWindBase):
     """Model describing the wind fields for SOLAR1 spacecraft."""
 
     class Meta:  # noqa: D106
@@ -150,7 +150,7 @@ class SOLAR1Wind(NOAAWindBase):
         managed = False
 
 
-class ACEWind(NOAAWindBase):
+class NOAAACEWind(NOAAWindBase):
     """Model describing the wind fields for ACE spacecraft."""
 
     class Meta:  # noqa: D106
