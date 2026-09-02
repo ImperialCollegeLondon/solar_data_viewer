@@ -81,19 +81,19 @@ class NOAAMagBase(models.Model):
         db_column="time_tag",
     )
 
-    bx_gse = models.FloatField(
+    bx_gsm = models.FloatField(
         help_text="GSM 'x' component of the magnetic field.", db_column="bx_gsm"
     )
-    by_gse = models.FloatField(
+    by_gsm = models.FloatField(
         help_text="GSM 'y' component of the magnetic field.", db_column="by_gsm"
     )
-    bz_gse = models.FloatField(
+    bz_gsm = models.FloatField(
         help_text="GSM 'z' component of the magnetic field.", db_column="bz_gsm"
     )
-    phi_gse = models.FloatField(
+    phi_gsm = models.FloatField(
         help_text="Phi GSM of the magnetic field.", db_column="phi_gsm"
     )
-    theta_gse = models.FloatField(
+    theta_gsm = models.FloatField(
         help_text="Theta GSM of the magnetic field.", db_column="theta_gsm"
     )
 
