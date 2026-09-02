@@ -71,6 +71,93 @@ class SOGSEMagneticField(models.Model):
         managed = False
 
 
+class NOAAMagBase(models.Model):
+    """Model describing the GSM components of the magnetic field for NOAA data."""
+
+    time = models.DateTimeField(
+        primary_key=True,
+        null=False,
+        help_text="Time for the data.",
+        db_column="time_tag",
+    )
+
+    bx_gsm = models.FloatField(
+        help_text="GSM 'x' component of the magnetic field.", db_column="bx_gsm"
+    )
+    by_gsm = models.FloatField(
+        help_text="GSM 'y' component of the magnetic field.", db_column="by_gsm"
+    )
+    bz_gsm = models.FloatField(
+        help_text="GSM 'z' component of the magnetic field.", db_column="bz_gsm"
+    )
+    phi_gsm = models.FloatField(
+        help_text="Phi GSM of the magnetic field.", db_column="phi_gsm"
+    )
+    theta_gsm = models.FloatField(
+        help_text="Theta GSM of the magnetic field.", db_column="theta_gsm"
+    )
+
+    class Meta:  # noqa: D106
+        abstract = True
+        managed = False
+
+
+class NOAAWindBase(models.Model):
+    """Model describing the wind fields for NOAA data."""
+
+    time = models.DateTimeField(
+        primary_key=True,
+        null=False,
+        help_text="Time for the data.",
+        db_column="time_tag",
+    )
+
+    density = models.FloatField(
+        help_text="Proton density in cm^-3.", db_column="density"
+    )
+    speed = models.FloatField(help_text="Proton speed in km/s.", db_column="speed")
+    temperature = models.IntegerField(
+        help_text="Proton temperature in K.",
+        db_column="temperature",
+    )
+
+    class Meta:  # noqa: D106
+        abstract = True
+        managed = False
+
+
+class NOAASOLAR1Mag(NOAAMagBase):
+    """Model describing the GSM components of the mag field for SOLAR1 spacecraft."""
+
+    class Meta:  # noqa: D106
+        db_table = "solar_mag_noaa"
+        managed = False
+
+
+class NOAAACEMag(NOAAMagBase):
+    """Model describing the GSM components of the mag field for ACE spacecraft."""
+
+    class Meta:  # noqa: D106
+        db_table = "ace_mag_noaa"
+        managed = False
+
+
+class NOAASOLAR1Wind(NOAAWindBase):
+    """Model describing the wind fields for SOLAR1 spacecraft."""
+
+    class Meta:  # noqa: D106
+        db_table = "solar_wind_noaa"
+        managed = False
+
+
+class NOAAACEWind(NOAAWindBase):
+    """Model describing the wind fields for ACE spacecraft."""
+
+    class Meta:  # noqa: D106
+        db_table = "ace_wind_noaa"
+        managed = False
+
+
 class SOContactSchedule(models.Model):
     """Model describing spacecraft SO contact schedule, also known as passes."""
 
