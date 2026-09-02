@@ -72,7 +72,7 @@ class SOGSEMagneticField(models.Model):
 
 
 class NOAAMagBase(models.Model):
-    """Model describing the GSE components of the magnetic field for NOAA data."""
+    """Model describing the GSM components of the magnetic field for NOAA data."""
 
     time = models.DateTimeField(
         primary_key=True,
