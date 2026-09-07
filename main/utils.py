@@ -9,7 +9,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from django.db.models import Avg
+from django.db.models import Avg, Model
 from django.db.models.functions import TruncMinute
 from django.template import Context, Template
 from django.utils import timezone
@@ -114,20 +114,28 @@ def retrieve_data(
         A dictionary containing the relevant datetimes in UNIX epoch time format and
             the measurements to plot.
     """
-    if from_date is None:
+    if not from_date:
         from_date = int((timezone.now() - timedelta(days=7)).timestamp()) * 1000
 
     if (
         measurement in ("bx_gsm", "by_gsm", "bz_gsm", "phi_gsm", "theta_gsm")
         and spacecraft in models.MAG_MODELS
     ):
-        return get_gsm_magnetic_field(spacecraft, measurement, from_date)
+        return _get_trace_data(
+            spacecraft, measurement, from_date, model=models.MAG_MODELS[spacecraft]
+        )
 
     if (
         measurement in ("density", "speed", "temperature")
         and spacecraft in models.WIND_MODELS
     ):
-        return get_imap_swapi_data(measurement, from_date)
+        return _get_trace_data(
+            spacecraft, measurement, from_date, model=models.WIND_MODELS[spacecraft]
+        )
+
+    logger.warning(
+        f"Measurement '{measurement}' for spacecraft '{spacecraft}' is not supported."
+    )
 
     return {"measurement": [], "date": []}
 
@@ -179,8 +187,8 @@ def get_pass_data(spacecraft: str) -> dict[str, list[float]]:
     }
 
 
-def get_gsm_magnetic_field(
-    spacecraft: str, measurement: str, from_date: int
+def _get_trace_data(
+    spacecraft: str, measurement: str, from_date: int, model: type[Model]
 ) -> dict[str, list[float]]:
     """Retrieves a component of the magnetic field data for the SO and IMAP missions.
 
@@ -188,27 +196,17 @@ def get_gsm_magnetic_field(
         spacecraft: Name of the spacecraft to retrieve data for.
         measurement: Name of the measurement to get data for.
         from_date: The date to use as the starting point to get data (in ms format).
+        model: The Django model to query for the data.
 
     Returns:
         A dictionary containing the relevant datetimes in UNIX epoch time format and
             the measurements to plot.
     """
-    if measurement not in ("bx_gsm", "by_gsm", "bz_gsm", "phi_gsm", "theta_gsm"):
-        raise ValueError(
-            "Only GSM magnetic field components can be retrieved by this function."
-        )
-
-    if spacecraft not in models.MAG_MODELS:
-        raise ValueError(
-            f"Only {list(models.MAG_MODELS.keys())} spacecrafts are supported."
-        )
-
     # Get the relevant data from the DB
     most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=UTC)
     start_time = timezone.now()
     dataquery = (
-        models.MAG_MODELS[spacecraft]  # type: ignore[attr-defined]
-        .objects.filter(time__gt=most_recent)
+        model.objects.filter(time__gt=most_recent)  # type: ignore[attr-defined]
         .annotate(date=TruncMinute("time"))
         .values("date")
         .annotate(average=Avg(measurement))
@@ -233,50 +231,6 @@ def get_gsm_magnetic_field(
     # Create JSON response
     dates = data.index.tolist()
     measurements = data["average"].tolist()
-    return {"measurement": measurements, "date": dates}
-
-
-def get_imap_swapi_data(measurement: str, from_date: int) -> dict[str, list[float]]:
-    """Retrieves a component of the SWAPI data for the IMAP mission.
-
-    Args:
-        measurement: Name of the measurement to get data for - density, speed or
-            temperature.
-        from_date: The date to use as the starting point to get data (in ms format).
-
-    Returns:
-        A dictionary containing the relevant datetimes in UNIX epoch time format and
-            the measurements to plot.
-    """
-    # Get the relevant data from the DB
-    most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=UTC)
-    start_time = timezone.now()
-    dataquery = (
-        models.IMAPSWAPI.objects.filter(time__gt=most_recent)
-        .annotate(date=TruncMinute("time"))
-        .values("date")
-        .annotate(average=Avg(measurement))
-        .order_by("date")
-    )
-    data = pd.DataFrame(list(dataquery))
-    logger.info(
-        f"Querying IMAP SWAPI {measurement} data from the DB took "
-        f"{(timezone.now() - start_time).total_seconds():.2f} seconds to retrieve "
-        f"{len(data)} records. Start time is {most_recent}."
-    )
-    if not len(data):
-        return {"measurement": [], "date": []}
-
-    data["date"] = pd.to_datetime(data["date"], utc=True)
-    data = reindex_data(data)
-
-    # Format datetime as Unix epoch time
-    data.index = data.index.astype("int64") // 10**3
-
-    # Create JSON response
-    dates = data.index.tolist()
-    measurements = data["average"].tolist()
-
     return {"measurement": measurements, "date": dates}
 
 

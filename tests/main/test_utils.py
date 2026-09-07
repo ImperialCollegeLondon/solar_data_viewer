@@ -143,7 +143,7 @@ def test_get_message_template():
 def test_get_imap_swapi_data_density(days, measurement_type):
     """Test the get_imap_swapi_data function."""
     from main.models import IMAPSWAPI
-    from main.utils import get_imap_swapi_data
+    from main.utils import get_wind_data
 
     num = days * 24
     now = datetime(2024, 6, 1, 12, 0, 0)  # Fixed current time for testing
@@ -157,7 +157,7 @@ def test_get_imap_swapi_data_density(days, measurement_type):
     baker.make(IMAPSWAPI, time=itertools.cycle(times), _quantity=len(times))
 
     # Find the actual and expected values
-    actual = get_imap_swapi_data(measurement_type, from_date=from_date)
+    actual = get_wind_data(measurement_type, from_date=from_date)
     expected_meas = list(
         IMAPSWAPI.objects.filter(time__in=times[-num:]).values_list(
             measurement_type, flat=True
