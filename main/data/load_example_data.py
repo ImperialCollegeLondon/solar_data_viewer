@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from django.utils import timezone
 
-from main.models import IMAPSWAPI, MAG_MODELS, SOContactSchedule
+from main.models import IMAPSWAPI, MAG_MODELS, SOSWAPASS, SOContactSchedule
 
 # Define the times
 now = timezone.now()
@@ -80,6 +80,36 @@ swapi_data = [
 
 # Add the data to the DB in bulk
 IMAPSWAPI.objects.bulk_create(swapi_data)
+
+########################################################################################
+# Load Solar Orbiter SWA PAS data
+########################################################################################
+
+swa_pas_times = pd.date_range(
+    start=now - pd.Timedelta(days=10), end=now, freq="20s"
+).to_series()
+
+SOSWAPASS.objects.all().delete()
+
+density = np.random.normal(loc=4.2, scale=0.3, size=len(swa_pas_times))
+v_x = np.random.normal(loc=400, scale=15, size=len(swa_pas_times))
+v_y = np.random.normal(loc=400, scale=15, size=len(swa_pas_times))
+v_z = np.random.normal(loc=400, scale=15, size=len(swa_pas_times))
+
+swa_pas_data = [
+    SOSWAPASS(
+        time=time,
+        vx=v_x,
+        vy=v_y,
+        vz=v_z,
+        density=density,
+    )
+    for time, v_x, v_y, v_z, density in zip(
+        swa_pas_times, v_x, v_y, v_z, density, strict=False
+    )
+]
+
+SOSWAPASS.objects.bulk_create(swa_pas_data)
 
 ########################################################################################
 # Load SO contact schedule (pass) data

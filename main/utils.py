@@ -126,6 +126,9 @@ def retrieve_data(
     if spacecraft == "IMAP" and measurement in ("density", "speed", "temperature"):
         return get_imap_swapi_data(measurement, from_date)
 
+    if spacecraft == "SO" and measurement in ("density", "speed"):
+        return get_so_swa_pas_data(measurement, from_date)
+
     if spacecraft in hapi.SPACECRAFTS:
         return hapi.get_data_from_hapi(spacecraft, measurement, from_date)
 
@@ -281,6 +284,46 @@ def get_imap_swapi_data(measurement: str, from_date: int) -> dict[str, list[floa
     measurements = data["average"].tolist()
 
     return {"measurement": measurements, "date": dates}
+
+
+def get_so_swa_pas_data(measurement: str, from_date: int) -> dict[str, list[float]]:
+    """Retrieve Solar Orbiter SWA PAS density or calculated speed data.
+
+    Args:
+        measurement: The measurement to return: ``density`` or ``speed``.
+        from_date: The starting date in milliseconds since the UNIX epoch.
+
+    Returns:
+        A dictionary containing timestamps in UNIX epoch milliseconds and the
+        requested measurement values.
+    """
+    most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=UTC)
+    start_time = timezone.now()
+
+    data = pd.DataFrame(
+        list(
+            models.SOSWAPASS.objects.filter(time__gt=most_recent)
+            .values("time", "vx", "vy", "vz", "density")
+            .order_by("time")
+        )
+    )
+    logger.info(
+        f"Querying SO SWA PAS {measurement} data from the DB took "
+        f"{(timezone.now() - start_time).total_seconds():.2f} seconds to retrieve "
+        f"{len(data)} records. Start time is {most_recent}."
+    )
+    if not len(data):
+        return {"measurement": [], "date": []}
+
+    data["date"] = pd.to_datetime(data["time"], utc=True)
+    data["speed"] = np.sqrt(data["vx"] ** 2 + data["vy"] ** 2 + data["vz"] ** 2)
+
+    data = data.groupby("date", as_index=False).agg({measurement: "mean"})
+    data = reindex_data(data)
+
+    data.index = data.index.astype("int64") // 10**3
+
+    return {"measurement": data[measurement].tolist(), "date": data.index.tolist()}
 
 
 def get_solar_orbiter_dates() -> list[tuple[date, date]]:

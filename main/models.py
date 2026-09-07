@@ -195,5 +195,34 @@ class IMAPSWAPI(models.Model):
         managed = False
 
 
+class SOSWAPASS(models.Model):
+    """Model describing the SWA PASS for SO spacecraft."""
+
+    time = models.DateTimeField(
+        primary_key=True,
+        null=False,
+        help_text="Time for the data.",
+        db_column="time_tag",
+    )
+
+    vx = models.FloatField(
+        help_text="Speed in x dimension in km/s.", db_column="vx_km_s"
+    )
+    vy = models.FloatField(
+        help_text="Speed in y dimension in km/s.", db_column="vy_km_s"
+    )
+    vz = models.FloatField(
+        help_text="Speed in z dimension in km/s.", db_column="vz_km_s"
+    )
+    density = models.FloatField(
+        help_text="Density in cm^-3.",
+        db_column="density_per_cc",
+    )
+
+    class Meta:  # noqa: D106
+        db_table = "solo_LL1_swa_pas"
+        managed = False
+
+
 MAG_MODELS = {"IMAP": IMAPGSEMagneticField, "SO": SOGSEMagneticField}
 """Models to handle magnetic data for the supported missions."""

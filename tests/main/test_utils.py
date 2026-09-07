@@ -12,6 +12,7 @@ from model_bakery import baker
 from main.config import PlotsConfig
 from main.utils import (
     get_message_template,
+    get_so_swa_pas_data,
     get_solar_orbiter_dates,
     load_plot_config,
     reindex_data,
@@ -170,3 +171,27 @@ def test_get_imap_swapi_data_density(days, measurement_type):
     assert len(actual["date"]) == num
     assert expected_dates == actual["date"]
     assert expected_meas == actual["measurement"]
+
+
+@pytest.mark.parametrize("measurement", ["density", "speed"])
+@pytest.mark.django_db(databases=["so"])
+def test_get_so_swa_pas_data(measurement):
+    """Test SWA PAS returns density and speed."""
+    from main.models import SOSWAPASS
+
+    now = datetime(2024, 6, 1, 12, 0, 0)
+    times = pd.date_range(start=now - pd.Timedelta(hours=1), end=now, freq="h")
+    values = [(3.0, 4.0, 12.0, 5.0), (6.0, 8.0, 0.0, 10.0)]
+    for time, (vx, vy, vz, density) in zip(times, values, strict=False):
+        baker.make(SOSWAPASS, time=time, vx=vx, vy=vy, vz=vz, density=density)
+
+    from_date = int((now - pd.Timedelta(hours=1, minutes=1)).timestamp()) * 1000
+
+    actual = get_so_swa_pas_data(measurement, from_date)
+
+    assert actual["date"] == (times.view("int64") // 10**3).tolist()
+
+    if measurement == "density":
+        assert actual["measurement"] == [5.0, 10.0]
+    else:
+        assert actual["measurement"] == [13.0, 10.0]
