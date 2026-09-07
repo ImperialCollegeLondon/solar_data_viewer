@@ -14,7 +14,7 @@ from django.db.models.functions import TruncMinute
 from django.template import Context, Template
 from django.utils import timezone
 
-from . import ace, hapi, models
+from . import models
 from .config import L1Config, PlotsConfig
 
 logger = getLogger("django")
@@ -125,12 +125,6 @@ def retrieve_data(
 
     if spacecraft == "IMAP" and measurement in ("density", "speed", "temperature"):
         return get_imap_swapi_data(measurement, from_date)
-
-    if spacecraft in hapi.SPACECRAFTS:
-        return hapi.get_data_from_hapi(spacecraft, measurement, from_date)
-
-    if spacecraft == "ACE":
-        return ace.get_ace_data(measurement, from_date)
 
     return {"measurement": [], "date": []}
 
