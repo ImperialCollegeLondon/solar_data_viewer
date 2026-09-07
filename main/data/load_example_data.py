@@ -79,7 +79,7 @@ for model in WIND_MODELS.values():
     ]
 
     # Add the data to the DB in bulk
-    model.objects.bulk_create(data)
+    model.objects.bulk_create(data)  # type: ignore[attr-defined]
 
 ########################################################################################
 # Load SO contact schedule (pass) data
