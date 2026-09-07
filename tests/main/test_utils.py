@@ -1,7 +1,6 @@
 """Test suite for the utils."""
 
 import itertools
-from contextlib import nullcontext as does_not_raise
 from datetime import date, datetime, timedelta
 from unittest.mock import mock_open, patch
 
@@ -24,28 +23,35 @@ def test_load_plot_config(plots_config):
     assert isinstance(config, PlotsConfig)
 
 
-@pytest.mark.parametrize("spacecraft", ["IMAP", "SO"])
 @pytest.mark.parametrize(
-    "measurement, raises",
+    "spacecraft, measurement, model_group",
     [
-        ("bx_gsm", does_not_raise()),
-        ("by_gsm", does_not_raise()),
-        ("bz_gsm", does_not_raise()),
-        ("phi_gsm", does_not_raise()),
-        ("theta_gsm", does_not_raise()),
-        ("temperature", pytest.raises(ValueError)),
+        ("IMAP", "bx_gsm", "MAG_MODELS"),
+        ("IMAP", "by_gsm", "MAG_MODELS"),
+        ("IMAP", "bz_gsm", "MAG_MODELS"),
+        ("IMAP", "phi_gsm", "MAG_MODELS"),
+        ("IMAP", "theta_gsm", "MAG_MODELS"),
+        ("SO", "bx_gsm", "MAG_MODELS"),
+        ("SO", "by_gsm", "MAG_MODELS"),
+        ("SO", "bz_gsm", "MAG_MODELS"),
+        ("SO", "phi_gsm", "MAG_MODELS"),
+        ("SO", "theta_gsm", "MAG_MODELS"),
+        ("IMAP", "density", "WIND_MODELS"),
+        ("IMAP", "speed", "WIND_MODELS"),
+        ("IMAP", "temperature", "WIND_MODELS"),
     ],
 )
 @pytest.mark.parametrize("days", [1, 3, 7])
 @pytest.mark.django_db(databases=["imap", "so"])
-def test_get_gsm_magnetic_field(spacecraft, measurement, raises, days):
-    """Test the get_gsm_magnetic_field function."""
+def test_get_trace_data(spacecraft, measurement, model_group, days):
+    """Test the _get_trace_data function for both magnetic field and wind data."""
     import pandas as pd
 
-    from main.models import MAG_MODELS
-    from main.utils import get_gsm_magnetic_field
+    from main.models import MAG_MODELS, WIND_MODELS
+    from main.utils import _get_trace_data
 
-    model = MAG_MODELS[spacecraft]
+    models_lookup = MAG_MODELS if model_group == "MAG_MODELS" else WIND_MODELS
+    model = models_lookup[spacecraft]
     # Prepare the times
     num = days * 24
     now = datetime(2024, 6, 1, 12, 0, 0)  # Fixed current time for testing
@@ -60,20 +66,17 @@ def test_get_gsm_magnetic_field(spacecraft, measurement, raises, days):
     baker.make(model, time=itertools.cycle(times), _quantity=len(times))
 
     # Find the actual and expected values
-    with raises:
-        actual = get_gsm_magnetic_field(spacecraft, measurement, from_date=from_date)
-        expected_meas = list(
-            model.objects.filter(time__in=times[-num:]).values_list(
-                measurement, flat=True
-            )
-        )
-        expected_dates = (times[-num:].astype("int64") // 10**3).to_list()
+    actual = _get_trace_data(spacecraft, measurement, from_date, model=model)
+    expected_meas = list(
+        model.objects.filter(time__in=times[-num:]).values_list(measurement, flat=True)
+    )
+    expected_dates = (times[-num:].astype("int64") // 10**3).to_list()
 
-        assert list(actual.keys()) == ["measurement", "date"]
-        assert len(actual["measurement"]) == num
-        assert len(actual["date"]) == num
-        assert expected_dates == actual["date"]
-        assert expected_meas == actual["measurement"]
+    assert list(actual.keys()) == ["measurement", "date"]
+    assert len(actual["measurement"]) == num
+    assert len(actual["date"]) == num
+    assert expected_dates == actual["date"]
+    assert expected_meas == actual["measurement"]
 
 
 def test_reindex_data():
@@ -135,38 +138,3 @@ def test_get_message_template():
         ):
             message = get_message_template(date)
             assert message == "SO is not in communication until 1 January 2026."
-
-
-@pytest.mark.parametrize("days", [1, 3, 7])
-@pytest.mark.parametrize("measurement_type", ["density", "speed", "temperature"])
-@pytest.mark.django_db(databases=["imap"])
-def test_get_imap_swapi_data_density(days, measurement_type):
-    """Test the get_imap_swapi_data function."""
-    from main.models import IMAPSWAPI
-    from main.utils import get_wind_data
-
-    num = days * 24
-    now = datetime(2024, 6, 1, 12, 0, 0)  # Fixed current time for testing
-    times = (
-        pd.date_range(start=now - pd.Timedelta(days=10), end=now, freq="h")
-        .round("min")
-        .to_series()
-    )
-    from_date = int((now - pd.Timedelta(days=days)).timestamp()) * 1000
-
-    baker.make(IMAPSWAPI, time=itertools.cycle(times), _quantity=len(times))
-
-    # Find the actual and expected values
-    actual = get_wind_data(measurement_type, from_date=from_date)
-    expected_meas = list(
-        IMAPSWAPI.objects.filter(time__in=times[-num:]).values_list(
-            measurement_type, flat=True
-        )
-    )
-    expected_dates = (times[-num:].astype("int64") // 10**3).to_list()
-
-    assert list(actual.keys()) == ["measurement", "date"]
-    assert len(actual["measurement"]) == num
-    assert len(actual["date"]) == num
-    assert expected_dates == actual["date"]
-    assert expected_meas == actual["measurement"]
