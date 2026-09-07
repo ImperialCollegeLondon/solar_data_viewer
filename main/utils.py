@@ -121,7 +121,7 @@ def retrieve_data(
         measurement in ("bx_gsm", "by_gsm", "bz_gsm", "phi_gsm", "theta_gsm")
         and spacecraft in models.MAG_MODELS
     ):
-        return get_gse_magnetic_field(spacecraft, measurement, from_date)
+        return get_gsm_magnetic_field(spacecraft, measurement, from_date)
 
     if (
         measurement in ("density", "speed", "temperature")
@@ -179,7 +179,7 @@ def get_pass_data(spacecraft: str) -> dict[str, list[float]]:
     }
 
 
-def get_gse_magnetic_field(
+def get_gsm_magnetic_field(
     spacecraft: str, measurement: str, from_date: int
 ) -> dict[str, list[float]]:
     """Retrieves a component of the magnetic field data for the SO and IMAP missions.

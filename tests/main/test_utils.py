@@ -28,22 +28,22 @@ def test_load_plot_config(plots_config):
 @pytest.mark.parametrize(
     "measurement, raises",
     [
-        ("bx_gse", does_not_raise()),
-        ("by_gse", does_not_raise()),
-        ("bz_gse", does_not_raise()),
-        ("phi_gse", does_not_raise()),
-        ("theta_gse", does_not_raise()),
+        ("bx_gsm", does_not_raise()),
+        ("by_gsm", does_not_raise()),
+        ("bz_gsm", does_not_raise()),
+        ("phi_gsm", does_not_raise()),
+        ("theta_gsm", does_not_raise()),
         ("temperature", pytest.raises(ValueError)),
     ],
 )
 @pytest.mark.parametrize("days", [1, 3, 7])
 @pytest.mark.django_db(databases=["imap", "so"])
-def test_get_gse_magnetic_field(spacecraft, measurement, raises, days):
-    """Test the get_gse_magnetic_field function."""
+def test_get_gsm_magnetic_field(spacecraft, measurement, raises, days):
+    """Test the get_gsm_magnetic_field function."""
     import pandas as pd
 
     from main.models import MAG_MODELS
-    from main.utils import get_gse_magnetic_field
+    from main.utils import get_gsm_magnetic_field
 
     model = MAG_MODELS[spacecraft]
     # Prepare the times
@@ -61,7 +61,7 @@ def test_get_gse_magnetic_field(spacecraft, measurement, raises, days):
 
     # Find the actual and expected values
     with raises:
-        actual = get_gse_magnetic_field(spacecraft, measurement, from_date=from_date)
+        actual = get_gsm_magnetic_field(spacecraft, measurement, from_date=from_date)
         expected_meas = list(
             model.objects.filter(time__in=times[-num:]).values_list(
                 measurement, flat=True
