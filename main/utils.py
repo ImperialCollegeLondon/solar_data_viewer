@@ -118,12 +118,15 @@ def retrieve_data(
         from_date = int((timezone.now() - timedelta(days=7)).timestamp()) * 1000
 
     if (
-        measurement in ("bx_gse", "by_gse", "bz_gse", "phi_gse", "theta_gse")
+        measurement in ("bx_gsm", "by_gsm", "bz_gsm", "phi_gsm", "theta_gsm")
         and spacecraft in models.MAG_MODELS
     ):
         return get_gse_magnetic_field(spacecraft, measurement, from_date)
 
-    if spacecraft == "IMAP" and measurement in ("density", "speed", "temperature"):
+    if (
+        measurement in ("density", "speed", "temperature")
+        and spacecraft in models.WIND_MODELS
+    ):
         return get_imap_swapi_data(measurement, from_date)
 
     return {"measurement": [], "date": []}
@@ -190,9 +193,9 @@ def get_gse_magnetic_field(
         A dictionary containing the relevant datetimes in UNIX epoch time format and
             the measurements to plot.
     """
-    if measurement not in ("bx_gse", "by_gse", "bz_gse", "phi_gse", "theta_gse"):
+    if measurement not in ("bx_gsm", "by_gsm", "bz_gsm", "phi_gsm", "theta_gsm"):
         raise ValueError(
-            "Only GSE magnetic field components can be retrieved by this function."
+            "Only GSM magnetic field components can be retrieved by this function."
         )
 
     if spacecraft not in models.MAG_MODELS:

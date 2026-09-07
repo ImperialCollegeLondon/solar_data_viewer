@@ -13,23 +13,23 @@ class IMAPGSEMagneticField(models.Model):
         db_column="time_utc",
     )
 
-    bx_gse = models.FloatField(
-        help_text="GSE 'x' component of the magnetic field.", db_column="B_GSE_x"
+    bx_gsm = models.FloatField(
+        help_text="GSM 'x' component of the magnetic field.", db_column="B_GSM_x"
     )
-    by_gse = models.FloatField(
-        help_text="GSE 'y' component of the magnetic field.", db_column="B_GSE_y"
+    by_gsm = models.FloatField(
+        help_text="GSM 'y' component of the magnetic field.", db_column="B_GSM_y"
     )
-    bz_gse = models.FloatField(
-        help_text="GSE 'z' component of the magnetic field.", db_column="B_GSE_z"
+    bz_gsm = models.FloatField(
+        help_text="GSM 'z' component of the magnetic field.", db_column="B_GSM_z"
     )
     b_mag = models.FloatField(
-        help_text="Modulus of the magnetic field.", db_column="B_magnitude"
+        help_text="Modulus of the magnetic field.", db_column="B_magnitude", null=True
     )
-    phi_gse = models.FloatField(
-        help_text="Phi GSE of the magnetic field.", db_column="phi_B_GSE"
+    phi_gsm = models.FloatField(
+        help_text="Phi GSM of the magnetic field.", db_column="phi_B_GSM"
     )
-    theta_gse = models.FloatField(
-        help_text="Theta GSE of the magnetic field.", db_column="theta_B_GSE"
+    theta_gsm = models.FloatField(
+        help_text="Theta GSM of the magnetic field.", db_column="theta_B_GSM"
     )
 
     class Meta:  # noqa: D106
@@ -38,7 +38,11 @@ class IMAPGSEMagneticField(models.Model):
 
 
 class SOGSEMagneticField(models.Model):
-    """Model describing the GSE components of the magnetic field."""
+    """Model describing the GSE components of the magnetic field.
+
+    NOTE: SO only provides Magnetic field in GSE coordinates. Field names in this table
+    switches them to GSM for convenience.
+    """
 
     time = models.DateTimeField(
         primary_key=True,
@@ -47,22 +51,22 @@ class SOGSEMagneticField(models.Model):
         db_column="time",
     )
 
-    bx_gse = models.FloatField(
+    bx_gsm = models.FloatField(
         help_text="GSE 'x' component of the magnetic field.", db_column="B_x"
     )
-    by_gse = models.FloatField(
+    by_gsm = models.FloatField(
         help_text="GSE 'y' component of the magnetic field.", db_column="B_y"
     )
-    bz_gse = models.FloatField(
+    bz_gsm = models.FloatField(
         help_text="GSE 'z' component of the magnetic field.", db_column="B_z"
     )
     b_mag = models.FloatField(
-        help_text="Modulus of the magnetic field.", db_column="B_mod"
+        help_text="Modulus of the magnetic field.", db_column="B_mod", null=True
     )
-    phi_gse = models.FloatField(
+    phi_gsm = models.FloatField(
         help_text="Phi GSE of the magnetic field.", db_column="phi_B_GSE"
     )
-    theta_gse = models.FloatField(
+    theta_gsm = models.FloatField(
         help_text="Theta GSE of the magnetic field.", db_column="theta_B_GSE"
     )
 
@@ -195,5 +199,17 @@ class IMAPSWAPI(models.Model):
         managed = False
 
 
-MAG_MODELS = {"IMAP": IMAPGSEMagneticField, "SO": SOGSEMagneticField}
+MAG_MODELS = {
+    "IMAP": IMAPGSEMagneticField,
+    "SO": SOGSEMagneticField,
+    "SOLAR-1": NOAASOLAR1Mag,
+    "ACE": NOAAACEMag,
+}
 """Models to handle magnetic data for the supported missions."""
+
+WIND_MODELS = {
+    "IMAP": IMAPSWAPI,
+    "SOLAR-1": NOAASOLAR1Wind,
+    "ACE": NOAAACEWind,
+}
+"""Models to handle solar wind data for the supported missions."""

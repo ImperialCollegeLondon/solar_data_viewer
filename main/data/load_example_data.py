@@ -33,12 +33,11 @@ for model in MAG_MODELS.values():
     mfield = [
         model(
             time=t,
-            bx_gse=row[0],
-            by_gse=row[1],
-            bz_gse=row[2],
-            b_mag=np.linalg.norm(row[:3]),
-            phi_gse=row[3],
-            theta_gse=row[4],
+            bx_gsm=row[0],
+            by_gsm=row[1],
+            bz_gsm=row[2],
+            phi_gsm=row[3],
+            theta_gsm=row[4],
         )
         for t, row in zip(mfield_times, b)
     ]

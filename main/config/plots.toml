@@ -12,32 +12,32 @@ default_spacecraft = "IMAP" # The spacecraft to display as default
 title = "Magnetic field"
 unit = "nT"
 
-[plots.measurements.bx_gse]
-label = "Bx GSE"
+[plots.measurements.bx_gsm]
+label = "Bx GSM"
 traces = {IMAP = "red", SO = "blue", "SOLAR-1" = "black", "ACE" = "brown"}
 
-[plots.measurements.by_gse]
-label = "By GSE"
+[plots.measurements.by_gsm]
+label = "By GSM"
 traces = {IMAP = "indianred", SO = "dodgerblue", "SOLAR-1" = "darkslategray", "ACE" = "sienna"}
 
-[plots.measurements.bz_gse]
-label = "Bz GSE"
+[plots.measurements.bz_gsm]
+label = "Bz GSM"
 traces = {IMAP = "lightsalmon", SO = "powderblue", "SOLAR-1" = "lightslategray", "ACE" = "maroon"}
 
 [[plots]]
-title = "Phi GSE"
+title = "Phi GSM"
 unit = "deg"
 
-[plots.measurements.phi_gse]
-label = "Phi GSE"
+[plots.measurements.phi_gsm]
+label = "Phi GSM"
 traces = {IMAP = "red", SO = "blue", "SOLAR-1" = "black", "ACE" = "brown"}
 
 [[plots]]
-title = "Theta GSE"
+title = "Theta GSM"
 unit = "deg"
 
-[plots.measurements.theta_gse]
-label = "Theta GSE"
+[plots.measurements.theta_gsm]
+label = "Theta GSM"
 traces = {IMAP = "red", SO = "blue", "SOLAR-1" = "black", "ACE" = "brown"}
 
 [[plots]]
