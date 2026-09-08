@@ -82,7 +82,7 @@ class NOAAMagBase(models.Model):
         primary_key=True,
         null=False,
         help_text="Time for the data.",
-        db_column="time_tag",
+        db_column="id",
     )
 
     bx_gsm = models.FloatField(
