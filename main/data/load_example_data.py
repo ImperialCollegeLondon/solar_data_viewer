@@ -107,33 +107,6 @@ for model in WIND_MODELS.values():
     model.objects.bulk_create(data)  # type: ignore[attr-defined]
 
 ########################################################################################
-# Load Solar Orbiter SWA PAS data
-########################################################################################
-
-
-# SOSWAPAS.objects.all().delete()
-
-# density = np.random.normal(loc=4.2, scale=0.3, size=len(wind_times))
-# v_x = np.random.normal(loc=388.5, scale=0.6, size=len(wind_times))
-# v_y = np.random.normal(loc=388.5, scale=0.6, size=len(wind_times))
-# v_z = np.random.normal(loc=388.5, scale=0.6, size=len(wind_times))
-
-# swa_pas_data = [
-#     SOSWAPAS(
-#         time=time,
-#         vx=v_x,
-#         vy=v_y,
-#         vz=v_z,
-#         density=density,
-#     )
-#     for time, v_x, v_y, v_z, density in zip(
-#         wind_times, v_x, v_y, v_z, density, strict=False
-#     )
-# ]
-
-# SOSWAPAS.objects.bulk_create(swa_pas_data)
-
-########################################################################################
 # Load SO contact schedule (pass) data
 ########################################################################################
 

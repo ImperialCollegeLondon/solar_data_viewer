@@ -34,7 +34,7 @@ class IMAPGSEMagneticField(models.Model):
 
     class Meta:  # noqa: D106
         db_table = "ialirt_mag"
-        # managed = False
+        managed = False
 
 
 class SOGSEMagneticField(models.Model):
@@ -72,7 +72,7 @@ class SOGSEMagneticField(models.Model):
 
     class Meta:  # noqa: D106
         db_table = "solo_L2_mag-gse-ll-internal"
-        # managed = False
+        managed = False
 
 
 class NOAAMagBase(models.Model):
@@ -103,7 +103,7 @@ class NOAAMagBase(models.Model):
 
     class Meta:  # noqa: D106
         abstract = True
-        # managed = False
+        managed = False
 
 
 class NOAAWindBase(models.Model):
@@ -127,7 +127,7 @@ class NOAAWindBase(models.Model):
 
     class Meta:  # noqa: D106
         abstract = True
-        # managed = False
+        managed = False
 
 
 class NOAASOLAR1Mag(NOAAMagBase):
@@ -135,7 +135,7 @@ class NOAASOLAR1Mag(NOAAMagBase):
 
     class Meta:  # noqa: D106
         db_table = "solar_mag_noaa"
-        # managed = False
+        managed = False
 
 
 class NOAAACEMag(NOAAMagBase):
@@ -143,7 +143,7 @@ class NOAAACEMag(NOAAMagBase):
 
     class Meta:  # noqa: D106
         db_table = "ace_mag_noaa"
-        # managed = False
+        managed = False
 
 
 class NOAASOLAR1Wind(NOAAWindBase):
@@ -151,7 +151,7 @@ class NOAASOLAR1Wind(NOAAWindBase):
 
     class Meta:  # noqa: D106
         db_table = "solar_wind_noaa"
-        # managed = False
+        managed = False
 
 
 class NOAAACEWind(NOAAWindBase):
@@ -159,7 +159,7 @@ class NOAAACEWind(NOAAWindBase):
 
     class Meta:  # noqa: D106
         db_table = "ace_wind_noaa"
-        # managed = False
+        managed = False
 
 
 class SOContactSchedule(models.Model):
@@ -170,7 +170,7 @@ class SOContactSchedule(models.Model):
 
     class Meta:  # noqa: D106
         db_table = "contact_schedule"
-        # managed = False
+        managed = False
 
 
 class IMAPSWAPI(models.Model):
@@ -196,7 +196,7 @@ class IMAPSWAPI(models.Model):
 
     class Meta:  # noqa: D106
         db_table = "ialirt_swapi"
-        # managed = False
+        managed = False
 
 
 class SOSWAPAS(models.Model):
@@ -225,7 +225,7 @@ class SOSWAPAS(models.Model):
 
     class Meta:  # noqa: D106
         db_table = "solo_LL1_swa_pas"
-        # managed = False
+        managed = False
 
 
 MAG_MODELS = {
