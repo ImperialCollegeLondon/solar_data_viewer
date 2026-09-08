@@ -205,13 +205,18 @@ def _get_trace_data(
     # Get the relevant data from the DB
     most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=UTC)
     start_time = timezone.now()
-    dataquery = (
-        model.objects.filter(time__gt=most_recent)  # type: ignore[attr-defined]
-        .annotate(date=TruncMinute("time"))
-        .values("date")
-        .annotate(average=Avg(measurement))
-        .order_by("date")
-    )
+    try:
+        dataquery = (
+            model.objects.filter(time__gt=most_recent)  # type: ignore[attr-defined]
+            .annotate(date=TruncMinute("time"))
+            .values("date")
+            .annotate(average=Avg(measurement))
+            .order_by("date")
+        )
+    except Exception as e:
+        logger.error(f"Error querying {spacecraft} {measurement} data from the DB: {e}")
+        return {"measurement": [], "date": []}
+
     data = pd.DataFrame(dataquery)
     logger.info(
         f"Querying {spacecraft} {measurement} data from the DB took "
@@ -221,16 +226,23 @@ def _get_trace_data(
     if not len(data):
         return {"measurement": [], "date": []}
 
-    # Do some post processing to sanitize the data
-    data["date"] = pd.to_datetime(data["date"], utc=True)
-    data = reindex_data(data)
+    try:
+        # Do some post processing to sanitize the data
+        data["date"] = pd.to_datetime(data["date"], utc=True)
+        data = reindex_data(data)
 
-    # Format datetime as Unix epoch time
-    data.index = data.index.astype("int64") // 10**3
+        # Format datetime as Unix epoch time
+        data.index = data.index.astype("int64") // 10**3
 
-    # Create JSON response
-    dates = data.index.tolist()
-    measurements = data["average"].tolist()
+        # Create JSON response
+        dates = data.index.tolist()
+        measurements = data["average"].tolist()
+    except Exception as e:
+        logger.error(
+            f"Error processing {spacecraft} {measurement} data from the DB: {e}"
+        )
+        return {"measurement": [], "date": []}
+
     return {"measurement": measurements, "date": dates}
 
 
