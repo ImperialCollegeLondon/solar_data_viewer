@@ -198,7 +198,7 @@ def _query_minute_average(
         .annotate(value=Avg(measurement))
         .order_by("date")
     )
-    data = pd.DataFrame(rows, columns=["date", "value"])
+    data = pd.DataFrame(list(rows), columns=["date", "value"])
     data["date"] = pd.to_datetime(data["date"], utc=True)
     return data
 
@@ -214,14 +214,14 @@ def _query_swa_pas(measurement: str, most_recent: datetime) -> pd.DataFrame:
         .values("date", "vx", "vy", "vz", "density")
         .order_by("date")
     )
-    data = pd.DataFrame(rows, columns=["date", "vx", "vy", "vz", "density"])
+    data = pd.DataFrame(list(rows), columns=["date", "vx", "vy", "vz", "density"])
     if data.empty:
         return pd.DataFrame(columns=["date", "value"])
 
     data["date"] = pd.to_datetime(data["date"], utc=True)
     data["speed"] = np.sqrt(data["vx"] ** 2 + data["vy"] ** 2 + data["vz"] ** 2)
     return (
-        data.groupby("date", as_index=False)[measurement]
+        data.groupby("date", as_index=False)[[measurement]]
         .mean()
         .rename(columns={measurement: "value"})
     )
@@ -267,9 +267,10 @@ def _get_trace_data(
         f"{len(data)} records. Start time is {most_recent}."
     )
 
-    if data.empty:
+    if not len(data):
         return {"measurement": [], "date": []}
 
+    # Do some post processing to sanitize the data
     try:
         data = reindex_data(data)
         data.index = data.index.astype("int64") // 10**3
@@ -277,6 +278,7 @@ def _get_trace_data(
         logger.exception(f"Error processing {spacecraft} {measurement} data.")
         return {"measurement": [], "date": []}
 
+    # Create JSON response
     return {"measurement": data["value"].tolist(), "date": data.index.tolist()}
 
 

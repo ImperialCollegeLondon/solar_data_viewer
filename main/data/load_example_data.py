@@ -6,6 +6,7 @@ as if it were being received sort of 'live' whenever the tool is launched.
 
 import numpy as np
 import pandas as pd
+from django.db.models import Model
 from django.utils import timezone
 
 from main.models import MAG_MODELS, SOSWAPAS, WIND_MODELS, SOContactSchedule
@@ -58,6 +59,7 @@ wind_times = pd.date_range(
 for model in WIND_MODELS.values():
     model.objects.all().delete()  # type: ignore[attr-defined]
 
+    data: list[Model]
     if model == SOSWAPAS:
         density = np.random.normal(loc=3.95, scale=0.3, size=len(wind_times))
         v_x = np.random.normal(loc=388.5, scale=0.6, size=len(wind_times))
