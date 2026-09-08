@@ -9,12 +9,12 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from django.db.models import Avg
+from django.db.models import Avg, Model
 from django.db.models.functions import TruncMinute
 from django.template import Context, Template
 from django.utils import timezone
 
-from . import ace, hapi, models
+from . import models
 from .config import L1Config, PlotsConfig
 
 logger = getLogger("django")
@@ -114,26 +114,28 @@ def retrieve_data(
         A dictionary containing the relevant datetimes in UNIX epoch time format and
             the measurements to plot.
     """
-    if from_date is None:
+    if not from_date:
         from_date = int((timezone.now() - timedelta(days=7)).timestamp()) * 1000
 
     if (
-        measurement in ("bx_gse", "by_gse", "bz_gse", "phi_gse", "theta_gse")
+        measurement in ("bx_gsm", "by_gsm", "bz_gsm", "phi_gsm", "theta_gsm")
         and spacecraft in models.MAG_MODELS
     ):
-        return get_gse_magnetic_field(spacecraft, measurement, from_date)
+        return _get_trace_data(
+            spacecraft, measurement, from_date, model=models.MAG_MODELS[spacecraft]
+        )
 
-    if spacecraft == "IMAP" and measurement in ("density", "speed", "temperature"):
-        return get_imap_swapi_data(measurement, from_date)
+    if (
+        measurement in ("density", "speed", "temperature")
+        and spacecraft in models.WIND_MODELS
+    ):
+        return _get_trace_data(
+            spacecraft, measurement, from_date, model=models.WIND_MODELS[spacecraft]
+        )
 
-    if spacecraft == "SO" and measurement in ("density", "speed"):
-        return get_so_swa_pas_data(measurement, from_date)
-
-    if spacecraft in hapi.SPACECRAFTS:
-        return hapi.get_data_from_hapi(spacecraft, measurement, from_date)
-
-    if spacecraft == "ACE":
-        return ace.get_ace_data(measurement, from_date)
+    logger.warning(
+        f"Measurement '{measurement}' for spacecraft '{spacecraft}' is not supported."
+    )
 
     return {"measurement": [], "date": []}
 
@@ -185,8 +187,48 @@ def get_pass_data(spacecraft: str) -> dict[str, list[float]]:
     }
 
 
-def get_gse_magnetic_field(
-    spacecraft: str, measurement: str, from_date: int
+def _query_minute_average(
+    model: type[Model], measurement: str, most_recent: datetime
+) -> pd.DataFrame:
+    """Retrieves per-minute average of a single measurement column."""
+    rows = (
+        model.objects.filter(time__gt=most_recent)  # type: ignore[attr-defined]
+        .annotate(date=TruncMinute("time"))
+        .values("date")
+        .annotate(value=Avg(measurement))
+        .order_by("date")
+    )
+    data = pd.DataFrame(rows, columns=["date", "value"])
+    data["date"] = pd.to_datetime(data["date"], utc=True)
+    return data
+
+
+def _query_swa_pas(measurement: str, most_recent: datetime) -> pd.DataFrame:
+    """Retrieves per-minute average of SWA-PAS data.
+
+    Speed is derived from the velocity components before averaging.
+    """
+    rows = (
+        models.SOSWAPAS.objects.filter(time__gt=most_recent)
+        .annotate(date=TruncMinute("time"))
+        .values("date", "vx", "vy", "vz", "density")
+        .order_by("date")
+    )
+    data = pd.DataFrame(rows, columns=["date", "vx", "vy", "vz", "density"])
+    if data.empty:
+        return pd.DataFrame(columns=["date", "value"])
+
+    data["date"] = pd.to_datetime(data["date"], utc=True)
+    data["speed"] = np.sqrt(data["vx"] ** 2 + data["vy"] ** 2 + data["vz"] ** 2)
+    return (
+        data.groupby("date", as_index=False)[measurement]
+        .mean()
+        .rename(columns={measurement: "value"})
+    )
+
+
+def _get_trace_data(
+    spacecraft: str, measurement: str, from_date: int, model: type[Model]
 ) -> dict[str, list[float]]:
     """Retrieves a component of the magnetic field data for the SO and IMAP missions.
 
@@ -194,136 +236,48 @@ def get_gse_magnetic_field(
         spacecraft: Name of the spacecraft to retrieve data for.
         measurement: Name of the measurement to get data for.
         from_date: The date to use as the starting point to get data (in ms format).
+        model: The Django model to query for the data.
 
     Returns:
         A dictionary containing the relevant datetimes in UNIX epoch time format and
             the measurements to plot.
     """
-    if measurement not in ("bx_gse", "by_gse", "bz_gse", "phi_gse", "theta_gse"):
-        raise ValueError(
-            "Only GSE magnetic field components can be retrieved by this function."
-        )
-
-    if spacecraft not in models.MAG_MODELS:
-        raise ValueError(
-            f"Only {list(models.MAG_MODELS.keys())} spacecrafts are supported."
-        )
-
     # Get the relevant data from the DB
     most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=UTC)
     start_time = timezone.now()
-    dataquery = (
-        models.MAG_MODELS[spacecraft]  # type: ignore[attr-defined]
-        .objects.filter(time__gt=most_recent)
-        .annotate(date=TruncMinute("time"))
-        .values("date")
-        .annotate(average=Avg(measurement))
-        .order_by("date")
-    )
-    data = pd.DataFrame(dataquery)
+
+    # no temperature measurement from SWA PAS
+    if spacecraft == "SO" and measurement == "temperature":
+        return {"measurement": [], "date": []}
+
+    is_swa_pas = spacecraft == "SO" and measurement in ("density", "speed")
+
+    try:
+        if is_swa_pas:
+            data = _query_swa_pas(measurement, most_recent)
+        else:
+            data = _query_minute_average(model, measurement, most_recent)
+    except Exception:
+        logger.exception(f"Error querying {spacecraft} {measurement} data from the DB.")
+        return {"measurement": [], "date": []}
+
     logger.info(
         f"Querying {spacecraft} {measurement} data from the DB took "
         f"{(timezone.now() - start_time).total_seconds():.2f} seconds to retrieve "
         f"{len(data)} records. Start time is {most_recent}."
     )
-    if not len(data):
+
+    if data.empty:
         return {"measurement": [], "date": []}
 
-    # Do some post processing to sanitize the data
-    data["date"] = pd.to_datetime(data["date"], utc=True)
-    data = reindex_data(data)
-
-    # Format datetime as Unix epoch time
-    data.index = data.index.astype("int64") // 10**3
-
-    # Create JSON response
-    dates = data.index.tolist()
-    measurements = data["average"].tolist()
-    return {"measurement": measurements, "date": dates}
-
-
-def get_imap_swapi_data(measurement: str, from_date: int) -> dict[str, list[float]]:
-    """Retrieves a component of the SWAPI data for the IMAP mission.
-
-    Args:
-        measurement: Name of the measurement to get data for - density, speed or
-            temperature.
-        from_date: The date to use as the starting point to get data (in ms format).
-
-    Returns:
-        A dictionary containing the relevant datetimes in UNIX epoch time format and
-            the measurements to plot.
-    """
-    # Get the relevant data from the DB
-    most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=UTC)
-    start_time = timezone.now()
-    dataquery = (
-        models.IMAPSWAPI.objects.filter(time__gt=most_recent)
-        .annotate(date=TruncMinute("time"))
-        .values("date")
-        .annotate(average=Avg(measurement))
-        .order_by("date")
-    )
-    data = pd.DataFrame(list(dataquery))
-    logger.info(
-        f"Querying IMAP SWAPI {measurement} data from the DB took "
-        f"{(timezone.now() - start_time).total_seconds():.2f} seconds to retrieve "
-        f"{len(data)} records. Start time is {most_recent}."
-    )
-    if not len(data):
+    try:
+        data = reindex_data(data)
+        data.index = data.index.astype("int64") // 10**3
+    except Exception:
+        logger.exception(f"Error processing {spacecraft} {measurement} data.")
         return {"measurement": [], "date": []}
 
-    data["date"] = pd.to_datetime(data["date"], utc=True)
-    data = reindex_data(data)
-
-    # Format datetime as Unix epoch time
-    data.index = data.index.astype("int64") // 10**3
-
-    # Create JSON response
-    dates = data.index.tolist()
-    measurements = data["average"].tolist()
-
-    return {"measurement": measurements, "date": dates}
-
-
-def get_so_swa_pas_data(measurement: str, from_date: int) -> dict[str, list[float]]:
-    """Retrieve Solar Orbiter SWA PAS density or calculated speed data.
-
-    Args:
-        measurement: The measurement to return: ``density`` or ``speed``.
-        from_date: The starting date in milliseconds since the UNIX epoch.
-
-    Returns:
-        A dictionary containing timestamps in UNIX epoch milliseconds and the
-        requested measurement values.
-    """
-    most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=UTC)
-    start_time = timezone.now()
-
-    data = pd.DataFrame(
-        list(
-            models.SOSWAPASS.objects.filter(time__gt=most_recent)
-            .values("time", "vx", "vy", "vz", "density")
-            .order_by("time")
-        )
-    )
-    logger.info(
-        f"Querying SO SWA PAS {measurement} data from the DB took "
-        f"{(timezone.now() - start_time).total_seconds():.2f} seconds to retrieve "
-        f"{len(data)} records. Start time is {most_recent}."
-    )
-    if not len(data):
-        return {"measurement": [], "date": []}
-
-    data["date"] = pd.to_datetime(data["time"], utc=True)
-    data["speed"] = np.sqrt(data["vx"] ** 2 + data["vy"] ** 2 + data["vz"] ** 2)
-
-    data = data.groupby("date", as_index=False).agg({measurement: "mean"})
-    data = reindex_data(data)
-
-    data.index = data.index.astype("int64") // 10**3
-
-    return {"measurement": data[measurement].tolist(), "date": data.index.tolist()}
+    return {"measurement": data["value"].tolist(), "date": data.index.tolist()}
 
 
 def get_solar_orbiter_dates() -> list[tuple[date, date]]:

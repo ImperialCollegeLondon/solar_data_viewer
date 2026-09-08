@@ -13,32 +13,36 @@ class IMAPGSEMagneticField(models.Model):
         db_column="time_utc",
     )
 
-    bx_gse = models.FloatField(
-        help_text="GSE 'x' component of the magnetic field.", db_column="B_GSE_x"
+    bx_gsm = models.FloatField(
+        help_text="GSM 'x' component of the magnetic field.", db_column="B_GSM_x"
     )
-    by_gse = models.FloatField(
-        help_text="GSE 'y' component of the magnetic field.", db_column="B_GSE_y"
+    by_gsm = models.FloatField(
+        help_text="GSM 'y' component of the magnetic field.", db_column="B_GSM_y"
     )
-    bz_gse = models.FloatField(
-        help_text="GSE 'z' component of the magnetic field.", db_column="B_GSE_z"
+    bz_gsm = models.FloatField(
+        help_text="GSM 'z' component of the magnetic field.", db_column="B_GSM_z"
     )
     b_mag = models.FloatField(
-        help_text="Modulus of the magnetic field.", db_column="B_magnitude"
+        help_text="Modulus of the magnetic field.", db_column="B_magnitude", null=True
     )
-    phi_gse = models.FloatField(
-        help_text="Phi GSE of the magnetic field.", db_column="phi_B_GSE"
+    phi_gsm = models.FloatField(
+        help_text="Phi GSM of the magnetic field.", db_column="phi_B_GSM"
     )
-    theta_gse = models.FloatField(
-        help_text="Theta GSE of the magnetic field.", db_column="theta_B_GSE"
+    theta_gsm = models.FloatField(
+        help_text="Theta GSM of the magnetic field.", db_column="theta_B_GSM"
     )
 
     class Meta:  # noqa: D106
         db_table = "ialirt_mag"
-        managed = False
+        # managed = False
 
 
 class SOGSEMagneticField(models.Model):
-    """Model describing the GSE components of the magnetic field."""
+    """Model describing the GSE components of the magnetic field.
+
+    NOTE: SO only provides Magnetic field in GSE coordinates. Field names in this table
+    switches them to GSM for convenience.
+    """
 
     time = models.DateTimeField(
         primary_key=True,
@@ -47,28 +51,28 @@ class SOGSEMagneticField(models.Model):
         db_column="time",
     )
 
-    bx_gse = models.FloatField(
+    bx_gsm = models.FloatField(
         help_text="GSE 'x' component of the magnetic field.", db_column="B_x"
     )
-    by_gse = models.FloatField(
+    by_gsm = models.FloatField(
         help_text="GSE 'y' component of the magnetic field.", db_column="B_y"
     )
-    bz_gse = models.FloatField(
+    bz_gsm = models.FloatField(
         help_text="GSE 'z' component of the magnetic field.", db_column="B_z"
     )
     b_mag = models.FloatField(
-        help_text="Modulus of the magnetic field.", db_column="B_mod"
+        help_text="Modulus of the magnetic field.", db_column="B_mod", null=True
     )
-    phi_gse = models.FloatField(
+    phi_gsm = models.FloatField(
         help_text="Phi GSE of the magnetic field.", db_column="phi_B_GSE"
     )
-    theta_gse = models.FloatField(
+    theta_gsm = models.FloatField(
         help_text="Theta GSE of the magnetic field.", db_column="theta_B_GSE"
     )
 
     class Meta:  # noqa: D106
         db_table = "solo_L2_mag-gse-ll-internal"
-        managed = False
+        # managed = False
 
 
 class NOAAMagBase(models.Model):
@@ -78,7 +82,7 @@ class NOAAMagBase(models.Model):
         primary_key=True,
         null=False,
         help_text="Time for the data.",
-        db_column="time_tag",
+        db_column="id",
     )
 
     bx_gsm = models.FloatField(
@@ -99,7 +103,7 @@ class NOAAMagBase(models.Model):
 
     class Meta:  # noqa: D106
         abstract = True
-        managed = False
+        # managed = False
 
 
 class NOAAWindBase(models.Model):
@@ -109,7 +113,7 @@ class NOAAWindBase(models.Model):
         primary_key=True,
         null=False,
         help_text="Time for the data.",
-        db_column="time_tag",
+        db_column="id",
     )
 
     density = models.FloatField(
@@ -123,7 +127,7 @@ class NOAAWindBase(models.Model):
 
     class Meta:  # noqa: D106
         abstract = True
-        managed = False
+        # managed = False
 
 
 class NOAASOLAR1Mag(NOAAMagBase):
@@ -131,7 +135,7 @@ class NOAASOLAR1Mag(NOAAMagBase):
 
     class Meta:  # noqa: D106
         db_table = "solar_mag_noaa"
-        managed = False
+        # managed = False
 
 
 class NOAAACEMag(NOAAMagBase):
@@ -139,7 +143,7 @@ class NOAAACEMag(NOAAMagBase):
 
     class Meta:  # noqa: D106
         db_table = "ace_mag_noaa"
-        managed = False
+        # managed = False
 
 
 class NOAASOLAR1Wind(NOAAWindBase):
@@ -147,7 +151,7 @@ class NOAASOLAR1Wind(NOAAWindBase):
 
     class Meta:  # noqa: D106
         db_table = "solar_wind_noaa"
-        managed = False
+        # managed = False
 
 
 class NOAAACEWind(NOAAWindBase):
@@ -155,7 +159,7 @@ class NOAAACEWind(NOAAWindBase):
 
     class Meta:  # noqa: D106
         db_table = "ace_wind_noaa"
-        managed = False
+        # managed = False
 
 
 class SOContactSchedule(models.Model):
@@ -166,7 +170,7 @@ class SOContactSchedule(models.Model):
 
     class Meta:  # noqa: D106
         db_table = "contact_schedule"
-        managed = False
+        # managed = False
 
 
 class IMAPSWAPI(models.Model):
@@ -192,11 +196,11 @@ class IMAPSWAPI(models.Model):
 
     class Meta:  # noqa: D106
         db_table = "ialirt_swapi"
-        managed = False
+        # managed = False
 
 
-class SOSWAPASS(models.Model):
-    """Model describing the SWA PASS for SO spacecraft."""
+class SOSWAPAS(models.Model):
+    """Model describing the SWA PAS for SO spacecraft."""
 
     time = models.DateTimeField(
         primary_key=True,
@@ -221,8 +225,21 @@ class SOSWAPASS(models.Model):
 
     class Meta:  # noqa: D106
         db_table = "solo_LL1_swa_pas"
-        managed = False
+        # managed = False
 
 
-MAG_MODELS = {"IMAP": IMAPGSEMagneticField, "SO": SOGSEMagneticField}
+MAG_MODELS = {
+    "IMAP": IMAPGSEMagneticField,
+    "SO": SOGSEMagneticField,
+    "SOLAR-1": NOAASOLAR1Mag,
+    "ACE": NOAAACEMag,
+}
 """Models to handle magnetic data for the supported missions."""
+
+WIND_MODELS = {
+    "IMAP": IMAPSWAPI,
+    "SOLAR-1": NOAASOLAR1Wind,
+    "ACE": NOAAACEWind,
+    "SO": SOSWAPAS,
+}
+"""Models to handle solar wind data for the supported missions."""
