@@ -118,7 +118,7 @@ def retrieve_data(
         from_date = int((timezone.now() - timedelta(days=7)).timestamp()) * 1000
 
     if (
-        measurement in ("bx_gsm", "by_gsm", "bz_gsm", "phi_gsm", "theta_gsm")
+        measurement in ("bx_gsm", "by_gsm", "bz_gsm", "b_mag", "phi_gsm", "theta_gsm")
         and spacecraft in models.MAG_MODELS
     ):
         return _get_trace_data(
