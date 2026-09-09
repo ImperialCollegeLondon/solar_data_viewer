@@ -23,7 +23,7 @@ class IMAPGSEMagneticField(models.Model):
         help_text="GSM 'z' component of the magnetic field.", db_column="B_GSM_z"
     )
     b_mag = models.FloatField(
-        help_text="Modulus of the magnetic field.", db_column="B_magnitude", null=True
+        help_text="Modulus of the magnetic field.", db_column="B_magnitude"
     )
     phi_gsm = models.FloatField(
         help_text="Phi GSM of the magnetic field.", db_column="phi_B_GSM"
@@ -61,7 +61,7 @@ class SOGSEMagneticField(models.Model):
         help_text="GSE 'z' component of the magnetic field.", db_column="B_z"
     )
     b_mag = models.FloatField(
-        help_text="Modulus of the magnetic field.", db_column="B_mod", null=True
+        help_text="Modulus of the magnetic field.", db_column="B_mod"
     )
     phi_gsm = models.FloatField(
         help_text="Phi GSE of the magnetic field.", db_column="phi_B_GSE"
@@ -93,6 +93,9 @@ class NOAAMagBase(models.Model):
     )
     bz_gsm = models.FloatField(
         help_text="GSM 'z' component of the magnetic field.", db_column="bz_gsm"
+    )
+    b_mag = models.FloatField(
+        help_text="Modulus of the magnetic field.", db_column="b_mod"
     )
     phi_gsm = models.FloatField(
         help_text="Phi GSM of the magnetic field.", db_column="phi_gsm"
