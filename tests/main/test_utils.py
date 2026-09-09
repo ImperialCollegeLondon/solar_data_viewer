@@ -4,7 +4,6 @@ import itertools
 from datetime import date, datetime, timedelta
 from unittest.mock import mock_open, patch
 
-import numpy as np
 import pandas as pd
 import pytest
 from model_bakery import baker
@@ -70,22 +69,20 @@ def test_get_trace_data(spacecraft, measurement, model_group, days):
 
     # Find the actual and expected values
     actual = _get_trace_data(spacecraft, measurement, from_date, model=model)
-    rows = model.objects.filter(time__in=times[-num:]).order_by("time")
+    expected_meas = list(
+        model.objects.filter(time__in=times[-num:]).values_list(measurement, flat=True)
+    )
+    # handle negative SO PAS speed values
     if spacecraft == "SO" and measurement == "speed":
-        # SWA PAS stores the velocity components
-        expected_measurement = [
-            np.sqrt(vx**2 + vy**2 + vz**2)
-            for vx, vy, vz in rows.values_list("vx", "vy", "vz")
-        ]
-    else:
-        expected_measurement = list(rows.values_list(measurement, flat=True))
+        expected_meas = [abs(value) for value in expected_meas]
+
     expected_dates = (times[-num:].astype("int64") // 10**3).to_list()
 
     assert list(actual.keys()) == ["measurement", "date"]
     assert len(actual["measurement"]) == num
     assert len(actual["date"]) == num
     assert expected_dates == actual["date"]
-    assert actual["measurement"] == expected_measurement
+    assert expected_meas == actual["measurement"]
 
 
 def test_reindex_data():

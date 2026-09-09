@@ -60,39 +60,27 @@ for model in WIND_MODELS.values():
     model.objects.all().delete()  # type: ignore[attr-defined]
 
     data: list[Model]
+
+    # Add data
+    density = np.random.normal(loc=3.95, scale=0.22, size=len(wind_times))
+    speed = np.random.normal(loc=388.5, scale=0.6, size=len(wind_times))
+    temperature = np.random.normal(loc=27400, scale=380, size=len(wind_times))
+
+    density = density.clip(3.55, 4.35).round(2)
+    speed = speed.clip(387, 390).round(2)
+    temperature = temperature.clip(26600, 28200).round(2)
+
     if model == SOSWAPAS:
-        density = np.random.normal(loc=3.95, scale=0.3, size=len(wind_times))
-        v_x = np.random.normal(loc=388.5, scale=0.6, size=len(wind_times))
-        v_y = np.random.normal(loc=388.5, scale=0.6, size=len(wind_times))
-        v_z = np.random.normal(loc=388.5, scale=0.6, size=len(wind_times))
-
-        density = density.clip(3.55, 4.35).round(2)
-        v_x = v_x.clip(387, 390).round(2)
-        v_y = v_y.clip(387, 390).round(2)
-        v_z = v_z.clip(387, 390).round(2)
-
         data = [
-            SOSWAPAS(
-                time=time,
-                vx=v_x,
-                vy=v_y,
-                vz=v_z,
-                density=density,
+            model(
+                time=t,
+                density=density_i,
+                speed=-abs(speed_i),  # make negative to simulate the SO speed data
             )
-            for time, v_x, v_y, v_z, density in zip(
-                wind_times, v_x, v_y, v_z, density, strict=False
-            )
+            for t, density_i, speed_i in zip(wind_times, density, speed)
         ]
+
     else:
-        # Add data
-        density = np.random.normal(loc=3.95, scale=0.22, size=len(wind_times))
-        speed = np.random.normal(loc=388.5, scale=0.6, size=len(wind_times))
-        temperature = np.random.normal(loc=27400, scale=380, size=len(wind_times))
-
-        density = density.clip(3.55, 4.35).round(2)
-        speed = speed.clip(387, 390).round(2)
-        temperature = temperature.clip(26600, 28200).round(2)
-
         data = [
             model(
                 time=t,

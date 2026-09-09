@@ -9,8 +9,8 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from django.db.models import Avg, Model
-from django.db.models.functions import TruncMinute
+from django.db.models import Avg, Expression, Model
+from django.db.models.functions import Abs, TruncMinute
 from django.template import Context, Template
 from django.utils import timezone
 
@@ -187,46 +187,6 @@ def get_pass_data(spacecraft: str) -> dict[str, list[float]]:
     }
 
 
-def _query_minute_average(
-    model: type[Model], measurement: str, most_recent: datetime
-) -> pd.DataFrame:
-    """Retrieves per-minute average of a single measurement column."""
-    rows = (
-        model.objects.filter(time__gt=most_recent)  # type: ignore[attr-defined]
-        .annotate(date=TruncMinute("time"))
-        .values("date")
-        .annotate(value=Avg(measurement))
-        .order_by("date")
-    )
-    data = pd.DataFrame(list(rows), columns=["date", "value"])
-    data["date"] = pd.to_datetime(data["date"], utc=True)
-    return data
-
-
-def _query_swa_pas(measurement: str, most_recent: datetime) -> pd.DataFrame:
-    """Retrieves per-minute average of SWA-PAS data.
-
-    Speed is derived from the velocity components before averaging.
-    """
-    rows = (
-        models.SOSWAPAS.objects.filter(time__gt=most_recent)
-        .annotate(date=TruncMinute("time"))
-        .values("date", "vx", "vy", "vz", "density")
-        .order_by("date")
-    )
-    data = pd.DataFrame(list(rows), columns=["date", "vx", "vy", "vz", "density"])
-    if data.empty:
-        return pd.DataFrame(columns=["date", "value"])
-
-    data["date"] = pd.to_datetime(data["date"], utc=True)
-    data["speed"] = np.sqrt(data["vx"] ** 2 + data["vy"] ** 2 + data["vz"] ** 2)
-    return (
-        data.groupby("date", as_index=False)[[measurement]]
-        .mean()
-        .rename(columns={measurement: "value"})
-    )
-
-
 def _get_trace_data(
     spacecraft: str, measurement: str, from_date: int, model: type[Model]
 ) -> dict[str, list[float]]:
@@ -242,44 +202,61 @@ def _get_trace_data(
         A dictionary containing the relevant datetimes in UNIX epoch time format and
             the measurements to plot.
     """
+    average_expression: str | Expression = measurement
+
     # Get the relevant data from the DB
     most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=UTC)
     start_time = timezone.now()
 
-    # no temperature measurement from SWA PAS
+    # no temperature measurement from SO PAS
     if spacecraft == "SO" and measurement == "temperature":
         return {"measurement": [], "date": []}
 
-    is_swa_pas = spacecraft == "SO" and measurement in ("density", "speed")
-
     try:
-        if is_swa_pas:
-            data = _query_swa_pas(measurement, most_recent)
-        else:
-            data = _query_minute_average(model, measurement, most_recent)
-    except Exception:
-        logger.exception(f"Error querying {spacecraft} {measurement} data from the DB.")
+        average_expression = measurement
+
+        # make sure SO PAS temperature is always positive
+        if spacecraft == "SO" and measurement == "speed":
+            average_expression = Abs("speed")
+
+        dataquery = (
+            model.objects.filter(time__gt=most_recent)  # type: ignore[attr-defined]
+            .annotate(date=TruncMinute("time"))
+            .values("date")
+            .annotate(average=Avg(average_expression))
+            .order_by("date")
+        )
+    except Exception as e:
+        logger.error(f"Error querying {spacecraft} {measurement} data from the DB: {e}")
         return {"measurement": [], "date": []}
 
+    data = pd.DataFrame(dataquery)
     logger.info(
         f"Querying {spacecraft} {measurement} data from the DB took "
         f"{(timezone.now() - start_time).total_seconds():.2f} seconds to retrieve "
         f"{len(data)} records. Start time is {most_recent}."
     )
-
     if not len(data):
         return {"measurement": [], "date": []}
 
-    # Do some post processing to sanitize the data
     try:
+        # Do some post processing to sanitize the data
+        data["date"] = pd.to_datetime(data["date"], utc=True)
         data = reindex_data(data)
+
+        # Format datetime as Unix epoch time
         data.index = data.index.astype("int64") // 10**3
-    except Exception:
-        logger.exception(f"Error processing {spacecraft} {measurement} data.")
+
+        # Create JSON response
+        dates = data.index.tolist()
+        measurements = data["average"].tolist()
+    except Exception as e:
+        logger.error(
+            f"Error processing {spacecraft} {measurement} data from the DB: {e}"
+        )
         return {"measurement": [], "date": []}
 
-    # Create JSON response
-    return {"measurement": data["value"].tolist(), "date": data.index.tolist()}
+    return {"measurement": measurements, "date": dates}
 
 
 def get_solar_orbiter_dates() -> list[tuple[date, date]]:

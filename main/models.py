@@ -209,15 +209,10 @@ class SOSWAPAS(models.Model):
         db_column="time_tag",
     )
 
-    vx = models.FloatField(
+    speed = models.FloatField(
         help_text="Speed in x dimension in km/s.", db_column="vx_km_s"
     )
-    vy = models.FloatField(
-        help_text="Speed in y dimension in km/s.", db_column="vy_km_s"
-    )
-    vz = models.FloatField(
-        help_text="Speed in z dimension in km/s.", db_column="vz_km_s"
-    )
+
     density = models.FloatField(
         help_text="Density in cm^-3.",
         db_column="density_per_cc",
