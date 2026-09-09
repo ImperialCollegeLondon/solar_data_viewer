@@ -12,6 +12,10 @@ default_spacecraft = "IMAP" # The spacecraft to display as default
 title = "Magnetic field"
 unit = "nT"
 
+[plots.measurements.b_mag]
+label = "|B|"
+traces = {IMAP = "red", SO = "blue", "SOLAR-1" = "black", "ACE" = "brown"}
+
 [plots.measurements.bx_gsm]
 label = "Bx GSM"
 traces = {IMAP = "red", SO = "blue", "SOLAR-1" = "black", "ACE" = "brown"}
