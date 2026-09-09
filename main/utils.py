@@ -219,8 +219,15 @@ def _get_trace_data(
         if spacecraft == "SO" and measurement == "speed":
             average_expression = Abs("speed")
 
+        # add filters to avoid extreme values and only get data after most recent date
+        data_filters = {
+            "time__gt": most_recent,
+            f"{measurement}__gt": -1e30,
+            f"{measurement}__lt": 1e30,
+        }
+
         dataquery = (
-            model.objects.filter(time__gt=most_recent)  # type: ignore[attr-defined]
+            model.objects.filter(**data_filters)  # type: ignore[attr-defined]
             .annotate(date=TruncMinute("time"))
             .values("date")
             .annotate(average=Avg(average_expression))
