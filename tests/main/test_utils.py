@@ -1,7 +1,7 @@
 """Test suite for the utils."""
 
 import itertools
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from unittest.mock import mock_open, patch
 
 import pandas as pd
@@ -56,7 +56,7 @@ def test_get_trace_data(spacecraft, measurement, model_group, days):
     model = models_lookup[spacecraft]
     # Prepare the times
     num = days * 24
-    now = datetime(2024, 6, 1, 12, 0, 0)  # Fixed current time for testing
+    now = datetime(2024, 6, 1, 12, 0, 0, tzinfo=UTC)  # Fixed current time for testing
     times = (
         pd.date_range(start=now - pd.Timedelta(days=10), end=now, freq="h")
         .round("min")
@@ -65,7 +65,24 @@ def test_get_trace_data(spacecraft, measurement, model_group, days):
     from_date = int((now - pd.Timedelta(days=days)).timestamp()) * 1000
 
     # Populate the database
-    baker.make(model, time=itertools.cycle(times), _quantity=len(times))
+    if (
+        spacecraft == "SO"
+    ):  # add explicit values for SO PAS speed to test the absolute value handling
+        field_values = {}
+
+        if measurement == "density":
+            field_values["density"] = 17.0
+        elif measurement == "speed":
+            field_values["speed"] = -400.0
+
+        baker.make(
+            model,
+            time=itertools.cycle(times),
+            _quantity=len(times),
+            **field_values,
+        )
+    else:
+        baker.make(model, time=itertools.cycle(times), _quantity=len(times))
 
     # Find the actual and expected values
     actual = _get_trace_data(spacecraft, measurement, from_date, model=model)

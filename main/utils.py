@@ -219,9 +219,24 @@ def _get_trace_data(
         if spacecraft == "SO" and measurement == "speed":
             average_expression = Abs("speed")
 
+        # add filters to avoid extreme values and only get data after most recent date
+        queryset = model.objects.filter(time__gt=most_recent)  # type: ignore[attr-defined]
+
+        if spacecraft == "SO":
+            if measurement == "speed":
+                queryset = queryset.annotate(valid_speed=Abs("speed")).filter(
+                    valid_speed__gte=100,
+                    valid_speed__lte=2000,
+                )
+
+            if measurement == "density":
+                queryset = queryset.filter(
+                    density__gte=0.1,
+                    density__lte=500,
+                )
+
         dataquery = (
-            model.objects.filter(time__gt=most_recent)  # type: ignore[attr-defined]
-            .annotate(date=TruncMinute("time"))
+            queryset.annotate(date=TruncMinute("time"))
             .values("date")
             .annotate(average=Avg(average_expression))
             .order_by("date")
