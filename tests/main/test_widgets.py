@@ -39,13 +39,22 @@ def test_add_callback_to_checkbox_button(process_data_mock: Mock):
     plot = create_timeseries_plot(plot_config, spacecrafts, x_range, default_spacecraft)
 
     with patch.object(CheckboxButtonGroup, "js_on_change") as js_mock:
-        add_callback_to_checkbox_button(plot, button)
+        add_callback_to_checkbox_button(
+            plot, button, hidden_by_default_labels=["Bx GSM", "By GSM"]
+        )
         called_args = js_mock.call_args.args[1]
         assert called_args.args["button"] == button
         expected_legend = (
             plot.legend[0] if isinstance(plot.legend, list) else plot.legend
         )
         assert called_args.args["legend"] == expected_legend
+        assert called_args.args["hidden_by_default_labels"] == ["Bx GSM", "By GSM"]
+
+    # Defaults to an empty list when not provided
+    with patch.object(CheckboxButtonGroup, "js_on_change") as js_mock:
+        add_callback_to_checkbox_button(plot, button)
+        called_args = js_mock.call_args.args[1]
+        assert called_args.args["hidden_by_default_labels"] == []
 
 
 @patch("main.utils.retrieve_data")

@@ -34,6 +34,11 @@ from .widgets import (
     create_time_range_dropdown,
 )
 
+HIDDEN_BY_DEFAULT_LABELS = {"Bx GSM", "By GSM"}
+"""Measurement labels whose traces are plotted but not shown by default.
+
+Their legend entry remains visible so they can be clicked to be shown."""
+
 
 def get_now_vertical_line(current_time: datetime.datetime) -> Span:
     """Create a vertical line to indicate the current time on the plots.
@@ -136,11 +141,16 @@ def add_pass_contact_vstrip(pass_source: AjaxDataSource, plot: figure) -> None:
     plot.add_layout(labels, "above")
 
 
-def update_legend_on_spacecraft_selection(plot: figure) -> figure:
+def update_legend_on_spacecraft_selection(
+    plot: figure, default_spacecraft: str | None = None
+) -> figure:
     """Update the legend to hide hidden spacecraft lines.
 
     Args:
         plot: A Bokeh figure for a timeseries plot.
+        default_spacecraft: The spacecraft toggled on by default. Used to determine
+            whether a hidden-by-default measurement's legend entry should stay
+            visible (its trace is hidden, but the spacecraft itself is toggled on).
     """
     if not plot.legend:
         return plot
@@ -152,12 +162,25 @@ def update_legend_on_spacecraft_selection(plot: figure) -> figure:
     # Hide legend items for hidden spacecraft line
     # A legend item can control multiple glyphs so we need to check
     # the first renderer to see if the main line is visible.
+    # Measurements in HIDDEN_BY_DEFAULT_LABELS are always plotted but not shown by
+    # default. For the toggled (default) spacecraft, their legend entry is kept
+    # visible and clickable even though the trace itself is hidden. For other
+    # spacecrafts, which aren't toggled on, the legend entry is hidden as usual.
     for item in legend.items:
-        if (
-            isinstance(item, LegendItem)
-            and item.renderers
-            and not item.renderers[0].visible
-        ):
+        if not isinstance(item, LegendItem) or not item.renderers:
+            continue
+
+        renderer = item.renderers[0]
+        is_toggled_spacecraft = (
+            default_spacecraft is not None and renderer.name == default_spacecraft
+        )
+        is_hidden_by_default = bool(renderer.tags) and (
+            renderer.tags[0] in HIDDEN_BY_DEFAULT_LABELS
+        )
+        if is_toggled_spacecraft and is_hidden_by_default:
+            continue
+
+        if not renderer.visible:
             item.visible = False
 
     return plot
@@ -231,15 +254,22 @@ def create_timeseries_plot(
                 adapter=ajax_adapter(),
             )
 
-            plot.line(
+            line_renderer = plot.line(
                 "date",
                 "measurement",
                 name=spacecraft,  # Enables selecting data in callback
                 color=args.traces[spacecraft],
                 source=source,
                 legend_label=f"{spacecraft}: {args.label}",
-                visible=spacecraft == default_spacecraft,
+                line_width=2 if args.label == "|B|" else 1,
+                visible=(
+                    spacecraft == default_spacecraft
+                    and args.label not in HIDDEN_BY_DEFAULT_LABELS
+                ),
             )
+            # Tag the renderer (rather than the glyph) with its measurement label so
+            # it can be identified later, e.g. in update_legend_on_spacecraft_selection.
+            line_renderer.tags = [args.label]
     # Show pass data for SO only
     pass_spacecraft = "SO"
     pass_contact_data_source = add_pass_source(pass_spacecraft)
@@ -251,7 +281,7 @@ def create_timeseries_plot(
     # Add 'Now' label next to the vertical line
     plot.add_layout(get_now_label(current_time))
     # Update legend to show/hide selected spacecraft data
-    update_legend_on_spacecraft_selection(plot)
+    update_legend_on_spacecraft_selection(plot, default_spacecraft)
 
     return plot
 
@@ -338,7 +368,10 @@ def create_timeseries_layout() -> Column:
 
     for plot in plots:
         add_callback_to_checkbox_button(
-            plot=plot, button=button, pass_checkbox=passes_button
+            plot=plot,
+            button=button,
+            pass_checkbox=passes_button,
+            hidden_by_default_labels=list(HIDDEN_BY_DEFAULT_LABELS),
         )
 
     widgets = row(button, time_dropdown, sizing_mode="stretch_width")

@@ -44,7 +44,8 @@ def checkbox_button_group(
 def add_callback_to_checkbox_button(
     plot: figure,
     button: CheckboxButtonGroup,
-    pass_checkbox: CheckboxGroup = None,
+    pass_checkbox: CheckboxGroup | None = None,
+    hidden_by_default_labels: list[str] | None = None,
 ) -> None:
     """Enables the data in the plot to be updated depending on the checkbox button.
 
@@ -53,11 +54,19 @@ def add_callback_to_checkbox_button(
         button: A checkbox button group to select the spacecraft to display data for.
         pass_checkbox: An optional CheckboxGroup to show/hide pass data when "SO"
                 is selected.
+        hidden_by_default_labels: Optional list of measurement labels that should
+            remain hidden even when their spacecraft is toggled on. Their legend
+            entry still becomes visible/clickable so they can be shown manually.
     """
     legend = plot.legend[0] if isinstance(plot.legend, list) else plot.legend
 
     # add pass checkbox to args if it exists, so we can use it in the callback
-    js_args = dict(button=button, legend=legend, plot=plot)
+    js_args = dict(
+        button=button,
+        legend=legend,
+        plot=plot,
+        hidden_by_default_labels=hidden_by_default_labels or [],
+    )
     if pass_checkbox:
         js_args["pass_checkbox"] = pass_checkbox
 
@@ -99,9 +108,16 @@ def add_callback_to_checkbox_button(
                 const index = labels.indexOf(renderer.name);
                 if (index === -1) return;
 
-                const visible = selection.includes(index);
-                renderer.visible = visible;
-                item.visible = visible;
+                const is_selected = selection.includes(index);
+                const is_hidden_by_default = (renderer.tags || []).some(
+                    (tag) => hidden_by_default_labels.includes(tag)
+                );
+
+                // Hidden-by-default traces stay hidden even when their spacecraft
+                // is toggled on; the legend entry becomes visible/clickable so
+                // they can be revealed manually instead.
+                renderer.visible = is_selected && !is_hidden_by_default;
+                item.visible = is_selected;
             });
             """,
     )
