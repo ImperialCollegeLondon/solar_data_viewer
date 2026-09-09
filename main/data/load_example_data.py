@@ -37,6 +37,7 @@ for model in MAG_MODELS.values():
             bx_gsm=row[0],
             by_gsm=row[1],
             bz_gsm=row[2],
+            b_mag=np.linalg.norm(row[:3]),
             phi_gsm=row[3],
             theta_gsm=row[4],
         )
