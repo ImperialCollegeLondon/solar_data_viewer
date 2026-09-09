@@ -199,6 +199,30 @@ class IMAPSWAPI(models.Model):
         managed = False
 
 
+class SOSWAPAS(models.Model):
+    """Model describing the SWA PAS for SO spacecraft."""
+
+    time = models.DateTimeField(
+        primary_key=True,
+        null=False,
+        help_text="Time for the data.",
+        db_column="time_tag",
+    )
+
+    speed = models.FloatField(
+        help_text="Speed in x dimension in km/s.", db_column="vx_km_s"
+    )
+
+    density = models.FloatField(
+        help_text="Density in cm^-3.",
+        db_column="density_per_cc",
+    )
+
+    class Meta:  # noqa: D106
+        db_table = "solo_LL1_swa_pas"
+        managed = False
+
+
 MAG_MODELS = {
     "IMAP": IMAPGSEMagneticField,
     "SO": SOGSEMagneticField,
@@ -211,5 +235,6 @@ WIND_MODELS = {
     "IMAP": IMAPSWAPI,
     "SOLAR-1": NOAASOLAR1Wind,
     "ACE": NOAAACEWind,
+    "SO": SOSWAPAS,
 }
 """Models to handle solar wind data for the supported missions."""

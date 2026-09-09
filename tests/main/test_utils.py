@@ -39,6 +39,8 @@ def test_load_plot_config(plots_config):
         ("IMAP", "density", "WIND_MODELS"),
         ("IMAP", "speed", "WIND_MODELS"),
         ("IMAP", "temperature", "WIND_MODELS"),
+        ("SO", "density", "WIND_MODELS"),
+        ("SO", "speed", "WIND_MODELS"),
     ],
 )
 @pytest.mark.parametrize("days", [1, 3, 7])
@@ -70,6 +72,10 @@ def test_get_trace_data(spacecraft, measurement, model_group, days):
     expected_meas = list(
         model.objects.filter(time__in=times[-num:]).values_list(measurement, flat=True)
     )
+    # handle negative SO PAS speed values
+    if spacecraft == "SO" and measurement == "speed":
+        expected_meas = [abs(value) for value in expected_meas]
+
     expected_dates = (times[-num:].astype("int64") // 10**3).to_list()
 
     assert list(actual.keys()) == ["measurement", "date"]

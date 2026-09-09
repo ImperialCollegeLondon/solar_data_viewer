@@ -6,9 +6,10 @@ as if it were being received sort of 'live' whenever the tool is launched.
 
 import numpy as np
 import pandas as pd
+from django.db.models import Model
 from django.utils import timezone
 
-from main.models import MAG_MODELS, WIND_MODELS, SOContactSchedule
+from main.models import MAG_MODELS, SOSWAPAS, WIND_MODELS, SOContactSchedule
 
 # Define the times
 now = timezone.now()
@@ -46,16 +47,19 @@ for model in MAG_MODELS.values():
     model.objects.bulk_create(mfield)  # type: ignore[attr-defined]
 
 ########################################################################################
-# Load IMAP SWAPI data
+# Load wind data
 ########################################################################################
 
 wind_times = pd.date_range(
     start=now - pd.Timedelta(days=10), end=now, freq="20s"
 ).to_series()
 
-# Remove existing SWAPI rows and replace with fresh examples.
+# Remove existing rows and replace with fresh examples.
+
 for model in WIND_MODELS.values():
     model.objects.all().delete()  # type: ignore[attr-defined]
+
+    data: list[Model]
 
     # Add data
     density = np.random.normal(loc=3.95, scale=0.22, size=len(wind_times))
@@ -66,17 +70,28 @@ for model in WIND_MODELS.values():
     speed = speed.clip(387, 390).round(2)
     temperature = temperature.clip(26600, 28200).round(2)
 
-    data = [
-        model(
-            time=t,
-            density=density_i,
-            speed=speed_i,
-            temperature=temperature_i,
-        )
-        for t, density_i, speed_i, temperature_i in zip(
-            wind_times, density, speed, temperature
-        )
-    ]
+    if model == SOSWAPAS:
+        data = [
+            model(
+                time=t,
+                density=density_i,
+                speed=-abs(speed_i),  # make negative to simulate the SO speed data
+            )
+            for t, density_i, speed_i in zip(wind_times, density, speed)
+        ]
+
+    else:
+        data = [
+            model(
+                time=t,
+                density=density_i,
+                speed=speed_i,
+                temperature=temperature_i,
+            )
+            for t, density_i, speed_i, temperature_i in zip(
+                wind_times, density, speed, temperature
+            )
+        ]
 
     # Add the data to the DB in bulk
     model.objects.bulk_create(data)  # type: ignore[attr-defined]

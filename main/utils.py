@@ -9,8 +9,8 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from django.db.models import Avg, Model
-from django.db.models.functions import TruncMinute
+from django.db.models import Avg, Expression, Model
+from django.db.models.functions import Abs, TruncMinute
 from django.template import Context, Template
 from django.utils import timezone
 
@@ -202,15 +202,28 @@ def _get_trace_data(
         A dictionary containing the relevant datetimes in UNIX epoch time format and
             the measurements to plot.
     """
+    average_expression: str | Expression = measurement
+
     # Get the relevant data from the DB
     most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=UTC)
     start_time = timezone.now()
+
+    # no temperature measurement from SO PAS
+    if spacecraft == "SO" and measurement == "temperature":
+        return {"measurement": [], "date": []}
+
     try:
+        average_expression = measurement
+
+        # make sure SO PAS temperature is always positive
+        if spacecraft == "SO" and measurement == "speed":
+            average_expression = Abs("speed")
+
         dataquery = (
             model.objects.filter(time__gt=most_recent)  # type: ignore[attr-defined]
             .annotate(date=TruncMinute("time"))
             .values("date")
-            .annotate(average=Avg(measurement))
+            .annotate(average=Avg(average_expression))
             .order_by("date")
         )
     except Exception as e:
