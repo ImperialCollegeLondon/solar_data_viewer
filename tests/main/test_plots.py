@@ -61,6 +61,110 @@ def test_create_timeseries_plot():
     assert f"from_date={from_date}" in first_source.data_url
 
 
+def test_create_timeseries_plot_hides_bx_by_gsm_by_default():
+    """Test that Bx/By GSM traces are plotted but hidden, with a clickable legend."""
+    from main.plots import create_timeseries_plot
+
+    plot_config = PlotConfig(
+        title="Magnetic field",
+        unit="nT",
+        measurements={
+            "bx_gsm": MeasurementConfig(
+                label="Bx GSM", traces={"A": "red", "B": "blue"}
+            ),
+            "by_gsm": MeasurementConfig(
+                label="By GSM", traces={"A": "red", "B": "blue"}
+            ),
+            "bz_gsm": MeasurementConfig(
+                label="Bz GSM", traces={"A": "red", "B": "blue"}
+            ),
+        },
+    )
+
+    spacecrafts = ["A", "B"]
+    default_spacecraft = "A"
+    x_range = figure(x_axis_type="datetime").x_range
+
+    plot = create_timeseries_plot(
+        plot_config, spacecrafts, x_range, default_spacecraft=default_spacecraft
+    )
+
+    line_renderers = {
+        (renderer.name, renderer.tags[0]): renderer
+        for renderer in plot.renderers
+        if renderer.tags
+    }
+
+    # Bx GSM/By GSM traces for the default spacecraft are plotted but not shown.
+    assert line_renderers[("A", "Bx GSM")].visible is False
+    assert line_renderers[("A", "By GSM")].visible is False
+    # Bz GSM is not hidden, so it follows the usual default spacecraft behaviour.
+    assert line_renderers[("A", "Bz GSM")].visible is True
+
+    # Traces for the non-default spacecraft remain hidden regardless of the label.
+    assert line_renderers[("B", "Bx GSM")].visible is False
+    assert line_renderers[("B", "Bz GSM")].visible is False
+
+    legend_items = {item.label.value: item for item in plot.legend.items}
+
+    # Legend entries for Bx GSM/By GSM stay visible/clickable even though the
+    # default spacecraft's trace is hidden.
+    assert legend_items["A: Bx GSM"].visible is True
+    assert legend_items["A: By GSM"].visible is True
+    # Legend entries for the non-default spacecraft are hidden as usual, including
+    # for Bx GSM/By GSM since that spacecraft isn't toggled on.
+    assert legend_items["B: Bx GSM"].visible is False
+    assert legend_items["B: Bz GSM"].visible is False
+
+
+def test_update_legend_keeps_hidden_by_default_labels_visible_for_toggled_spacecraft():
+    """Test legend items for HIDDEN_BY_DEFAULT_LABELS stay visible when hidden, as
+    long as their spacecraft is the toggled (default) one.
+    """  # noqa: D205
+    from main.plots import (
+        HIDDEN_BY_DEFAULT_LABELS,
+        update_legend_on_spacecraft_selection,
+    )
+
+    label = next(iter(HIDDEN_BY_DEFAULT_LABELS))
+
+    p = figure()
+    r = p.line([0, 1], [0, 1], visible=False, name="A")
+    r.tags = [label]
+
+    item = LegendItem(label="Test", renderers=[r])
+    legend = Legend(items=[item])
+    p.add_layout(legend)
+
+    update_legend_on_spacecraft_selection(p, default_spacecraft="A")
+
+    assert item.visible is True
+
+
+def test_update_legend_hides_hidden_by_default_labels_for_other_spacecraft():
+    """Test legend items for HIDDEN_BY_DEFAULT_LABELS are hidden when their
+    spacecraft isn't the toggled (default) one.
+    """  # noqa: D205
+    from main.plots import (
+        HIDDEN_BY_DEFAULT_LABELS,
+        update_legend_on_spacecraft_selection,
+    )
+
+    label = next(iter(HIDDEN_BY_DEFAULT_LABELS))
+
+    p = figure()
+    r = p.line([0, 1], [0, 1], visible=False, name="B")
+    r.tags = [label]
+
+    item = LegendItem(label="Test", renderers=[r])
+    legend = Legend(items=[item])
+    p.add_layout(legend)
+
+    update_legend_on_spacecraft_selection(p, default_spacecraft="A")
+
+    assert item.visible is False
+
+
 def test_create_timeseries_plots():
     """Test the create_timeseries_plots function."""
     from main.plots import create_timeseries_plots
