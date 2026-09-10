@@ -39,10 +39,13 @@ class TestDataView:
     def test_get(self, client):
         """Test the get method."""
         with patch("main.views.retrieve_data") as process_data_mock:
-            process_data_mock.return_value = {
-                "measurement": [3.0, 4.0, 5.0],
-                "date": [1767867720000, 1767867780000, 1767867840000],
-            }
+            process_data_mock.return_value = (
+                "",
+                {
+                    "measurement": [3.0, 4.0, 5.0],
+                    "date": [1767867720000, 1767867780000, 1767867840000],
+                },
+            )
             measurement, spacecraft = "speed", "IMAP"
             endpoint = reverse("main:data", args=[measurement, spacecraft])
             response = client.get(endpoint)

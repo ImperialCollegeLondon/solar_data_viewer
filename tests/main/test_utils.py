@@ -85,7 +85,7 @@ def test_get_trace_data(spacecraft, measurement, model_group, days):
         baker.make(model, time=itertools.cycle(times), _quantity=len(times))
 
     # Find the actual and expected values
-    actual = _get_trace_data(spacecraft, measurement, from_date, model=model)
+    _, actual = _get_trace_data(spacecraft, measurement, from_date, model=model)
     expected_meas = list(
         model.objects.filter(time__in=times[-num:]).values_list(measurement, flat=True)
     )
