@@ -1,5 +1,6 @@
 """API module for the solar_data_viewer application."""
 
+from django.http import HttpRequest
 from ninja import Field, NinjaAPI, Path, Query, Schema, Status
 
 from .utils import retrieve_data
@@ -7,7 +8,7 @@ from .utils import retrieve_data
 api = NinjaAPI(title="Solar Data Viewer API docs")
 
 
-class ScienceDataResponse(Schema):
+class ScienceDataResponse(Schema):  # type: ignore[explicit-any]
     """Response schema for science data - mag or wind."""
 
     date: list[int] = Field(..., description="List of dates as timestamps in ms.")
@@ -16,7 +17,7 @@ class ScienceDataResponse(Schema):
     )
 
 
-class ErrorResponse(Schema):
+class ErrorResponse(Schema):  # type: ignore[explicit-any]
     """Response in case of errors."""
 
     message: str = Field(
@@ -29,17 +30,19 @@ class ErrorResponse(Schema):
     response={200: ScienceDataResponse, 500: ErrorResponse},
 )
 def get_science_data(
-    request,
-    measurement: str = Path(..., description="Name of the measurement of interest."),
-    spacecraft: str = Path(
+    request: HttpRequest,
+    measurement: str = Path(  # type: ignore[type-arg]
+        ..., description="Name of the measurement of interest."
+    ),
+    spacecraft: str = Path(  # type: ignore[type-arg]
         ..., description="Name of the spacecraft to retrieve data for."
     ),
-    from_date: int | None = Query(
+    from_date: int | None = Query(  # type: ignore[type-arg]
         None,
         description="The date to use as the starting point to get data (in ms format). "
         "If null, defaults to 7 days ago from the current time.",
     ),
-):
+) -> dict[str, list[float]] | Status[dict[str, str]]:
     """Get the science data - wind or mag - for the requested spacecraft."""
     error, data = retrieve_data(spacecraft.upper(), measurement, from_date)
 
