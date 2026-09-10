@@ -670,6 +670,19 @@ wheels = [
 ]
 
 [[package]]
+name = "django-ninja"
+version = "1.7.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+    { name = "pydantic" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/25/f7/410af3b53845f04c94a9dabe5934117d9546b6f5ce4028cff5b74deb933c/django_ninja-1.7.0.tar.gz", hash = "sha256:7a0ce06c978a42a808d9a9d7ba1cda383df8eea90040cfc232ad10b7d9024e0d", size = 2341450, upload-time = "2026-08-30T17:49:19.718Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/54/d6/f4f939b912c696b6fc19e15ed3b2b37ac7cb09600373e83211f44adaf6d5/django_ninja-1.7.0-py3-none-any.whl", hash = "sha256:f1a0f762c9810dabcb040fcff76c6e2f5d0cdb51b4a597799ee06b5df8481f3f", size = 2376156, upload-time = "2026-08-30T17:49:17.552Z" },
+]
+
+[[package]]
 name = "django-stubs"
 version = "6.0.9"
 source = { registry = "https://pypi.org/simple" }
@@ -2346,6 +2359,7 @@ dependencies = [
     { name = "azure-monitor-opentelemetry" },
     { name = "bokeh" },
     { name = "django" },
+    { name = "django-ninja" },
     { name = "gunicorn" },
     { name = "pandas" },
     { name = "psycopg2-binary" },
@@ -2384,6 +2398,7 @@ requires-dist = [
     { name = "azure-monitor-opentelemetry", specifier = ">=1.8.9" },
     { name = "bokeh", specifier = ">=3.8.2" },
     { name = "django", specifier = ">=6.0.7" },
+    { name = "django-ninja", specifier = ">=1.7.0" },
     { name = "gunicorn", specifier = ">=26.0.0" },
     { name = "pandas", specifier = ">=3.0.5" },
     { name = "psycopg2-binary", specifier = ">=2.9.12" },
