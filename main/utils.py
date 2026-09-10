@@ -101,7 +101,7 @@ def reindex_data(df: pd.DataFrame, threshold: str = "1m") -> pd.DataFrame:
 
 def retrieve_data(
     spacecraft: str, measurement: str, from_date: int | None
-) -> dict[str, list[float]]:
+) -> tuple[str, dict[str, list[float]]]:
     """Selects between different retrieval functions, calls them and returns the data.
 
     Args:
@@ -133,11 +133,10 @@ def retrieve_data(
             spacecraft, measurement, from_date, model=models.WIND_MODELS[spacecraft]
         )
 
-    logger.warning(
-        f"Measurement '{measurement}' for spacecraft '{spacecraft}' is not supported."
-    )
+    err = f"Measurement '{measurement}' for spacecraft '{spacecraft}' does not exist."
+    logger.error(err)
 
-    return {"measurement": [], "date": []}
+    return err, {"measurement": [], "date": []}
 
 
 def get_pass_data(spacecraft: str) -> dict[str, list[float]]:
@@ -189,7 +188,7 @@ def get_pass_data(spacecraft: str) -> dict[str, list[float]]:
 
 def _get_trace_data(
     spacecraft: str, measurement: str, from_date: int, model: type[Model]
-) -> dict[str, list[float]]:
+) -> tuple[str, dict[str, list[float]]]:
     """Retrieves a component of the magnetic field data for the SO and IMAP missions.
 
     Args:
@@ -210,7 +209,7 @@ def _get_trace_data(
 
     # no temperature measurement from SO PAS
     if spacecraft == "SO" and measurement == "temperature":
-        return {"measurement": [], "date": []}
+        return "", {"measurement": [], "date": []}
 
     try:
         average_expression = measurement
@@ -242,8 +241,9 @@ def _get_trace_data(
             .order_by("date")
         )
     except Exception as e:
-        logger.error(f"Error querying {spacecraft} {measurement} data from the DB: {e}")
-        return {"measurement": [], "date": []}
+        err = f"Error querying {spacecraft} {measurement} data from the DB: {e}"
+        logger.error(err)
+        return err, {"measurement": [], "date": []}
 
     data = pd.DataFrame(dataquery)
     logger.info(
@@ -252,7 +252,7 @@ def _get_trace_data(
         f"{len(data)} records. Start time is {most_recent}."
     )
     if not len(data):
-        return {"measurement": [], "date": []}
+        return "", {"measurement": [], "date": []}
 
     try:
         # Do some post processing to sanitize the data
@@ -266,12 +266,11 @@ def _get_trace_data(
         dates = data.index.tolist()
         measurements = data["average"].tolist()
     except Exception as e:
-        logger.error(
-            f"Error processing {spacecraft} {measurement} data from the DB: {e}"
-        )
-        return {"measurement": [], "date": []}
+        err = f"Error processing {spacecraft} {measurement} data from the DB: {e}"
+        logger.error(err)
+        return err, {"measurement": [], "date": []}
 
-    return {"measurement": measurements, "date": dates}
+    return "", {"measurement": measurements, "date": dates}
 
 
 def get_solar_orbiter_dates() -> list[tuple[date, date]]:

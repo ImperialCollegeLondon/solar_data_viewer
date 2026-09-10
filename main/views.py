@@ -82,7 +82,7 @@ class DataView(View):
         else:
             from_date = None
 
-        data = retrieve_data(spacecraft, measurement, from_date)
+        _, data = retrieve_data(spacecraft, measurement, from_date)
         return JsonResponse(data)
 
 
