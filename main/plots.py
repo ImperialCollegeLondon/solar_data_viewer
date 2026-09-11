@@ -507,8 +507,6 @@ def create_l1_plot(
         match_aspect=True,
         x_axis_label=x_axis_label,
         y_axis_label=y_axis_label,
-        x_range=Range1d(-110, 110),
-        y_range=Range1d(-55, 55),
         sizing_mode="stretch_width",
     )
 
