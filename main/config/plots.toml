@@ -18,10 +18,12 @@ traces = {IMAP = "red", SO = "blue", "SOLAR-1" = "black", "ACE" = "brown"}
 
 [plots.measurements.bx_gsm]
 label = "Bx GSM"
+spacecraft_labels = {SO = "Bx GSE"}
 traces = {IMAP = "red", SO = "blue", "SOLAR-1" = "black", "ACE" = "brown"}
 
 [plots.measurements.by_gsm]
 label = "By GSM"
+spacecraft_labels = {SO = "By GSE"}
 traces = {IMAP = "indianred", SO = "dodgerblue", "SOLAR-1" = "darkslategray", "ACE" = "sienna"}
 
 [plots.measurements.bz_gsm]
@@ -34,6 +36,7 @@ unit = "deg"
 
 [plots.measurements.phi_gsm]
 label = "Phi GSM"
+spacecraft_labels = {SO = "Phi GSE"}
 traces = {IMAP = "red", SO = "blue", "SOLAR-1" = "black", "ACE" = "brown"}
 
 [[plots]]
@@ -42,6 +45,7 @@ unit = "deg"
 
 [plots.measurements.theta_gsm]
 label = "Theta GSM"
+spacecraft_labels = {SO = "Theta GSE"}
 traces = {IMAP = "red", SO = "blue", "SOLAR-1" = "black", "ACE" = "brown"}
 
 [[plots]]
