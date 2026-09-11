@@ -245,7 +245,10 @@ def create_timeseries_plot(
 
     for measurement, args in plot_config.measurements.items():
         for spacecraft in spacecrafts:
-            label = args.spacecraft_labels.get(spacecraft, args.label)
+            if spacecraft in args.spacecraft_labels:  # Use spacecraft-specific label
+                label = args.spacecraft_labels[spacecraft]
+            else:
+                label = args.label
             # Create an AjaxDataSource for each spacecraft and measurement
             source = AjaxDataSource(
                 data_url=f"/data/{measurement}/{spacecraft}?from_date={from_date}",
