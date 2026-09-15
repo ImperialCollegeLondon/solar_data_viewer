@@ -245,6 +245,7 @@ def create_timeseries_plot(
 
     for measurement, args in plot_config.measurements.items():
         for spacecraft in spacecrafts:
+            label = args.spacecraft_labels.get(spacecraft, args.label)
             # Create an AjaxDataSource for each spacecraft and measurement
             source = AjaxDataSource(
                 data_url=f"/data/{measurement}/{spacecraft}?from_date={from_date}",
@@ -260,7 +261,7 @@ def create_timeseries_plot(
                 name=spacecraft,  # Enables selecting data in callback
                 color=args.traces[spacecraft],
                 source=source,
-                legend_label=f"{spacecraft}: {args.label}",
+                legend_label=f"{spacecraft}: {label}",
                 line_width=2 if args.label == "|B|" else 1,
                 visible=(
                     spacecraft == default_spacecraft
