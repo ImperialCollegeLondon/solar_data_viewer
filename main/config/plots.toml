@@ -28,6 +28,7 @@ traces = {IMAP = "indianred", SO = "dodgerblue", "SOLAR-1" = "darkslategray", "A
 
 [plots.measurements.bz_gsm]
 label = "Bz GSM"
+spacecraft_labels = {SO = "Bz GSE"}
 traces = {IMAP = "lightsalmon", SO = "powderblue", "SOLAR-1" = "lightslategray", "ACE" = "maroon"}
 
 [[plots]]
