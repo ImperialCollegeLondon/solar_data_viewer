@@ -18,6 +18,9 @@ class MeasurementConfig(BaseConfig):
     label: str
     """The label to use in the legend for the measurement."""
 
+    spacecraft_labels: dict[str, str] = {}
+    """Optional spacecraft-specific labels (e.g. using GSE for SO)."""
+
     traces: dict[str, str]
     """A dictionary mapping the trace for each spacecraft to a Bokeh colour, e.g.
     {'IMAP': 'blue', 'SO': 'red'}."""
