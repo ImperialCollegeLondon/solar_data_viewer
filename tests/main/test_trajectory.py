@@ -1,10 +1,11 @@
 """Test suite for the trajectory plots."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import Mock, patch
 
 import numpy as np
 from astropy.coordinates import SkyCoord
+from django.utils import timezone
 from sunpy.coordinates.frames import HeliographicStonyhurst
 
 from main.trajectory import (
@@ -21,7 +22,7 @@ from main.utils import L1Config
 
 def test_get_earth_coordinates():
     """Test the get_earth_coordinates function."""
-    time = datetime.now()
+    time = timezone.now()
     coord = get_earth_coordinates(time)
     assert isinstance(coord, HeliographicStonyhurst)
 
@@ -33,7 +34,7 @@ def test_get_earth_coordinates():
 def test_get_JPL_spacecraft_coordinates():
     """Test the get_JPL_spacecraft_coordinates function."""
     # ACE id is -92
-    time = datetime.now() - timedelta(days=1)
+    time = timezone.now() - timedelta(days=1)
     coord = get_JPL_spacecraft_coordinates(-92, time)
     assert isinstance(coord, SkyCoord)
 
@@ -44,7 +45,7 @@ def test_get_JPL_spacecraft_coordinates():
 
 def test_heliographic_to_cartesian():
     """Test the heliographic_to_cartesian function."""
-    time = datetime.now()
+    time = timezone.now()
     earth_coord = get_earth_coordinates(time)
     cart_coords = heliographic_to_cartesian(earth_coord)
     assert all(isinstance(coord, float) for coord in cart_coords)
@@ -87,7 +88,7 @@ def test_l1_data(load_config_mock, gse_mock, trajectory_mock):
     ]
     load_config_mock.return_value = mock_config
 
-    time = datetime.now()
+    time = timezone.now()
     times = (time - timedelta(7), time + timedelta(7))
     static_data, trajectory_data, arrow_data = l1_data(times)
 
@@ -113,7 +114,7 @@ def test_l1_data(load_config_mock, gse_mock, trajectory_mock):
 
 def test_heliographic_earth_separation_angles():
     """Test the heliographic_earth_separation_angles function."""
-    time = datetime.now()
+    time = timezone.now()
     earth_coord = get_earth_coordinates(time)
     coord = get_JPL_spacecraft_coordinates("IMAP", time)
     angles = heliographic_to_earth_separation_angles(coord, earth_coord)
@@ -133,7 +134,7 @@ def test_generate_solar_orbiter_statistics(
     earth_mock.return_value.radius.to_value.return_value = 1.0
     so_mock.return_value.radius.to_value.return_value = 0.2
     angles_mock.return_value = (10.0, 5.0)
-    datetime_mock.now.return_value = datetime.now()
+    datetime_mock.now.return_value = timezone.now()
 
     stats = generate_solar_orbiter_statistics()
     assert stats["sun_earth_angle"] == 10

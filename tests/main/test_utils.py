@@ -6,6 +6,7 @@ from unittest.mock import mock_open, patch
 
 import pandas as pd
 import pytest
+from django.utils import timezone
 from model_bakery import baker
 
 from main.config import PlotsConfig
@@ -104,7 +105,7 @@ def test_get_trace_data(spacecraft, measurement, model_group, days):
 
 def test_reindex_data():
     """Test the reindex_data function."""
-    start = datetime.now()
+    start = timezone.now()
     dates = [start + timedelta(days=i) for i in range(10)]
     expected_dates = dates.copy()
 

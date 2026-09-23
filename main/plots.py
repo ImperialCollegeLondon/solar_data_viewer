@@ -23,6 +23,7 @@ from bokeh.models.layouts import Column, Row
 from bokeh.models.widgets.groups import CheckboxButtonGroup
 from bokeh.plotting import figure
 from django.conf import settings
+from django.utils import timezone
 
 from .config import PlotConfig
 from .utils import load_l1_config, load_plot_config
@@ -238,7 +239,7 @@ def create_timeseries_plot(
     # Disable level-of-detail downsampling to ensure the lines
     # are always fully rendered and not greyed out.
     plot.lod_threshold = None
-    current_time = datetime.datetime.now()
+    current_time = timezone.now()
 
     from_date_ = current_time - datetime.timedelta(days=7)
     from_date = int(from_date_.timestamp()) * 1000
@@ -276,7 +277,7 @@ def create_timeseries_plot(
     pass_contact_data_source = add_pass_source(pass_spacecraft)
     add_pass_contact_vstrip(pass_contact_data_source, plot)
 
-    current_time = datetime.datetime.now()
+    current_time = timezone.now()
     # Add vertical line for current time
     plot.add_layout(get_now_vertical_line(current_time))
     # Add 'Now' label next to the vertical line
@@ -316,7 +317,7 @@ def create_timeseries_plots(
     # Calculate start and end times
     delta = datetime.timedelta(days=3)
     future_buffer = datetime.timedelta(days=1)
-    current_time = datetime.datetime.now()
+    current_time = timezone.now()
     end_time = current_time + future_buffer
     start_time = current_time - delta
 
