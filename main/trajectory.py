@@ -8,6 +8,7 @@ from typing import cast
 import astropy.units as u
 import numpy as np
 from astropy.coordinates import SkyCoord
+from django.utils import timezone
 from sunpy.coordinates import get_body_heliographic_stonyhurst, get_horizons_coord
 from sunpy.coordinates.frames import GeocentricSolarEcliptic, HeliographicStonyhurst
 
@@ -214,7 +215,7 @@ def generate_solar_orbiter_statistics() -> dict[str, str | float]:
         Dictionary containing statistics that can be accessed in the HTML
             template.
     """
-    time = datetime.now()
+    time = timezone.now()
     earth = get_earth_coordinates(time)
     so = cast(SkyCoord, get_JPL_spacecraft_coordinates("Solar Orbiter", time))
 
@@ -340,7 +341,7 @@ def check_if_so_in_communication() -> str | None:
             communication) or None if not.
     """
     so_dates = get_solar_orbiter_dates()
-    today = datetime.now().date()
+    today = timezone.now().date()
 
     for start, end in so_dates:
         if start <= today <= end:

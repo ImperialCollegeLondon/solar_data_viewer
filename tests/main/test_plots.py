@@ -1,7 +1,7 @@
 """Test suite for the plots."""
 
 import math
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import Mock, patch
 
 from bokeh.models import (  # type: ignore
@@ -14,6 +14,7 @@ from bokeh.models import (  # type: ignore
     Span,
 )
 from bokeh.plotting import figure
+from django.utils import timezone
 
 from main.config import MeasurementConfig, PlotConfig
 from main.plots import add_pass_contact_vstrip, add_pass_source
@@ -38,6 +39,9 @@ def test_create_timeseries_plot():
     spacecrafts = ["A", "B"]
     x_range = figure(x_axis_type="datetime").x_range
 
+    # Need to keep the following two close, so the difference in "now" is not picked
+    # by the test
+    from_date_ = timezone.now() - timedelta(days=7)
     plot = create_timeseries_plot(plot_config, spacecrafts, x_range)
 
     assert isinstance(plot, figure)
@@ -56,7 +60,6 @@ def test_create_timeseries_plot():
     first_source = plot.renderers[0].data_source
     assert isinstance(first_source, AjaxDataSource)
 
-    from_date_ = datetime.now() - timedelta(days=7)
     from_date = int(from_date_.timestamp()) * 1000
     assert f"from_date={from_date}" in first_source.data_url
 
@@ -265,7 +268,7 @@ def test_get_now_vertical_line():
     """Test the get_now_vertical_line function."""
     from main.plots import get_now_vertical_line
 
-    now = datetime.now().timestamp() * 1000
+    now = timezone.now().timestamp() * 1000
     line = get_now_vertical_line(now)
 
     assert isinstance(line, Span)
@@ -278,7 +281,7 @@ def test_get_now_label():
     """Test the get_now_label function."""
     from main.plots import get_now_label
 
-    now = datetime.now()
+    now = timezone.now()
     label = get_now_label(now)
 
     assert label.x == now.timestamp() * 1000

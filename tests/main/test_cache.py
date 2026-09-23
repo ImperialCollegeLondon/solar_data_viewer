@@ -1,19 +1,20 @@
 """Test suite for cache."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import patch
 
 from django.core.cache import cache
+from django.utils import timezone
 
 
 @patch("main.cache.static_solar_orbiter_data")
 @patch("main.cache.trajectory_solar_orbiter_data")
-@patch("main.cache.datetime")
+@patch("main.cache.timezone")
 def test_set_so_trajectory_cache(datetime_mock, traj_data_mock, static_data_mock):
     """Test the set_so_trajectory_cache function."""
     from main.cache import set_so_trajectory_cache
 
-    time = datetime.now()
+    time = timezone.now()
     times = (time - timedelta(days=7), time + timedelta(days=7))
     datetime_mock.now.return_value = time
     traj_data_mock.return_value = ("trajectory data", "arrow data")
@@ -40,12 +41,12 @@ def test_set_so_trajectory_cache(datetime_mock, traj_data_mock, static_data_mock
 
 
 @patch("main.cache.l1_data")
-@patch("main.cache.datetime")
+@patch("main.cache.timezone")
 def test_set_l1_trajectory_cache(datetime_mock, l1_data_mock):
     """Test the set_l1_trajectory_cache function."""
     from main.cache import set_l1_trajectory_cache
 
-    time = datetime.now()
+    time = timezone.now()
     times = (time - timedelta(days=7), time + timedelta(days=7))
     datetime_mock.now.return_value = time
     l1_data_mock.return_value = ("static data", "trajectory data", "arrow data")

@@ -1,12 +1,12 @@
 """Test suite for the main views."""
 
-from datetime import datetime
 from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
 from django.http import JsonResponse
 from django.urls import reverse
+from django.utils import timezone
 
 from .view_utils import TemplateOkMixin
 
@@ -96,7 +96,7 @@ class TestTrajectoryDataView:
 
     def test_get(self, client):
         """Test the get method."""
-        today = datetime.now()
+        today = timezone.now()
 
         mock_data = {
             "static": {
@@ -140,7 +140,7 @@ class TestL1DataView:
 
     def test_get(self, client):
         """Test the get method."""
-        today = datetime.now()
+        today = timezone.now()
 
         mock_data = {
             "static": {"static": "data"},
