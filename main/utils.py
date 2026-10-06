@@ -153,7 +153,7 @@ def retrieve_data(
 
 def retrieve_batch_data(
     spacecraft: str, group: str, from_date: int | None
-) -> tuple[str, dict[str, list[int | float | str | None]]]:
+) -> tuple[str, dict[str, list[int] | list[float | str | None]]]:
     """Aggregate all measurements in a spacecraft/table group in one query."""
     start_time = timezone.now()
     if group == "mag":
@@ -178,7 +178,7 @@ def retrieve_batch_data(
 
     try:
         queryset = model.objects.filter(time__gt=most_recent)  # type: ignore[attr-defined]
-        aggregates: dict[str, Any] = {}
+        aggregates: dict[str, Avg] = {}
         for measurement in measurements:
             if measurement not in available_measurements:
                 continue
@@ -211,14 +211,17 @@ def retrieve_batch_data(
         data["date"] = pd.to_datetime(data["date"], utc=True)
         data = reindex_data(data)
         data.index = data.index.astype("int64") // 10**3
-        result: dict[str, list[int | float | str | None]] = {
+        result: dict[str, list[int] | list[float | str | None]] = {
             "date": data.index.tolist()
         }
         for measurement in measurements:
             if measurement in data:
                 result[measurement] = data[measurement].tolist()
             else:
-                result[measurement] = [None] * len(data)
+                missing_values: list[float | str | None] = []
+                for _ in range(len(data)):
+                    missing_values.append(None)
+                result[measurement] = missing_values
     else:
         result = {"date": []}
         result.update({measurement: [] for measurement in measurements})

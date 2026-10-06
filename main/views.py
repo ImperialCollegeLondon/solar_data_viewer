@@ -108,8 +108,8 @@ class BatchDataView(View):
         request: HttpRequest,
         spacecraft: str,
         group: Literal["mag", "wind"],
-        *args: Any,
-        **kwargs: Any,
+        *args: object,
+        **kwargs: object,
     ) -> JsonResponse:
         """Return minute-averaged measurement columns as JSON."""
         from_date_ = request.GET.get("from_date")
