@@ -140,3 +140,24 @@ NOAA_HAPI_URL = (
 
 URL_ACE = "https://services.swpc.noaa.gov/products/solar-wind/{dataset}-{period}.json"
 """URL for retrieving ACE data. Needs to be completted with dataset and period."""
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+    },
+    "formatters": {
+        "simple": {
+            "format": "{levelname} {asctime}: {message}",
+            "style": "{",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": os.environ.get("LOGGING_LEVEL", "INFO"),
+    },
+}
