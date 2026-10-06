@@ -61,7 +61,10 @@ def test_create_timeseries_plot():
     assert isinstance(first_source, AjaxDataSource)
 
     from_date = int(from_date_.timestamp()) * 1000
+    assert first_source.data_url.startswith("/data/batch/A/wind?")
     assert f"from_date={from_date}" in first_source.data_url
+    assert plot.renderers[0].data_source is plot.renderers[2].data_source
+    assert plot.renderers[1].data_source is plot.renderers[3].data_source
 
 
 def test_create_timeseries_plot_hides_bx_by_gsm_by_default():
@@ -226,7 +229,7 @@ def test_create_timeseries_plots():
             assert any(isinstance(tool, CrosshairTool) for tool in tools)
 
             # Check callback added to buttons
-            data_source_mock.call_count == 5
+            data_source_mock.call_count == 4
 
 
 def test_create_solar_orbiter_plot():
