@@ -17,7 +17,7 @@ from django.utils import timezone
 from . import models
 from .config import L1Config, PlotsConfig
 
-logger = getLogger("django")
+logger = getLogger(__name__)
 
 # Group measurements by spacecraft table to be used for faster aggregation
 MEASUREMENTS_BY_GROUP = {
