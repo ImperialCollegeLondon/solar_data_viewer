@@ -1,6 +1,8 @@
 services:
   app:
     build: .
+    environment:
+      - LOGGING_LEVEL
     command:
       - bash
       - -c

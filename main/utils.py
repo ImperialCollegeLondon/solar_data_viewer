@@ -17,7 +17,7 @@ from django.utils import timezone
 from . import models
 from .config import L1Config, PlotsConfig
 
-logger = getLogger("django")
+logger = getLogger(__name__)
 
 
 BATCH_SIZE = 20000
@@ -246,7 +246,7 @@ def _get_trace_data(
         return err, {"measurement": [], "date": []}
 
     data = pd.DataFrame(dataquery)
-    logger.info(
+    logger.debug(
         f"Querying {spacecraft} {measurement} data from the DB took "
         f"{(timezone.now() - start_time).total_seconds():.2f} seconds to retrieve "
         f"{len(data)} records. Start time is {most_recent}."

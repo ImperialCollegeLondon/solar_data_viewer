@@ -152,12 +152,14 @@ LOGGING = {
     },
     "formatters": {
         "simple": {
-            "format": "{levelname} {asctime}: {message}",
+            "format": "[{asctime}] {levelname}: {message}",
             "style": "{",
         },
     },
-    "root": {
-        "handlers": ["console"],
-        "level": os.environ.get("LOGGING_LEVEL", "INFO"),
+    "loggers": {
+        "main": {
+            "handlers": ["console"],
+            "level": os.environ.get("LOGGING_LEVEL", "WARNING"),
+        },
     },
 }
