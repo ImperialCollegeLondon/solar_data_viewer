@@ -16,7 +16,7 @@ from .plots import create_l1_plot, create_solar_orbiter_layout, create_timeserie
 from .trajectory import check_if_so_in_communication, generate_solar_orbiter_statistics
 from .utils import get_pass_data, retrieve_batch_data, retrieve_data
 
-logger = getLogger("django")
+logger = getLogger(__name__)
 
 
 class IndexView(TemplateView):
