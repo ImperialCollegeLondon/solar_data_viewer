@@ -1,6 +1,8 @@
 """Views for the main app."""
 
 from datetime import datetime
+from logging import getLogger
+from time import perf_counter
 from typing import Any, Literal
 
 import bokeh
@@ -12,7 +14,9 @@ from django.views.generic import TemplateView, View
 from .cache import set_l1_trajectory_cache, set_so_trajectory_cache
 from .plots import create_l1_plot, create_solar_orbiter_layout, create_timeseries_layout
 from .trajectory import check_if_so_in_communication, generate_solar_orbiter_statistics
-from .utils import get_pass_data, retrieve_data
+from .utils import get_pass_data, retrieve_batch_data, retrieve_data
+
+logger = getLogger(__name__)
 
 
 class IndexView(TemplateView):
@@ -82,7 +86,43 @@ class DataView(View):
         else:
             from_date = None
 
+        response_started = perf_counter()
+
         _, data = retrieve_data(spacecraft, measurement, from_date)
+
+        response = JsonResponse(data)
+        logger.debug(
+            "%s %s Data retrieval and JSON response creation took %.3fs (%d points)",
+            spacecraft,
+            measurement,
+            perf_counter() - response_started,
+            len(data.get("date", [])),
+        )
+        return response
+
+
+class BatchDataView(View):
+    """View for returning several measurements for one spacecraft and data table."""
+
+    def get(
+        self,
+        request: HttpRequest,
+        spacecraft: str,
+        group: Literal["mag", "wind"],
+        *args: object,
+        **kwargs: object,
+    ) -> JsonResponse:
+        """Return minute-averaged measurement columns as JSON."""
+        from_date_ = request.GET.get("from_date")
+        if from_date_:
+            try:
+                from_date = int(from_date_)
+            except ValueError:
+                raise ValueError("from_date must be an integer representing ms time.")
+        else:
+            from_date = None
+
+        _, data = retrieve_batch_data(spacecraft, group, from_date)
         return JsonResponse(data)
 
 

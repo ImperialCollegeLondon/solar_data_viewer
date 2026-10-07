@@ -53,6 +53,22 @@ class TestDataView:
             process_data_mock.assert_called_with(spacecraft, measurement, None)
 
 
+class TestBatchDataView:
+    """Test the batch data API view."""
+
+    def test_get(self, client):
+        """The batch data get method."""
+        data = {"date": [1767867720000], "speed": [400.0], "density": [20.0]}
+        with patch("main.views.retrieve_batch_data") as retrieve_mock:
+            retrieve_mock.return_value = "", data
+            endpoint = reverse("main:batch_data", args=["SO", "wind"])
+            response = client.get(f"{endpoint}?from_date=1767867000000")
+
+        assert isinstance(response, JsonResponse)
+        assert response.json() == data
+        retrieve_mock.assert_called_once_with("SO", "wind", 1767867000000)
+
+
 class TestSolarOrbiterView(TemplateOkMixin):
     """Test suite for the Solar Orbiter view."""
 

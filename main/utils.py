@@ -9,7 +9,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from django.db.models import Avg, Expression, Model
+from django.db.models import Avg, Expression, Model, Q
 from django.db.models.functions import Abs, TruncMinute
 from django.template import Context, Template
 from django.utils import timezone
@@ -19,6 +19,18 @@ from .config import L1Config, PlotsConfig
 
 logger = getLogger(__name__)
 
+# Group measurements by spacecraft table to be used for faster aggregation
+MEASUREMENTS_BY_GROUP = {
+    "mag": ("bx_gsm", "by_gsm", "bz_gsm", "b_mag", "phi_gsm", "theta_gsm"),
+    "wind": ("density", "speed", "temperature"),
+}
+
+# Map each measurement to its corresponding group for quick lookup
+MEASUREMENT_TO_GROUP = {
+    measurement: group
+    for group, measurements in MEASUREMENTS_BY_GROUP.items()
+    for measurement in measurements
+}
 
 BATCH_SIZE = 20000
 """Maximum numbers of data points to return per query.
@@ -139,6 +151,86 @@ def retrieve_data(
     return err, {"measurement": [], "date": []}
 
 
+def retrieve_batch_data(
+    spacecraft: str, group: str, from_date: int | None
+) -> tuple[str, dict[str, list[int] | list[float | str | None]]]:
+    """Aggregate all measurements in a spacecraft/table group in one query."""
+    start_time = timezone.now()
+    if group == "mag":
+        model = models.MAG_MODELS.get(spacecraft)
+    elif group == "wind":
+        model = models.WIND_MODELS.get(spacecraft)
+    else:
+        model = None
+
+    if model is None:
+        err = (
+            f"Measurement group '{group}' for spacecraft '{spacecraft}' does not exist."
+        )
+        logger.error(err)
+        return err, {"date": []}
+
+    if not from_date:
+        from_date = int((timezone.now() - timedelta(days=7)).timestamp()) * 1000
+    most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=UTC)
+    measurements = MEASUREMENTS_BY_GROUP[group]
+    available_measurements = {field.name for field in model._meta.concrete_fields}
+
+    try:
+        queryset = model.objects.filter(time__gt=most_recent)  # type: ignore[attr-defined]
+        aggregates: dict[str, Avg] = {}
+        for measurement in measurements:
+            if measurement not in available_measurements:
+                continue
+
+            expression: str | Expression = measurement
+            aggregate_filter = None
+            if spacecraft == "SO" and measurement == "speed":
+                expression = Abs("speed")
+                aggregate_filter = Q(speed__gte=100, speed__lte=2000) | Q(
+                    speed__gte=-2000, speed__lte=-100
+                )
+            elif spacecraft == "SO" and measurement == "density":
+                aggregate_filter = Q(density__gte=0.1, density__lte=500)
+
+            aggregates[measurement] = Avg(expression, filter=aggregate_filter)
+
+        rows = list(
+            queryset.annotate(date=TruncMinute("time"))
+            .values("date")
+            .annotate(**aggregates)
+            .order_by("date")
+        )
+    except Exception as e:
+        err = f"Error querying {spacecraft} {group} data from the DB: {e}"
+        logger.error(err)
+        return err, {"date": []}
+
+    if rows:
+        data = pd.DataFrame(rows)
+        data["date"] = pd.to_datetime(data["date"], utc=True)
+        data = reindex_data(data)
+        data.index = data.index.astype("int64") // 10**3
+        result: dict[str, list[int] | list[float | str | None]] = {
+            "date": data.index.tolist()
+        }
+        for measurement in measurements:
+            if measurement in data:
+                result[measurement] = data[measurement].tolist()
+            else:
+                result[measurement] = [None] * len(data)  # type: ignore
+    else:
+        result = {"date": []}
+        result.update({measurement: [] for measurement in measurements})
+
+    logger.debug(
+        f"Querying batch data for {spacecraft} {group} from the DB took "
+        f"{(timezone.now() - start_time).total_seconds():.2f} seconds to retrieve "
+        f"{len(rows)} records. Start time is {most_recent}."
+    )
+    return "", result
+
+
 def get_pass_data(spacecraft: str) -> dict[str, list[float]]:
     """Read pass data from database.
 
@@ -202,10 +294,9 @@ def _get_trace_data(
             the measurements to plot.
     """
     average_expression: str | Expression = measurement
-
+    start_time = timezone.now()
     # Get the relevant data from the DB
     most_recent = datetime.fromtimestamp(int(from_date) / 1000, tz=UTC)
-    start_time = timezone.now()
 
     # no temperature measurement from SO PAS
     if spacecraft == "SO" and measurement == "temperature":
@@ -217,7 +308,6 @@ def _get_trace_data(
         # make sure SO PAS temperature is always positive
         if spacecraft == "SO" and measurement == "speed":
             average_expression = Abs("speed")
-
         # add filters to avoid extreme values and only get data after most recent date
         queryset = model.objects.filter(time__gt=most_recent)  # type: ignore[attr-defined]
 
@@ -251,6 +341,7 @@ def _get_trace_data(
         f"{(timezone.now() - start_time).total_seconds():.2f} seconds to retrieve "
         f"{len(data)} records. Start time is {most_recent}."
     )
+
     if not len(data):
         return "", {"measurement": [], "date": []}
 

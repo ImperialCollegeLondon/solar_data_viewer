@@ -11,6 +11,11 @@ urlpatterns = [
     path("solar_orbiter", views.SolarOrbiterView.as_view(), name="solar_orbiter"),
     path("data/passes/<str:spacecraft>", views.PassView.as_view(), name="pass_data"),
     path(
+        "data/batch/<str:spacecraft>/<str:group>",
+        views.BatchDataView.as_view(),
+        name="batch_data",
+    ),
+    path(
         "data/<str:measurement>/<str:spacecraft>", views.DataView.as_view(), name="data"
     ),
     path(

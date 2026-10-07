@@ -103,6 +103,59 @@ def test_get_trace_data(spacecraft, measurement, model_group, days):
     assert expected_meas == actual["measurement"]
 
 
+@pytest.mark.django_db(databases=["imap", "so"])
+def test_retrieve_batch_data_aggregates_measurements_together():
+    """Test batch retrieval for IMAP."""
+    from main.models import IMAPGSEMagneticField
+    from main.utils import retrieve_batch_data
+
+    first_time = datetime(2024, 6, 1, 12, 0, tzinfo=UTC)
+    second_time = first_time + timedelta(seconds=20)
+    from_date = int((first_time - timedelta(minutes=1)).timestamp()) * 1000
+    baker.make(
+        IMAPGSEMagneticField,
+        time=first_time,
+        bx_gsm=2.0,
+        by_gsm=4.0,
+        b_mag=6.0,
+    )
+    baker.make(
+        IMAPGSEMagneticField,
+        time=second_time,
+        bx_gsm=4.0,
+        by_gsm=8.0,
+        b_mag=10.0,
+    )
+
+    error, result = retrieve_batch_data("IMAP", "mag", from_date)
+
+    assert error == ""
+    assert len(result["date"]) == 1
+    assert result["bx_gsm"] == [3.0]
+    assert result["by_gsm"] == [6.0]
+    assert result["b_mag"] == [8.0]
+
+
+@pytest.mark.django_db(databases=["imap", "so"])
+def test_retrieve_batch_data_solar_orbiter():
+    """Test retrieve batch data for Solar Orbiter."""
+    from main.models import SOSWAPAS
+    from main.utils import retrieve_batch_data
+
+    first_time = datetime(2024, 6, 1, 12, 0, tzinfo=UTC)
+    second_time = first_time + timedelta(seconds=20)
+    from_date = int((first_time - timedelta(minutes=1)).timestamp()) * 1000
+    baker.make(SOSWAPAS, time=first_time, speed=-400.0, density=20.0)
+    baker.make(SOSWAPAS, time=second_time, speed=-50.0, density=700.0)
+
+    error, result = retrieve_batch_data("SO", "wind", from_date)
+
+    assert error == ""
+    assert result["speed"] == [400.0]
+    assert result["density"] == [20.0]
+    assert result["temperature"] == [None]
+
+
 def test_reindex_data():
     """Test the reindex_data function."""
     start = timezone.now()
