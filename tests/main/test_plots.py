@@ -42,7 +42,15 @@ def test_create_timeseries_plot():
     # Need to keep the following two close, so the difference in "now" is not picked
     # by the test
     from_date_ = timezone.now() - timedelta(days=7)
-    plot = create_timeseries_plot(plot_config, spacecrafts, x_range)
+    from_date_unix = int(from_date_.timestamp()) * 1000
+    data_sources = {
+        (spacecraft, "wind"): AjaxDataSource(
+            data_url=(f"/data/batch/{spacecraft}/wind?from_date={from_date_unix}")
+        )
+        for spacecraft in spacecrafts
+    }
+
+    plot = create_timeseries_plot(plot_config, spacecrafts, x_range, data_sources)
 
     assert isinstance(plot, figure)
 
@@ -60,9 +68,8 @@ def test_create_timeseries_plot():
     first_source = plot.renderers[0].data_source
     assert isinstance(first_source, AjaxDataSource)
 
-    from_date = int(from_date_.timestamp()) * 1000
     assert first_source.data_url.startswith("/data/batch/A/wind?")
-    assert f"from_date={from_date}" in first_source.data_url
+    assert f"from_date={from_date_unix}" in first_source.data_url
     assert plot.renderers[0].data_source is plot.renderers[2].data_source
     assert plot.renderers[1].data_source is plot.renderers[3].data_source
 
@@ -91,8 +98,21 @@ def test_create_timeseries_plot_hides_bx_by_gsm_by_default():
     default_spacecraft = "A"
     x_range = figure(x_axis_type="datetime").x_range
 
+    from_date_ = timezone.now() - timedelta(days=7)
+    from_date_unix = int(from_date_.timestamp()) * 1000
+    data_sources = {
+        (spacecraft, "mag"): AjaxDataSource(
+            data_url=(f"/data/batch/{spacecraft}/mag?from_date={from_date_unix}")
+        )
+        for spacecraft in spacecrafts
+    }
+
     plot = create_timeseries_plot(
-        plot_config, spacecrafts, x_range, default_spacecraft=default_spacecraft
+        plot_config,
+        spacecrafts,
+        x_range,
+        data_sources,
+        default_spacecraft=default_spacecraft,
     )
 
     line_renderers = {

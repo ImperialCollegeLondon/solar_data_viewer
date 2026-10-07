@@ -218,15 +218,12 @@ def retrieve_batch_data(
             if measurement in data:
                 result[measurement] = data[measurement].tolist()
             else:
-                missing_values: list[float | str | None] = []
-                for _ in range(len(data)):
-                    missing_values.append(None)
-                result[measurement] = missing_values
+                result[measurement] = [None] * len(data)  # type: ignore
     else:
         result = {"date": []}
         result.update({measurement: [] for measurement in measurements})
 
-    logger.info(
+    logger.debug(
         f"Querying batch data for {spacecraft} {group} from the DB took "
         f"{(timezone.now() - start_time).total_seconds():.2f} seconds to retrieve "
         f"{len(rows)} records. Start time is {most_recent}."
@@ -339,7 +336,7 @@ def _get_trace_data(
         return err, {"measurement": [], "date": []}
 
     data = pd.DataFrame(dataquery)
-    logger.info(
+    logger.debug(
         f"Querying {spacecraft} {measurement} data from the DB took "
         f"{(timezone.now() - start_time).total_seconds():.2f} seconds to retrieve "
         f"{len(data)} records. Start time is {most_recent}."
