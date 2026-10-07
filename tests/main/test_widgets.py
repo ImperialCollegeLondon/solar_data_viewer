@@ -2,14 +2,22 @@
 
 from unittest.mock import Mock, patch
 
-from bokeh.models import CustomJS, Range1d, Select  # type: ignore[attr-defined]
+from bokeh.models import (  # type: ignore[attr-defined]
+    AjaxDataSource,
+    CustomJS,
+    Range1d,
+    Select,
+)
 from bokeh.models.widgets.groups import CheckboxButtonGroup, CheckboxGroup
 
 from main.config import MeasurementConfig, PlotConfig
 
 
 @patch("main.utils.retrieve_data")
-def test_add_callback_to_checkbox_button(process_data_mock: Mock):
+def test_add_callback_to_checkbox_button(
+    process_data_mock: Mock,
+    data_sources: dict[tuple[str, str], AjaxDataSource],
+):
     """Test the add_callback_to_checkbox_button function."""
     from main.plots import create_timeseries_plot
     from main.widgets import add_callback_to_checkbox_button, checkbox_button_group
@@ -36,7 +44,9 @@ def test_add_callback_to_checkbox_button(process_data_mock: Mock):
 
     x_range = Range1d(start=0, end=1)
 
-    plot = create_timeseries_plot(plot_config, spacecrafts, x_range, default_spacecraft)
+    plot = create_timeseries_plot(
+        plot_config, spacecrafts, x_range, data_sources, default_spacecraft
+    )
 
     with patch.object(CheckboxButtonGroup, "js_on_change") as js_mock:
         add_callback_to_checkbox_button(

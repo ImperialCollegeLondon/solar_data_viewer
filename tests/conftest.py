@@ -6,10 +6,19 @@ from typing import Any
 from unittest.mock import Mock
 
 import pytest
-from bokeh.models import Range1d
+from bokeh.models import AjaxDataSource, Range1d
 
 from main.config import MeasurementConfig, PlotConfig
 from main.plots import create_timeseries_plot
+
+
+@pytest.fixture
+def data_sources():
+    """Mmock data sources for tests."""
+    return {
+        ("A", "wind"): AjaxDataSource(data_url="/data/batch/A/wind"),
+        ("B", "wind"): AjaxDataSource(data_url="/data/batch/B/wind"),
+    }
 
 
 @pytest.fixture
@@ -22,7 +31,9 @@ def plots_config() -> dict[str, Any]:  # type: ignore[explicit-any]
 
 
 @pytest.fixture
-def plot_context(process_data_mock: Mock):
+def plot_context(
+    process_data_mock: Mock, data_sources: dict[tuple[str, str], AjaxDataSource]
+):
     """Standard plot environment for widget tests."""
     # Mock the data processing function
     process_data_mock = process_data_mock.patch(
@@ -51,6 +62,7 @@ def plot_context(process_data_mock: Mock):
         plot_config,
         spacecrafts=["A", "B"],
         x_range=x_range,
+        data_sources=data_sources,
         default_spacecraft=default_spacecraft,
     )
 

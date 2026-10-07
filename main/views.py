@@ -86,12 +86,13 @@ class DataView(View):
         else:
             from_date = None
 
+        response_started = perf_counter()
+
         _, data = retrieve_data(spacecraft, measurement, from_date)
 
-        response_started = perf_counter()
         response = JsonResponse(data)
-        logger.info(
-            "%s %s JSON response creation took %.3fs (%d points)",
+        logger.debug(
+            "%s %s Data retrieval and JSON response creation took %.3fs (%d points)",
             spacecraft,
             measurement,
             perf_counter() - response_started,

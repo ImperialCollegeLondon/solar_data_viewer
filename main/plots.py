@@ -217,8 +217,8 @@ def create_timeseries_plot(
     plot_config: PlotConfig,
     spacecrafts: list[str],
     x_range: Range1d,
+    data_sources: dict[tuple[str, str], AjaxDataSource],
     default_spacecraft: str = "IMAP",
-    data_sources: dict[tuple[str, str], AjaxDataSource] | None = None,
 ) -> figure:
     """Create a timeseries plot.
 
@@ -249,10 +249,6 @@ def create_timeseries_plot(
     plot.lod_threshold = None
     current_time = timezone.now()
 
-    from_date_ = current_time - datetime.timedelta(days=7)
-    from_date = int(from_date_.timestamp()) * 1000
-    shared_sources = data_sources if data_sources is not None else {}
-
     # Use one AjaxDataSource for each combination of spacecraft and measurement group
     for measurement, args in plot_config.measurements.items():
         for spacecraft in spacecrafts:
@@ -260,25 +256,14 @@ def create_timeseries_plot(
             # get the group from the measurement name
             group = MEASUREMENT_TO_GROUP[measurement]
             source_key = (spacecraft, group)
-
-            if source_key not in shared_sources:
-                shared_sources[source_key] = AjaxDataSource(
-                    data_url=(
-                        f"/data/batch/{spacecraft}/{group}?from_date={from_date}"
-                    ),
-                    polling_interval=settings.PLOT_REFRESH_TIME_MS,
-                    method="GET",
-                    mode="append",
-                    adapter=ajax_adapter(),
-                )
-            source = shared_sources[source_key]
+            data_source = data_sources[source_key]
 
             line_renderer = plot.line(
                 "date",
                 measurement,
                 name=spacecraft,  # Enables selecting data in callback
                 color=args.traces[spacecraft],
-                source=source,
+                source=data_source,
                 legend_label=f"{spacecraft}: {label}",
                 line_width=2 if args.label == "|B|" else 1,
                 visible=(
@@ -365,8 +350,8 @@ def create_timeseries_plots(
             plot_config,
             spacecrafts,
             shared_x_range,
-            default_spacecraft,
             data_sources,
+            default_spacecraft,
         )
         plot.add_tools(hover, crosshair)
         plot.yaxis.axis_label = f"{plot_config.title} ({plot_config.unit})"
