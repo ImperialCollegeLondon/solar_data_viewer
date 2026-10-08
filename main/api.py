@@ -105,7 +105,7 @@ def get_batch_science_data(
         description="The date to use as the starting point to get data (in ms format). "
         "If null, defaults to 7 days ago from the current time.",
     ),
-) -> dict[str, list[float]] | Status[dict[str, str]]:
+) -> dict[str, list[int] | list[float | str | None]] | Status[dict[str, str]]:
     """Get all the science data - wind or mag - for the requested spacecraft."""
     error, data = retrieve_batch_data(spacecraft.upper(), group, from_date)
 
