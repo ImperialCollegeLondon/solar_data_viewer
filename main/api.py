@@ -26,16 +26,16 @@ class ErrorResponse(Schema):  # type: ignore[explicit-any]
 
 
 @api.get(
-    "/data/{spacecraft}/field/{measurement}",
+    "/data/field/{measurement}/{spacecraft}",
     response={200: ScienceDataResponse, 500: ErrorResponse},
 )
 def get_science_data(
     request: HttpRequest,
-    spacecraft: str = Path(  # type: ignore[type-arg]
-        ..., description="Name of the spacecraft to retrieve data for."
-    ),
     measurement: str = Path(  # type: ignore[type-arg]
         ..., description="Name of the measurement of interest."
+    ),
+    spacecraft: str = Path(  # type: ignore[type-arg]
+        ..., description="Name of the spacecraft to retrieve data for."
     ),
     from_date: int | None = Query(  # type: ignore[type-arg]
         None,
@@ -65,9 +65,7 @@ class ScienceMagDataResponse(Schema):  # type: ignore[explicit-any]
     bz_gsm: list[float] = Field(
         ..., description="Z component of the magnetic field, in GSM coordinates."
     )
-    b_gsm: list[float] = Field(
-        ..., description="Module of the magnetic field, in GSM coordinates."
-    )
+    b_mag: list[float] = Field(..., description="Module of the magnetic field.")
     phi_gsm: list[float] = Field(
         ..., description="Phi angle of the magnetic field, in GSM coordinates."
     )
@@ -86,19 +84,13 @@ class ScienceWindDataResponse(Schema):  # type: ignore[explicit-any]
 
 
 @api.get(
-    "/data/{spacecraft}/batch/{group}",
-    response={
-        200: ScienceMagDataResponse | ScienceWindDataResponse,
-        500: ErrorResponse,
-    },
+    "/data/batch/mag/{spacecraft}",
+    response={200: ScienceMagDataResponse, 500: ErrorResponse},
 )
-def get_batch_science_data(
+def get_mag_science_data(
     request: HttpRequest,
     spacecraft: str = Path(  # type: ignore[type-arg]
         ..., description="Name of the spacecraft to retrieve data for."
-    ),
-    group: str = Path(  # type: ignore[type-arg]
-        ..., description="Name of the data group. Must be 'mag' or 'wind'."
     ),
     from_date: int | None = Query(  # type: ignore[type-arg]
         None,
@@ -106,8 +98,32 @@ def get_batch_science_data(
         "If null, defaults to 7 days ago from the current time.",
     ),
 ) -> dict[str, list[int] | list[float | str | None]] | Status[dict[str, str]]:
-    """Get all the science data - wind or mag - for the requested spacecraft."""
-    error, data = retrieve_batch_data(spacecraft.upper(), group, from_date)
+    """Get all the mag science data for the requested spacecraft."""
+    error, data = retrieve_batch_data(spacecraft.upper(), "mag", from_date)
+
+    if error:
+        return Status(500, {"message": error})
+
+    return data
+
+
+@api.get(
+    "/data/batch/wind/{spacecraft}",
+    response={200: ScienceWindDataResponse, 500: ErrorResponse},
+)
+def get_wind_science_data(
+    request: HttpRequest,
+    spacecraft: str = Path(  # type: ignore[type-arg]
+        ..., description="Name of the spacecraft to retrieve data for."
+    ),
+    from_date: int | None = Query(  # type: ignore[type-arg]
+        None,
+        description="The date to use as the starting point to get data (in ms format). "
+        "If null, defaults to 7 days ago from the current time.",
+    ),
+) -> dict[str, list[int] | list[float | str | None]] | Status[dict[str, str]]:
+    """Get all the wind science data for the requested spacecraft."""
+    error, data = retrieve_batch_data(spacecraft.upper(), "wind", from_date)
 
     if error:
         return Status(500, {"message": error})
