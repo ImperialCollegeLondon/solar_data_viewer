@@ -109,6 +109,12 @@ Use the commands `uv add <package>` and `uv remove <package>` to add or remove d
 
 For further information, see the [uv] docs for managing dependencies.
 
+## API documentation
+
+Solar Data Viewer follows the [OpenAPI] specification, and the description of the
+available endpoins can be obtained by navigating to `/api/docs`,
+eg. <http://localhost:8000/api/docs>.
+
 [uv]: https://docs.astral.sh/uv
 [pre-commit]: https://pre-commit.com/
 [pytest]: https://pytest.org/
@@ -119,3 +125,4 @@ For further information, see the [uv] docs for managing dependencies.
 [Download and install uv]: https://docs.astral.sh/uv/getting-started/installation/
 [uv activate]: https://docs.astral.sh/uv/pip/environments/
 [Docker]: https://docs.docker.com/desktop/
+[OpenAPI]: https://www.openapis.org/
