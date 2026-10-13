@@ -2459,7 +2459,7 @@ wheels = [
 
 [[package]]
 name = "sunpy"
-version = "8.0.0"
+version = "8.0.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "astropy" },
@@ -2470,14 +2470,14 @@ dependencies = [
     { name = "pyerfa" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5d/31/3b52f449b352bd78dda65635ca5127e1dbf90c516abb8109d62b30a27149/sunpy-8.0.0.tar.gz", hash = "sha256:a675c184d5dbe455495242e446e7c10db0bbe78bbed8920e327d293ae1fb689d", size = 4962896, upload-time = "2026-06-30T12:08:18.355Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1f/38/f784e9a10cb2b57587179216a1512b6d7808478e6e3a58eb3c999a04e42f/sunpy-8.0.1.tar.gz", hash = "sha256:185d545a4a4b04bc8924170d47c25fb4d736e174cf55ff386a2eae52606b1240", size = 4969865, upload-time = "2026-10-08T22:06:40.467Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3a/8a/716f44ffea0a52ae4c31cd22b05ca71ab603844ae6f1931376d1526e4258/sunpy-8.0.0-cp312-abi3-macosx_10_13_x86_64.whl", hash = "sha256:9b791d3ad258415f56c9e5b7c460bbac2eaf44fe4eb8421d110babf186c996e5", size = 3922666, upload-time = "2026-06-30T12:08:05.891Z" },
-    { url = "https://files.pythonhosted.org/packages/df/d2/cd8d1a7348f2be568cc9ccd706ca0faf21a5b0684a3b4eedeacad5363730/sunpy-8.0.0-cp312-abi3-macosx_11_0_arm64.whl", hash = "sha256:15e1adfff88bc489fa5b8fc3d8a82cd6d2854ca98ba5244c1547fbc00d6d36bf", size = 3922742, upload-time = "2026-06-30T12:08:08.458Z" },
-    { url = "https://files.pythonhosted.org/packages/de/5f/14cba934e3afb9b88442cda494ba2f9475fe458a8f39a5dcaab58658db26/sunpy-8.0.0-cp312-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:9ff3d28e61a47539cf754b378e91de55869eb8d661a60735184c4b18acf52903", size = 3969415, upload-time = "2026-06-30T12:08:10.422Z" },
-    { url = "https://files.pythonhosted.org/packages/25/9c/70bf76f3a945690517f2d023ab09324c5e5c1529c7bf1ed41b00a19eac14/sunpy-8.0.0-cp312-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:b43ca59d99130fccb2a921548eb788eb1a9fc7d72e885ebfbb7606502539adcd", size = 3973181, upload-time = "2026-06-30T12:08:12.176Z" },
-    { url = "https://files.pythonhosted.org/packages/23/6f/0ba5f960ce0f577c51c7f6922363291b05fbe9899625d3dd4525474b0240/sunpy-8.0.0-cp312-abi3-win_amd64.whl", hash = "sha256:3cedcffa0e2a59b7daa3dea4f531f58e96617d6e3178e6073a482fb951a66ddf", size = 3920917, upload-time = "2026-06-30T12:08:14.489Z" },
-    { url = "https://files.pythonhosted.org/packages/7f/b7/0b26066229229a31138690dabf1bc5d0e246343861e7d4df6053720aadf2/sunpy-8.0.0-py3-none-any.whl", hash = "sha256:f54563084c91ed0268ab48a897781cb4f1b26044fb1a6c226909dc2381f1c585", size = 3892576, upload-time = "2026-06-30T12:08:16.464Z" },
+    { url = "https://files.pythonhosted.org/packages/e1/f3/1367465d014a3a70029d538cf13dcd9c83dc8234c9483900cb321d635b69/sunpy-8.0.1-cp312-abi3-macosx_10_13_x86_64.whl", hash = "sha256:c1f3f715c131a6322138dfbdb265672ad33ee4630dbf9188492cf13a0e38f3d5", size = 3922948, upload-time = "2026-10-08T22:06:26.124Z" },
+    { url = "https://files.pythonhosted.org/packages/2f/46/adfd4cebfd2fd9208e7d204aef15a88ab9a0d69622b995dd53bfd955c079/sunpy-8.0.1-cp312-abi3-macosx_11_0_arm64.whl", hash = "sha256:50ad16d5de265504091fe7e25696cdf0c0dcd1dff004b5367c202e6ad4f44ecf", size = 3923010, upload-time = "2026-10-08T22:06:28.943Z" },
+    { url = "https://files.pythonhosted.org/packages/34/c8/f46257a6317b3d1b52debbe630dd4310e33397769858fc073a20d6fea3d8/sunpy-8.0.1-cp312-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:4c27b88bdd97302dd4eed71042ffc51bce6fae2fe0b3db1540a73a3dd769c134", size = 3969668, upload-time = "2026-10-08T22:06:31.552Z" },
+    { url = "https://files.pythonhosted.org/packages/50/25/0c1d0337799339e9cf97e836449a16d345b0dbcf65e098d3868e06926ff2/sunpy-8.0.1-cp312-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:b4d62cdfd1bc15b943fa4f9267be730ba40db235eb72982184a2bed74d80ff60", size = 3973447, upload-time = "2026-10-08T22:06:33.728Z" },
+    { url = "https://files.pythonhosted.org/packages/cf/2e/4adbd5110f0e55ab61bdd4b8bc3082ee4dd8d7b36b08e40b1f32d7b03a06/sunpy-8.0.1-cp312-abi3-win_amd64.whl", hash = "sha256:646db32961d09e4d2ca56224f52e4ff7c3bd076efd1e1c9f50274ba0cbbafca4", size = 3921241, upload-time = "2026-10-08T22:06:35.635Z" },
+    { url = "https://files.pythonhosted.org/packages/6d/cc/4fc6ac068a09073d6711ba177d2040703e69dd69d9b34d836bccde7fa484/sunpy-8.0.1-py3-none-any.whl", hash = "sha256:d65f69429bcc67e8a48884247149cb8b58470da83b98ac5fd648ad33a26c79f8", size = 3892802, upload-time = "2026-10-08T22:06:38.195Z" },
 ]
 
 [[package]]
